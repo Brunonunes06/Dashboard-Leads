@@ -161,7 +161,7 @@ function ProfilePage() {
             title="Conta Google"
             description="Login único e sincronização."
             status="pending"
-            actionLabel="Conectar"
+            actionLabel="✔️"
           />
 
           <IntegrationRow
