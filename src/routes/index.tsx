@@ -81,13 +81,18 @@ function Dashboard() {
                 <XAxis dataKey="day" stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip
+                  cursor={{ fill: "var(--color-secondary)", opacity: 0.4 }}
                   contentStyle={{
                     backgroundColor: "var(--color-popover)",
                     border: "1px solid var(--color-border)",
                     borderRadius: 12,
                     fontSize: 12,
+                    color: "#fff",
                   }}
+                  itemStyle={{ color: "#fff" }}
+                  labelStyle={{ color: "#fff", fontWeight: 600 }}
                 />
+
                 <Bar dataKey="leads" fill="var(--color-chart-2)" radius={[6, 6, 0, 0]} />
                 <Bar dataKey="qualificados" fill="var(--color-primary)" radius={[6, 6, 0, 0]} />
               </BarChart>
