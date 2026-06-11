@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, MessagesSquare, Settings2, Sparkles, Zap } from "lucide-react";
+import { LayoutDashboard, MessagesSquare, Settings2, Sparkles, UserCircle, Zap } from "lucide-react";
 
 import {
   Sidebar,
@@ -18,6 +18,7 @@ const items = [
   { title: "Visão geral", url: "/", icon: LayoutDashboard },
   { title: "Conversas", url: "/leads", icon: MessagesSquare },
   { title: "Configurar IA", url: "/settings", icon: Settings2 },
+  { title: "Perfil", url: "/profile", icon: UserCircle },
 ];
 
 export function AppSidebar() {
