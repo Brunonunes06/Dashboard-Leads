@@ -34,7 +34,7 @@ import { leads, sources, weeklyData } from "@/data/mockLeads";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Visão geral · Resposta" },
+      { title: "Dashboard · Resposta" },
       {
         name: "description",
         content: "Métricas de leads, tempo de resposta e qualificação por IA em tempo real.",
@@ -45,7 +45,7 @@ export const Route = createFileRoute("/")({
 });
 
 // Substitua pelo seu Client ID real gerado no Google Cloud Console
-const GOOGLE_CLIENT_ID = "561076792344.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = "503517426148-qnavb54arur62q39edqr5r1fkrocbdat.apps.googleusercontent.com";
 
 function DashboardWrapper() {
   return (

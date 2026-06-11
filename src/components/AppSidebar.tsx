@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 
 const items = [
-  { title: "Visão geral", url: "/", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Conversas", url: "/leads", icon: MessagesSquare },
   { title: "Configurar IA", url: "/settings", icon: Settings2 },
   { title: "Perfil", url: "/profile", icon: UserCircle },

@@ -4,12 +4,20 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Token de verificação que você vai inventar (exemplo: 'meutoken123')
 const VERIFY_TOKEN = "meutoken123"; 
 const EMAIL_ADMINISTRADOR = "myhpc3301@gmail.com";
 
 app.use(cors());
 app.use(express.json());
+
+// ============================================================================
+// O PULO DO GATO: Middleware para desativar a tela de aviso do Ngrok Browser Warning
+// ============================================================================
+app.use((req, res, next) => {
+  // Configura a resposta para instruir o ngrok a pular a página de aviso contra abusos
+  res.setHeader('ngrok-skip-browser-warning', 'true');
+  next();
+});
 
 // 1. ROTA GET: Exigida pela Meta para validar que seu webhook está ativo
 app.get('/', (req, res) => {
@@ -18,9 +26,12 @@ app.get('/', (req, res) => {
   const challenge = req.query['hub.challenge'];
 
   if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+    console.log('\n==================================================');
     console.log('--- WEBHOOK VERIFICADO COM SUCESSO PELA META! ---');
+    console.log('==================================================\n');
     return res.status(200).send(challenge);
   } else {
+    console.log('--- Tentativa de validação falhou: Token inválido ---');
     return res.status(403).end();
   }
 });
@@ -30,14 +41,13 @@ app.post('/', (req, res) => {
   const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
   
   console.log(`\n--- Webhook Recebido às ${timestamp} ---`);
-  // Mostra os dados da mensagem do WhatsApp no seu terminal
   console.log(JSON.stringify(req.body, null, 2)); 
   console.log(`----------------------------------------\n`);
 
   return res.status(200).end();
 });
 
-// Mantendo a sua rota antiga caso seu frontend ainda use para testes
+// Rota antiga do seu frontend para disparos manuais
 app.post('/api/whatsapp/send', (req, res) => {
   const { message, number, userEmail } = req.body;
   if (userEmail && userEmail.toLowerCase() !== EMAIL_ADMINISTRADOR.toLowerCase()) {
@@ -50,6 +60,7 @@ app.post('/api/whatsapp/send', (req, res) => {
 app.listen(PORT, () => {
   console.log(`==================================================`);
   console.log(` Webhook Local Ativo: http://localhost:${PORT}`);
-  console.log(` Token de Verificação: ${VERIFY_TOKEN}`);
+  console.log(` Token de Verificação para a Meta: ${VERIFY_TOKEN}`);
+  console.log(` Trava do Ngrok Warning ativada com sucesso!`);
   console.log(`==================================================`);
-});ngrok http 3000
+});
