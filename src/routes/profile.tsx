@@ -1,6 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Camera, CheckCircle2, Mail, MessageCircle, Phone, ShieldCheck, User } from "lucide-react";
-import { useState } from "react";
+import {
+  Camera,
+  CheckCircle2,
+  Mail,
+  MessageCircle,
+  Phone,
+  ShieldCheck,
+  User,
+} from "lucide-react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,16 +21,48 @@ export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
       { title: "Perfil · Resposta" },
-      { name: "description", content: "Gerencie sua conta, tema e integrações de WhatsApp e Google." },
+      {
+        name: "description",
+        content: "Gerencie sua conta, tema e integrações.",
+      },
     ],
   }),
   component: ProfilePage,
 });
 
 function ProfilePage() {
-  const [name, setName] = useState("Rafael Costa");
+  const [name, setName] = useState("Usuário");
   const [email, setEmail] = useState("rafael@premier.com.br");
   const [phone, setPhone] = useState("+55 11 99876-5432");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedName = localStorage.getItem("userName");
+      const savedEmail = localStorage.getItem("userEmail");
+      const savedPhone = localStorage.getItem("userPhone");
+
+      if (savedName) setName(savedName);
+      if (savedEmail) setEmail(savedEmail);
+      if (savedPhone) setPhone(savedPhone);
+    }
+  }, []);
+
+  const handleSave = () => {
+    localStorage.setItem("userName", name);
+    localStorage.setItem("userEmail", email);
+    localStorage.setItem("userPhone", phone);
+
+    window.dispatchEvent(new Event("profileUpdated"));
+
+    toast.success("Perfil atualizado com sucesso!");
+  };
+
+  const initials = name
+    .split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6 lg:p-8">
@@ -33,95 +73,120 @@ function ProfilePage() {
         </p>
       </div>
 
-      <Card className="border-border/60">
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <User className="h-4 w-4 text-primary" /> Dados pessoais
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            Dados pessoais
           </CardTitle>
         </CardHeader>
+
         <CardContent className="space-y-5">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="grid h-20 w-20 place-items-center rounded-full gradient-primary text-2xl font-semibold text-primary-foreground shadow-glow">
-                RC
+              <div className="grid h-20 w-20 place-items-center rounded-full bg-primary text-2xl font-bold text-primary-foreground">
+                {initials}
               </div>
-              <button className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full border border-border bg-card text-muted-foreground hover:text-foreground">
+
+              <button className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full border bg-card">
                 <Camera className="h-3.5 w-3.5" />
               </button>
             </div>
+
             <div>
               <p className="text-sm font-medium">{name}</p>
-              <p className="text-xs text-muted-foreground">Administrador · Premier Imóveis</p>
+              <p className="text-xs text-muted-foreground">
+                Administrador
+              </p>
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
+            <div>
               <Label>Nome completo</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} />
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
             </div>
-            <div className="space-y-1.5">
+
+            <div>
               <Label>E-mail</Label>
-              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
-            <div className="space-y-1.5 sm:col-span-2">
+
+            <div className="sm:col-span-2">
               <Label>Telefone WhatsApp</Label>
-              <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+55 11 99999-0000" />
-              <p className="text-xs text-muted-foreground">Use o formato internacional (E.164).</p>
+              <Input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-border/60">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-base">Aparência</CardTitle>
+          <CardTitle>Aparência</CardTitle>
         </CardHeader>
-        <CardContent className="flex items-center justify-between rounded-lg border border-border/60 bg-background/40 p-4">
+
+        <CardContent className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium">Tema</p>
-            <p className="text-xs text-muted-foreground">Claro, escuro ou seguir o sistema.</p>
+            <p className="text-xs text-muted-foreground">
+              Claro, escuro ou sistema.
+            </p>
           </div>
+
           <ThemeToggle />
         </CardContent>
       </Card>
 
-      <Card className="border-border/60">
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <ShieldCheck className="h-4 w-4 text-primary" /> Integrações
+          <CardTitle className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4" />
+            Integrações
           </CardTitle>
         </CardHeader>
+
         <CardContent className="space-y-3">
           <IntegrationRow
             icon={<Mail className="h-4 w-4" />}
             title="Conta Google"
-            description="Login único e sincronização da agenda do corretor."
+            description="Login único e sincronização."
             status="pending"
             actionLabel="Conectar"
           />
+
           <IntegrationRow
-            icon={<MessageCircle className="h-4 w-4 text-primary" />}
-            title="WhatsApp Business (Twilio)"
-            description="Envio e recepção automatizada de mensagens pelo seu número."
+            icon={<MessageCircle className="h-4 w-4" />}
+            title="WhatsApp Business"
+            description="Automação de mensagens."
             status="pending"
-            actionLabel="Conectar número"
+            actionLabel="Conectar"
           />
+
           <IntegrationRow
             icon={<Phone className="h-4 w-4" />}
-            title="Telefonia / ligações"
-            description="Em breve — escalar leads quentes para chamada."
+            title="Telefonia"
+            description="Integração de chamadas."
             status="soon"
           />
         </CardContent>
       </Card>
 
       <div className="flex justify-end gap-2">
-        <Button variant="outline">Cancelar</Button>
-        <Button
-          className="gradient-primary text-primary-foreground hover:opacity-90"
-          onClick={() => toast.success("Perfil salvo")}
-        >
+        <Button variant="outline">
+          Cancelar
+        </Button>
+
+        <Button onClick={handleSave}>
           Salvar alterações
         </Button>
       </div>
@@ -143,22 +208,31 @@ function IntegrationRow({
   actionLabel?: string;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/40 p-4">
+    <div className="flex items-center justify-between rounded-lg border p-4">
       <div className="flex items-center gap-3">
-        <div className="grid h-9 w-9 place-items-center rounded-lg bg-secondary">{icon}</div>
+        <div className="grid h-9 w-9 place-items-center rounded-lg bg-secondary">
+          {icon}
+        </div>
+
         <div>
           <p className="text-sm font-medium">{title}</p>
           <p className="text-xs text-muted-foreground">{description}</p>
         </div>
       </div>
+
       {status === "connected" ? (
-        <span className="flex items-center gap-1 text-xs font-medium text-primary">
-          <CheckCircle2 className="h-3.5 w-3.5" /> Conectado
+        <span className="flex items-center gap-1 text-xs font-medium text-green-500">
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          Conectado
         </span>
-      ) : status === "pending" && actionLabel ? (
-        <Button size="sm" variant="outline">{actionLabel}</Button>
+      ) : status === "pending" ? (
+        <Button size="sm" variant="outline">
+          {actionLabel}
+        </Button>
       ) : (
-        <span className="text-xs text-muted-foreground">Em breve</span>
+        <span className="text-xs text-muted-foreground">
+          Em breve
+        </span>
       )}
     </div>
   );

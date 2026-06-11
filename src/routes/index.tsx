@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import {
   Bar,
   BarChart,
@@ -11,10 +13,21 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ArrowUpRight, Clock, MessageCircle, Target, TrendingUp, Users } from "lucide-react";
+import {
+  ArrowUpRight,
+  Clock,
+  MessageCircle,
+  Target,
+  TrendingUp,
+  Users,
+  Send,
+  Mail,
+  Phone,
+} from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/StatusBadge";
 import { leads, sources, weeklyData } from "@/data/mockLeads";
 
@@ -22,36 +35,260 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Visão geral · Resposta" },
-      { name: "description", content: "Métricas de leads, tempo de resposta e qualificação por IA em tempo real." },
+      {
+        name: "description",
+        content: "Métricas de leads, tempo de resposta e qualificação por IA em tempo real.",
+      },
     ],
   }),
-  component: Dashboard,
+  component: DashboardWrapper,
 });
 
+// Substitua pelo seu Client ID real gerado no Google Cloud Console
+const GOOGLE_CLIENT_ID = "561076792344.apps.googleusercontent.com";
+
+function DashboardWrapper() {
+  return (
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <Dashboard />
+    </GoogleOAuthProvider>
+  );
+}
+
 const metrics = [
-  { label: "Leads hoje", value: "47", delta: "+19%", icon: Users, accent: "text-chart-2" },
-  { label: "Tempo médio de resposta", value: "3,2s", delta: "−42%", icon: Clock, accent: "text-primary" },
-  { label: "Taxa de qualificação", value: "44%", delta: "+9%", icon: Target, accent: "text-warning" },
-  { label: "Transferidos ao vendedor", value: "21", delta: "+6", icon: TrendingUp, accent: "text-chart-5" },
+  {
+    label: "Leads hoje",
+    value: "47",
+    delta: "+19%",
+    icon: Users,
+    accent: "text-chart-2",
+  },
+  {
+    label: "Tempo médio de resposta",
+    value: "3,2s",
+    delta: "−42%",
+    icon: Clock,
+    accent: "text-primary",
+  },
+  {
+    label: "Taxa de qualificação",
+    value: "44%",
+    delta: "+9%",
+    icon: Target,
+    accent: "text-warning",
+  },
+  {
+    label: "Transferidos ao vendedor",
+    value: "21",
+    delta: "+6",
+    icon: TrendingUp,
+    accent: "text-chart-5",
+  },
 ];
 
 function Dashboard() {
+  const [userName, setUserName] = useState("Usuário");
+  const [userEmail, setUserEmail] = useState("");
+  const [userPhone, setUserPhone] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [inputPhone, setInputPhone] = useState("");
+
+  // Carrega os dados salvos do usuário ao iniciar o componente
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedName = localStorage.getItem("userName");
+      const savedEmail = localStorage.getItem("userEmail");
+      const savedPhone = localStorage.getItem("userPhone");
+
+      if (savedName) setUserName(savedName);
+      if (savedEmail) setUserEmail(savedEmail);
+      if (savedPhone) {
+        setUserPhone(savedPhone);
+        setInputPhone(savedPhone);
+      }
+      if (savedName || savedEmail) setIsLoggedIn(true);
+    }
+  }, []);
+
+  // Função para decodificar o token JWT do Google de forma simples sem bibliotecas externas adicionais
+  const parseJwt = (token: string) => {
+    try {
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return null;
+    }
+  };
+
+  // Callback acionado quando o login com o Google é bem-sucedido
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    if (!credentialResponse.credential) return;
+
+    // Decodifica as informações do perfil vindas do Google (contém name, email, picture, etc)
+    const profile = parseJwt(credentialResponse.credential);
+
+    if (profile) {
+      const name = profile.name || "Usuário Google";
+      const email = profile.email || "";
+
+      localStorage.setItem("userName", name);
+      localStorage.setItem("userEmail", email);
+      
+      setUserName(name);
+      setUserEmail(email);
+      setIsLoggedIn(true);
+
+      // Envia uma notificação inicial se houver um telefone já salvo
+      const telefoneDestino = localStorage.getItem("userPhone") || "5511999999999";
+      await enviarNotificacaoWhatsapp(
+        `Olá ${name}, login efetuado com sucesso usando o e-mail: ${email}!`,
+        telefoneDestino
+      );
+    }
+  };
+
+  // Salva o telefone WhatsApp fornecido pelo usuário
+  const handleSavePhone = () => {
+    localStorage.setItem("userPhone", inputPhone);
+    setUserPhone(inputPhone);
+    setIsEditingPhone(false);
+    
+    enviarNotificacaoWhatsapp(
+      `Número de WhatsApp vinculado com sucesso ao perfil de ${userName}!`,
+      inputPhone
+    );
+  };
+
+  // Integração com a chamada HTTP da API do WhatsApp
+  const enviarNotificacaoWhatsapp = async (mensagem: string, numeroDestino: string) => {
+    if (!numeroDestino) {
+      console.warn("Nenhum número de telefone fornecido para o envio.");
+      return;
+    }
+
+    try {
+      console.log(`Disparando WhatsApp para ${numeroDestino}: "${mensagem}"`);
+      
+      // Endpoint fictício/real do seu backend que se conecta à API do WhatsApp
+      const response = await fetch("/api/whatsapp/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: mensagem,
+          number: numeroDestino.replace(/\D/g, ""), // Remove caracteres especiais
+        }),
+      });
+
+      if (response.ok) {
+        console.log("Mensagem de WhatsApp enviada com sucesso!");
+      }
+    } catch (error) {
+      console.error("Erro ao conectar com a API do WhatsApp:", error);
+    }
+  };
+
+  // Função para limpar a sessão e deslogar
+  const handleLogout = () => {
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("userPhone");
+    setUserName("Usuário");
+    setUserEmail("");
+    setUserPhone("");
+    setInputPhone("");
+    setIsLoggedIn(false);
+  };
+
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6 lg:p-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Bom dia, [setName] 👋</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Sua IA já respondeu <span className="font-medium text-foreground">47 leads</span> hoje. 21 foram qualificados e estão prontos para você.
+      
+      {/* SEÇÃO DO CABEÇALHO: Login, E-mail e WhatsApp */}
+      <div className="flex flex-wrap items-start justify-between gap-6 border-b border-border/40 pb-6">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Bom dia, {userName} 👋
+          </h1>
+          
+          {/* Exibição de Informações extras do Perfil logado */}
+          {isLoggedIn && (
+            <div className="flex flex-col gap-1.5 mt-2 text-sm text-muted-foreground">
+              {userEmail && (
+                <div className="flex items-center gap-2">
+                  <Mail className="h-3.5 w-3.5 text-primary" />
+                  <span>{userEmail}</span>
+                </div>
+              )}
+              
+              <div className="flex items-center gap-2">
+                <Phone className="h-3.5 w-3.5 text-green-500" />
+                {isEditingPhone ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      placeholder="Ex: 5511999999999"
+                      value={inputPhone}
+                      onChange={(e) => setInputPhone(e.target.value)}
+                      className="h-7 w-44 text-xs bg-secondary"
+                    />
+                    <Button onClick={handleSavePhone} size="sm" className="h-7 px-2 text-xs">
+                      Salvar
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span>{userPhone ? `WhatsApp: ${userPhone}` : "Nenhum WhatsApp cadastrado"}</span>
+                    <button 
+                      onClick={() => setIsEditingPhone(true)} 
+                      className="text-xs text-primary underline hover:text-primary/80"
+                    >
+                      {userPhone ? "Alterar" : "Adicionar"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          
+          <p className="mt-2 text-sm text-muted-foreground">
+            Sua IA já respondeu <span className="font-medium text-foreground">47 leads</span> hoje. 21 foram qualificados.
           </p>
         </div>
-        <Button asChild className="gradient-primary text-primary-foreground shadow-glow hover:opacity-90">
-          <Link to="/leads">
-            Ver conversas <ArrowUpRight className="ml-1 h-4 w-4" />
-          </Link>
-        </Button>
+
+        {/* Botões de Ações e Provedores */}
+        <div className="flex flex-wrap items-center gap-3">
+          {!isLoggedIn ? (
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => console.log("Falha na autenticação")}
+              useOneTap
+              theme="filled_dark"
+              shape="pill"
+            />
+          ) : (
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              Sair da conta
+            </Button>
+          )}
+
+          <Button asChild className="gradient-primary text-primary-foreground shadow-glow hover:opacity-90">
+            <Link to="/leads">
+              Ver conversas <ArrowUpRight className="ml-1 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
       </div>
 
+      {/* GRID DE MÉTRICAS */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {metrics.map((m) => (
           <Card key={m.label} className="relative overflow-hidden border-border/60 bg-card">
@@ -69,7 +306,9 @@ function Dashboard() {
         ))}
       </div>
 
+      {/* GRÁFICOS */}
       <div className="grid gap-4 lg:grid-cols-3">
+        {/* Gráfico de Barras */}
         <Card className="border-border/60 lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-base font-semibold">Leads x Qualificados · últimos 7 dias</CardTitle>
@@ -92,7 +331,6 @@ function Dashboard() {
                   itemStyle={{ color: "#fff" }}
                   labelStyle={{ color: "#fff", fontWeight: 600 }}
                 />
-
                 <Bar dataKey="leads" fill="var(--color-chart-2)" radius={[6, 6, 0, 0]} />
                 <Bar dataKey="qualificados" fill="var(--color-primary)" radius={[6, 6, 0, 0]} />
               </BarChart>
@@ -100,6 +338,7 @@ function Dashboard() {
           </CardContent>
         </Card>
 
+        {/* Gráfico de Origens (Pie) */}
         <Card className="border-border/60">
           <CardHeader>
             <CardTitle className="text-base font-semibold">Origem dos leads</CardTitle>
@@ -122,7 +361,6 @@ function Dashboard() {
                     itemStyle={{ color: "#fff" }}
                     labelStyle={{ color: "#fff", fontWeight: 600 }}
                   />
-
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -140,12 +378,11 @@ function Dashboard() {
                 </div>
               ))}
             </div>
-
           </CardContent>
-
         </Card>
       </div>
 
+      {/* SEÇÃO DE ATIVIDADE RECENTE COM DISPARO MANUAL */}
       <Card className="border-border/60">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base font-semibold">Atividade recente</CardTitle>
@@ -156,9 +393,8 @@ function Dashboard() {
         <CardContent className="p-0">
           <div className="divide-y divide-border/60">
             {leads.slice(0, 5).map((lead) => (
-              <Link
+              <div
                 key={lead.id}
-                to="/leads"
                 className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-secondary/40"
               >
                 <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-secondary text-sm font-semibold uppercase">
@@ -171,6 +407,18 @@ function Dashboard() {
                   </div>
                   <p className="truncate text-xs text-muted-foreground">{lead.lastMessage}</p>
                 </div>
+                
+                {/* Botão de envio rápido para disparar para o WhatsApp definido ou para o número do lead */}
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="h-8 w-8 text-muted-foreground hover:text-green-500"
+                  onClick={() => enviarNotificacaoWhatsapp(`Olá ${lead.name}, recebemos seu contato e a nossa IA já está processando!`, userPhone || "5511999999999")}
+                  title="Disparar notificação WhatsApp"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+
                 <div className="hidden text-right text-xs text-muted-foreground sm:block">
                   <div className="flex items-center justify-end gap-1">
                     <MessageCircle className="h-3 w-3" />
@@ -181,7 +429,7 @@ function Dashboard() {
                 <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-secondary/60">
                   <span className="font-display text-sm font-semibold text-primary">{lead.score}</span>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         </CardContent>
