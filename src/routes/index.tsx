@@ -29,7 +29,7 @@ export const Route = createFileRoute("/")({
 });
 
 const metrics = [
-  { label: "Leads hoje", value: "47", delta: "+18%", icon: Users, accent: "text-chart-2" },
+  { label: "Leads hoje", value: "47", delta: "+19%", icon: Users, accent: "text-chart-2" },
   { label: "Tempo médio de resposta", value: "3,2s", delta: "−42%", icon: Clock, accent: "text-primary" },
   { label: "Taxa de qualificação", value: "44%", delta: "+9%", icon: Target, accent: "text-warning" },
   { label: "Transferidos ao vendedor", value: "21", delta: "+6", icon: TrendingUp, accent: "text-chart-5" },
@@ -40,7 +40,7 @@ function Dashboard() {
     <div className="mx-auto max-w-7xl space-y-6 p-6 lg:p-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Bom dia, Rafael 👋</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Bom dia, Bruno 👋</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Sua IA já respondeu <span className="font-medium text-foreground">47 leads</span> hoje. 21 foram qualificados e estão prontos para você.
           </p>

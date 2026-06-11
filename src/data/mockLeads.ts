@@ -185,7 +185,7 @@ export const weeklyData = [
 ];
 
 export const sources = [
-  { name: "Instagram Ads", value: 42, color: "oklch(0.74 0.17 155)" },
+  { name: "Instagram Ads", value: 42, color: "oklch(0.74 0.17 155)", },
   { name: "Google Ads", value: 31, color: "oklch(0.65 0.18 200)" },
   { name: "Facebook Ads", value: 18, color: "oklch(0.78 0.16 75)" },
   { name: "Site/Orgânico", value: 9, color: "oklch(0.6 0.2 295)" },
