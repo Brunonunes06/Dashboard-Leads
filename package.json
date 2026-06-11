@@ -84,5 +84,18 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^8.0.16"
-  }
+  },
+  "version": "1.0.0",
+  "main": "eslint.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Brunonunes06/beta-leads-fast.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Brunonunes06/beta-leads-fast/issues"
+  },
+  "homepage": "https://github.com/Brunonunes06/beta-leads-fast#readme",
+  "description": ""
 }
