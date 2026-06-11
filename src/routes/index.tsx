@@ -99,23 +99,25 @@ function Dashboard() {
           <CardHeader>
             <CardTitle className="text-base font-semibold">Origem dos leads</CardTitle>
           </CardHeader>
-          <CardContent className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={sources} dataKey="value" innerRadius={50} outerRadius={80} paddingAngle={3} stroke="none">
-                  {sources.map((s) => <Cell key={s.name} fill={s.color} />)}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "var(--color-popover)",
-                    border: "1px solid var(--color-border)",
-                    borderRadius: 12,
-                    fontSize: 12,
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="-mt-4 space-y-1.5">
+          <CardContent className="flex flex-col gap-3">
+            <div className="h-44">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={sources} dataKey="value" innerRadius={45} outerRadius={72} paddingAngle={3} stroke="none">
+                    {sources.map((s) => <Cell key={s.name} fill={s.color} />)}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--color-popover)",
+                      border: "1px solid var(--color-border)",
+                      borderRadius: 12,
+                      fontSize: 12,
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="space-y-1.5">
               {sources.map((s) => (
                 <div key={s.name} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
@@ -127,6 +129,7 @@ function Dashboard() {
               ))}
             </div>
           </CardContent>
+
         </Card>
       </div>
 
