@@ -174,7 +174,7 @@ export const leads: Lead[] = [
   },
 ];
 
-export const weeklyData = [
+  export const weeklyData = [
   { day: "Seg", leads: 18, qualificados: 7 },
   { day: "Ter", leads: 24, qualificados: 11 },
   { day: "Qua", leads: 31, qualificados: 14 },
