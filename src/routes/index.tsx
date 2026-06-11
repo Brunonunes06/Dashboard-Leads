@@ -117,8 +117,12 @@ function Dashboard() {
                       border: "1px solid var(--color-border)",
                       borderRadius: 12,
                       fontSize: 12,
+                      color: "#fff",
                     }}
+                    itemStyle={{ color: "#fff" }}
+                    labelStyle={{ color: "#fff", fontWeight: 600 }}
                   />
+
                 </PieChart>
               </ResponsiveContainer>
             </div>
