@@ -119,15 +119,19 @@ function Dashboard() {
             </div>
             <div className="space-y-1.5">
               {sources.map((s) => (
-                <div key={s.name} className="flex items-center justify-between text-xs">
+                <div
+                  key={s.name}
+                  className="group flex items-center justify-between rounded-md px-1.5 py-1 text-xs transition-colors hover:bg-secondary/60"
+                >
                   <div className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full" style={{ background: s.color }} />
-                    <span className="text-muted-foreground">{s.name}</span>
+                    <span className="text-muted-foreground transition-colors group-hover:text-white">{s.name}</span>
                   </div>
-                  <span className="font-medium">{s.value}%</span>
+                  <span className="font-medium transition-colors group-hover:text-white">{s.value}%</span>
                 </div>
               ))}
             </div>
+
           </CardContent>
 
         </Card>
