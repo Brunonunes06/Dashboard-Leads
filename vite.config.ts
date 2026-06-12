@@ -12,4 +12,19 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    optimizeDeps: {
+      // Pre-bundle heavy deps upfront so Vite doesn't re-optimize and reload mid-session (causes 504s)
+      include: [
+        "react",
+        "react-dom",
+        "react/jsx-runtime",
+        "react/jsx-dev-runtime",
+        "@supabase/supabase-js",
+        "@react-oauth/google",
+        "recharts",
+        "@tanstack/react-query",
+      ],
+    },
+  },
 });
