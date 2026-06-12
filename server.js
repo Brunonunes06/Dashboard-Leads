@@ -17,6 +17,9 @@ const APP_SECRET = process.env.META_APP_SECRET || "89d05c47fab6299cde66e070e41c1
 // Token de Acesso (User ou Page Access Token de Longa Duração)
 const ACCESS_TOKEN = "OCAQDjZAOiRnd4ffeEntZBmQCR4dUQurLLvKdmVhd7Njp1uxZCPuPCzEupGOJV71rAqsfH5QN5VSPKZA2HAwXMZBfw8FGf1ep1nPZARMZCxOyKAZDZD";
 
+// 🧠 BANCO DE DADOS EM MEMÓRIA
+const dbLeads = {};
+
 // Captura o corpo bruto (raw body) antes do parse do JSON para a validação matemática do SHA256
 app.use(cors());
 app.use(express.json({
@@ -31,6 +34,14 @@ app.use((req, res, next) => {
   next();
 });
 
+// Rota opcional para ler os leads
+app.get('/api/leads', (req, res) => {
+  return res.json(Object.values(dbLeads));
+});
+
+// Ignora o pedido de favicon do navegador para não poluir o terminal com erro 404
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 // ==========================================
 // 1. VALIDAÇÃO DO WEBHOOK DO INSTAGRAM (GET)
 // ==========================================
@@ -39,7 +50,18 @@ app.get('/', (req, res) => {
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
 
-  // Evita registrar erro se a Meta mandar uma requisição vazia ou incompleta de checagem
+  // 🌐 SE VOCÊ ABRIR NO NAVEGADOR: Mostra uma resposta amigável em vez de dar Erro 400
+  if (!mode && !token) {
+    return res.status(200).send(`
+      <div style="font-family: sans-serif; text-align: center; margin-top: 50px;">
+        <h1 style="color: #10B981;">🚀 Servidor do Instagram Ativo!</h1>
+        <button onclick="testConnection()">Testar Conexão</button>
+        <p style="color: #64748B;">O túnel do Ngrok está se comunicando perfeitamente com o seu computador.</p>
+      </div>
+    `);
+  }
+
+  // Se houver tentativa de validação mas faltar dados
   if (!mode || !token) {
     return res.status(400).send('Requisição incompleta');
   }
@@ -58,7 +80,6 @@ app.get('/', (req, res) => {
 // ==========================================
 app.post('/', async (req, res) => {
   try {
-    // [SEGURANÇA] Validação de Assinatura de Payload (SHA256)
     const signature = req.headers['x-hub-signature-256'];
     
     if (APP_SECRET && signature && req.rawBody) {
@@ -72,8 +93,7 @@ app.post('/', async (req, res) => {
           .digest('hex');
 
         if (signatureHash !== expectedHash) {
-          // Avisa mas deixa passar em ambiente de testes para não quebrar o robô caso o Secret mude
-          console.warn('⚠️ [Aviso] Assinatura SHA256 não bateu perfeitamente. Continuando em modo flexível...');
+          console.warn('⚠️ [Aviso] Assinatura SHA256 flexível.');
         }
       } catch (err) {
         console.error("Erro ao validar assinatura hash:", err.message);
@@ -92,31 +112,39 @@ app.post('/', async (req, res) => {
         const textoRecebido = messageObj.text.trim().toLowerCase();
         console.log(`[Instagram DM] Mensagem recebida de ${senderId}: "${textoRecebido}"`);
 
-        // 🤖 REGRAS DO ROBÔ PARA INSTAGRAM
+        if (!dbLeads[senderId]) {
+          dbLeads[senderId] = {
+            instagramId: senderId,
+            status: "Menu Inicial",
+            ultimaMensagem: messageObj.text,
+            totalInteracoes: 1,
+            historico: []
+          };
+        }
+
+        const lead = dbLeads[senderId];
+        lead.ultimaMensagem = messageObj.text;
+        lead.historico.push({ quem: "usuario", texto: messageObj.text, data: new Date() });
+
         let mensagemResposta = "";
 
         if (textoRecebido.includes('oi') || textoRecebido.includes('olá') || textoRecebido.includes('bom dia') || textoRecebido.includes('alô')) {
+          lead.status = "Menu Inicial";
           mensagemResposta = "Olá! Bem-vindo à nossa automação do Instagram. \n\nDigite a opção desejada:\n1. Conhecer o Painel de Leads\n2. Falar com Suporte";
         } else if (textoRecebido === '1') {
-          mensagemResposta = "O nosso Painel de Leads organiza e gerencia todos os seus contatos capturados de forma inteligente!";
+          lead.status = "Interessado no Painel";
+          mensagemResposta = "O nosso Painel de Leads organiza e gerencia todos os seus contatos capturados de forma inteligente diretamente no Lovable!";
         } else if (textoRecebido === '2') {
-          mensagemResposta = "Perfeito. Um atendente humano foi notificado e responderá sua DM em breve.";
+          lead.status = "Aguardando Humano";
+          mensagemResposta = "Perfeito. O administrador (" + EMAIL_ADMINISTRADOR + ") foi notificado e um atendente humano responderá a sua DM em breve.";
         } else {
-          mensagemResposta = "Desculpe, não entendi. Digite 'Oi' para retornar ao menu principal.";
+          mensagemResposta = "Desculpe, não entendi o comando. Digite 'Oi' para retornar ao menu principal e ver as opções.";
         }
 
-        // Envia resposta de volta na DM do cliente
-        await responderDMInstagram(senderId, mensagemResposta);
-      }
-    }
+        lead.historico.push({ quem: "robo", texto: mensagemResposta, data: new Date() });
+        console.log(`[CRM] Lead ${senderId} atualizado para: "${lead.status}"`);
 
-    // Processamento de Comentários em Posts
-    if (entry?.changes?.[0]) {
-      const change = entry.changes[0];
-      if (change.field === 'comments') {
-        const comentarioId = change.value?.id;
-        const textoComentario = change.value?.text;
-        console.log(`[Instagram Comentário] Novo comentário detectado (ID: ${comentarioId}): "${textoComentario}"`);
+        await responderDMInstagram(senderId, mensagemResposta);
       }
     }
 
@@ -160,7 +188,7 @@ async function responderDMInstagram(recipientId, texto) {
 
 app.listen(PORT, () => {
   console.log(`==================================================`);
-  console.log(` 🚀 Servidor focado em Instagram Ativo na Porta: ${PORT}`);
-  console.log(` 🔑 Token de Verificação configurado: ${VERIFY_TOKEN}`);
+  console.log(` 🚀 Servidor Inteligente de CRM Ativo na Porta: ${PORT}`);
+  console.log(` 🔑 Webhook pronto para testes!`);
   console.log(`==================================================`);
 });
