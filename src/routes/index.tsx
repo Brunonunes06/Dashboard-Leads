@@ -29,15 +29,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/StatusBadge";
-import { leads, sources, weeklyData } from "@/data/mockLeads";
+import { sources, weeklyData } from "@/data/mockLeads";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Dashboard · Resposta" },
+      { title: "Dashboard · Central de Webhooks" },
       {
         name: "description",
-        content: "Métricas de leads, tempo de resposta e qualificação por IA em tempo real.",
+        content: "Métricas de leads, tempo de resposta e qualificação em tempo real.",
       },
     ],
   }),
@@ -53,6 +53,13 @@ function DashboardWrapper() {
       <Dashboard />
     </GoogleOAuthProvider>
   );
+}
+
+// Interface que espelha exatamente a estrutura dinâmica enviada pelo seu backend
+interface BackendLead {
+  id: string;
+  status: string;
+  ultimaMensagem: string;
 }
 
 const metrics = [
@@ -93,8 +100,39 @@ function Dashboard() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [inputPhone, setInputPhone] = useState("");
+  
+  // Estado que armazena os dados reais vindos da API do seu server.js
+  const [leadsReais, setLeadsReais] = useState<BackendLead[]>([]);
+  const [loadingBackend, setLoadingBackend] = useState<boolean>(true);
 
-  // Carrega os dados salvos do usuário ao iniciar o componente
+  // 📥 CONEXÃO EM TEMPO REAL COM O BACKEND (server.js)
+  useEffect(() => {
+    async function carregarDadosDoServidor() {
+      try {
+        const res = await fetch('http://localhost:3000/api/leads', {
+          headers: {
+            'ngrok-skip-browser-warning': 'true'
+          }
+        });
+        if (res.ok) {
+          const dados = await res.json();
+          setLeadsReais(dados);
+        }
+      } catch (error) {
+        console.error("Erro ao sincronizar com a API de leads:", error);
+      } finally {
+        setLoadingBackend(false);
+      }
+    }
+
+    carregarDadosDoServidor();
+
+    // Sincronização viva: atualiza a lista da tabela a cada 4 segundos
+    const intervaloSincronia = setInterval(carregarDadosDoServidor, 4000);
+    return () => clearInterval(intervaloSincronia);
+  }, []);
+
+  // Carrega os dados salvos de login do usuário do localStorage ao iniciar
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedName = localStorage.getItem("userName");
@@ -111,7 +149,6 @@ function Dashboard() {
     }
   }, []);
 
-  // Função para decodificar o token JWT do Google de forma simples sem bibliotecas externas adicionais
   const parseJwt = (token: string) => {
     try {
       const base64Url = token.split(".")[1];
@@ -128,11 +165,9 @@ function Dashboard() {
     }
   };
 
-  // Callback acionado quando o login com o Google é bem-sucedido
   const handleGoogleSuccess = async (credentialResponse: any) => {
     if (!credentialResponse.credential) return;
 
-    // Decodifica as informações do perfil vindas do Google (contém name, email, picture, etc)
     const profile = parseJwt(credentialResponse.credential);
 
     if (profile) {
@@ -146,7 +181,6 @@ function Dashboard() {
       setUserEmail(email);
       setIsLoggedIn(true);
 
-      // Envia uma notificação inicial se houver um telefone já salvo
       const telefoneDestino = localStorage.getItem("userPhone") || "5511999999999";
       await enviarNotificacaoWhatsapp(
         `Olá ${name}, login efetuado com sucesso usando o e-mail: ${email}!`,
@@ -155,7 +189,6 @@ function Dashboard() {
     }
   };
 
-  // Salva o telefone WhatsApp fornecido pelo usuário
   const handleSavePhone = () => {
     localStorage.setItem("userPhone", inputPhone);
     setUserPhone(inputPhone);
@@ -167,7 +200,6 @@ function Dashboard() {
     );
   };
 
-  // Integração com a chamada HTTP da API do WhatsApp
   const enviarNotificacaoWhatsapp = async (mensagem: string, numeroDestino: string) => {
     if (!numeroDestino) {
       console.warn("Nenhum número de telefone fornecido para o envio.");
@@ -177,7 +209,6 @@ function Dashboard() {
     try {
       console.log(`Disparando WhatsApp para ${numeroDestino}: "${mensagem}"`);
       
-      // Endpoint fictício/real do seu backend que se conecta à API do WhatsApp
       const response = await fetch("/api/whatsapp/send", {
         method: "POST",
         headers: {
@@ -185,7 +216,7 @@ function Dashboard() {
         },
         body: JSON.stringify({
           message: mensagem,
-          number: numeroDestino.replace(/\D/g, ""), // Remove caracteres especiais
+          number: numeroDestino.replace(/\D/g, ""),
         }),
       });
 
@@ -197,7 +228,6 @@ function Dashboard() {
     }
   };
 
-  // Função para limpar a sessão e deslogar
   const handleLogout = () => {
     localStorage.removeItem("userName");
     localStorage.removeItem("userEmail");
@@ -219,7 +249,6 @@ function Dashboard() {
             Bom dia, {userName} 👋
           </h1>
           
-          {/* Exibição de Informações extras do Perfil logado */}
           {isLoggedIn && (
             <div className="flex flex-col gap-1.5 mt-2 text-sm text-muted-foreground">
               {userEmail && (
@@ -260,11 +289,11 @@ function Dashboard() {
           )}
           
           <p className="mt-2 text-sm text-muted-foreground">
-            Sua IA já respondeu <span className="font-medium text-foreground">47 leads</span> hoje. 21 foram qualificados.
+            Sua central processou <span className="font-medium text-foreground">{leadsReais.length} leads via webhook</span> em tempo real nesta seção.
           </p>
         </div>
 
-        {/* Botões de Ações e Provedores */}
+        {/* Botões de Ações */}
         <div className="flex flex-wrap items-center gap-3">
           {!isLoggedIn ? (
             <GoogleLogin
@@ -282,7 +311,7 @@ function Dashboard() {
 
           <Button asChild className="gradient-primary text-primary-foreground shadow-glow hover:opacity-90">
             <Link to="/leads">
-              Ver conversas <ArrowUpRight className="ml-1 h-4 w-4" />
+              Ver detalhado <ArrowUpRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
         </div>
@@ -299,7 +328,9 @@ function Dashboard() {
                 </div>
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">{m.delta}</span>
               </div>
-              <p className="mt-4 text-3xl font-semibold tracking-tight">{m.value}</p>
+              <p className="mt-4 text-3xl font-semibold tracking-tight">
+                {m.label === "Leads hoje" ? leadsReais.length || m.value : m.value}
+              </p>
               <p className="mt-1 text-xs text-muted-foreground">{m.label}</p>
             </CardContent>
           </Card>
@@ -382,55 +413,62 @@ function Dashboard() {
         </Card>
       </div>
 
-      {/* SEÇÃO DE ATIVIDADE RECENTE COM DISPARO MANUAL */}
+      {/* SEÇÃO DE ATIVIDADE RECENTE INTEGRADA AO SEU SERVER.JS */}
       <Card className="border-border/60">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base font-semibold">Atividade recente</CardTitle>
+          <CardTitle className="text-base font-semibold">Leads Ativos recebidos via Webhook</CardTitle>
           <Button asChild variant="ghost" size="sm">
             <Link to="/leads">Ver tudo</Link>
           </Button>
         </CardHeader>
         <CardContent className="p-0">
           <div className="divide-y divide-border/60">
-            {leads.slice(0, 5).map((lead) => (
-              <div
-                key={lead.id}
-                className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-secondary/40"
-              >
-                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-secondary text-sm font-semibold uppercase">
-                  {lead.name.split(" ").map((w) => w[0]).slice(0, 2).join("")}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-medium">{lead.name}</p>
-                    <StatusBadge status={lead.status} />
-                  </div>
-                  <p className="truncate text-xs text-muted-foreground">{lead.lastMessage}</p>
-                </div>
-                
-                {/* Botão de envio rápido para disparar para o WhatsApp definido ou para o número do lead */}
-                <Button 
-                  size="icon" 
-                  variant="ghost" 
-                  className="h-8 w-8 text-muted-foreground hover:text-green-500"
-                  onClick={() => enviarNotificacaoWhatsapp(`Olá ${lead.name}, recebemos seu contato e a nossa IA já está processando!`, userPhone || "5511999999999")}
-                  title="Disparar notificação WhatsApp"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-
-                <div className="hidden text-right text-xs text-muted-foreground sm:block">
-                  <div className="flex items-center justify-end gap-1">
-                    <MessageCircle className="h-3 w-3" />
-                    {lead.responseTime}
-                  </div>
-                  <div>{lead.lastActivity}</div>
-                </div>
-                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-secondary/60">
-                  <span className="font-display text-sm font-semibold text-primary">{lead.score}</span>
-                </div>
+            {loadingBackend ? (
+              <div className="p-6 text-center text-xs text-muted-foreground">Conectando ao banco de dados local...</div>
+            ) : leadsReais.length === 0 ? (
+              <div className="p-8 text-center text-xs text-muted-foreground italic">
+                Nenhum payload detectado. Envie requisições POST para http://localhost:3000/api/webhook para alimentar esta lista.
               </div>
-            ))}
+            ) : (
+              leadsReais.slice(0, 6).map((lead) => (
+                <div
+                  key={lead.id}
+                  className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-secondary/40"
+                >
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-secondary text-xs font-mono font-semibold text-emerald-400 uppercase">
+                    ID
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="truncate text-sm font-mono font-medium text-slate-300">ID: {lead.id}</p>
+                      <StatusBadge status={lead.status} />
+                    </div>
+                    <p className="truncate text-xs text-muted-foreground mt-0.5">Payload: "{lead.ultimaMensagem}"</p>
+                  </div>
+                  
+                  {/* Botão de envio rápido para disparar notificações do WhatsApp */}
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="h-8 w-8 text-muted-foreground hover:text-green-500"
+                    onClick={() => enviarNotificacaoWhatsapp(`Atualização de Lead: O evento do ID ${lead.id} foi verificado no painel.`, userPhone || "5511999999999")}
+                    title="Disparar notificação WhatsApp"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+
+                  <div className="hidden text-right text-xs text-muted-foreground sm:block">
+                    <div className="flex items-center justify-end gap-1 font-mono">
+                      <MessageCircle className="h-3 w-3" />
+                      Live
+                    </div>
+                  </div>
+                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-secondary/60">
+                    <span className="font-display text-xs font-semibold text-primary">100</span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
