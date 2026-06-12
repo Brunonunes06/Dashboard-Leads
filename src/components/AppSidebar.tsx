@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, MessagesSquare, Settings2, Sparkles, UserCircle, Zap } from "lucide-react";
+import { Instagram, LayoutDashboard, MessagesSquare, Settings2, Sparkles, UserCircle, Zap } from "lucide-react";
 
 import {
   Sidebar,
@@ -17,6 +17,7 @@ import {
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Conversas", url: "/leads", icon: MessagesSquare },
+  { title: "CRM Instagram", url: "/instagram", icon: Instagram },
   { title: "Configurar IA", url: "/settings", icon: Settings2 },
   { title: "Perfil", url: "/profile", icon: UserCircle },
 ];
