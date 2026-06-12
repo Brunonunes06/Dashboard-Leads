@@ -271,7 +271,7 @@ function Dashboard() {
               onSuccess={handleGoogleSuccess}
               onError={() => console.log("Falha na autenticação")}
               useOneTap
-              theme="filled_dark"
+              theme="filled_black"
               shape="pill"
             />
           ) : (
