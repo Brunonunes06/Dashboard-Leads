@@ -4,50 +4,44 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Banquinho de dados em memória para os leads
 const dbLeads = {};
 
 app.use(cors());
 app.use(express.json());
 
-// Evita a tela de aviso do Ngrok se estiver testando externamente
 app.use((req, res, next) => {
   res.setHeader('ngrok-skip-browser-warning', 'true');
   next();
 });
 
-// 🌐 ROTA PRINCIPAL: Tela informativa do Servidor
 app.get('/', (req, res) => {
   return res.status(200).send(`
     <div style="font-family: sans-serif; text-align: center; margin-top: 50px; background: #0f172a; color: #f8fafc; padding: 40px; min-height: 100vh;">
-      <h1 style="color: #10B981;">🚀 Servidor do CRM Webhook Ativo!</h1>
-      <p style="color: #94a3b8;">Pronto para receber dados de qualquer plataforma integrada.</p>
+      <h1 style="color: #10B981;">🚀 Servidor de CRM Ativo!</h1>
+      <p style="color: #94a3b8;">Pronto para receber dados.</p>
     </div>
   `);
 });
 
-// 📂 ROTA PARA O FRONTEND: Retorna a lista de leads cadastrados
 app.get('/api/leads', (req, res) => {
   return res.json(Object.values(dbLeads));
 });
 
-// 📥 ROTA DO WEBHOOK: Recebe leads de qualquer plataforma externa
 app.post('/api/webhook', (req, res) => {
   try {
     const { id, status, ultimaMensagem } = req.body;
 
     if (!id) {
-      return res.status(400).json({ error: "O campo 'id' é obrigatório no corpo da requisição." });
+      return res.status(400).json({ error: "O campo 'id' é obrigatório." });
     }
 
-    // Cria ou atualiza o lead no banco de dados genérico
     dbLeads[id] = {
       id: id,
       status: status || "Novo Lead",
       ultimaMensagem: ultimaMensagem || "Nenhum histórico registrado."
     };
 
-    console.log(`[CRM] Lead atualizado/criado via Webhook - ID: ${id} | Status: ${dbLeads[id].status}`);
+    console.log(`[CRM] Lead processado - ID: ${id}`);
     return res.status(200).json({ success: true, message: "Lead processado com sucesso." });
   } catch (error) {
     console.error("Erro ao processar webhook:", error);
@@ -55,12 +49,8 @@ app.post('/api/webhook', (req, res) => {
   }
 });
 
-// Ignora pedidos de favicon para limpar o console
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 app.listen(PORT, () => {
-  console.log(`==================================================`);
-  console.log(` 🚀 Servidor de CRM Genérico Ativo na Porta: ${PORT}`);
-  console.log(` 📥 Endpoint para Webhooks: http://localhost:${PORT}/api/webhook`);
-  console.log(`==================================================`);
+  console.log(`🚀 Servidor rodando na porta: ${PORT}`);
 });

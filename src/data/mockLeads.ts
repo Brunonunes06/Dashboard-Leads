@@ -55,6 +55,8 @@ export const leads: Lead[] = [
       { id: "m8", sender: "ai", text: "Excelente, Marina. Vou conectar você agora com o Rafael, especialista nesse imóvel. Ele pode agendar a visita ainda hoje. 👍", time: "14:07" },
       { id: "m9", sender: "human", text: "Oi Marina, aqui é o Rafael. Tenho disponibilidade sábado às 10h ou 11h. Qual horário fica melhor?", time: "14:09" },
       { id: "m10", sender: "lead", text: "Perfeito! Posso visitar sábado de manhã?", time: "14:11" },
+      { id: "m11", sender: "lead", text: "Ótimo, vou agendar para sábado às 10h então. Vou te enviar a confirmação e o endereço certinho por aqui. Qualquer dúvida, é só me chamar!", time: "14:12" }
+
     ],
   },
   {
@@ -175,9 +177,9 @@ export const leads: Lead[] = [
 ];
 
   export const weeklyData = [
-  { day: "Seg", leads: 18, qualificados: 7 },
+  { day: "Seg", leads: 50, qualificados: 100 },
   { day: "Ter", leads: 24, qualificados: 11 },
-  { day: "Qua", leads: 31, qualificados: 14 },
+  { day: "Qua", leads: 10, qualificados: 14 },
   { day: "Qui", leads: 27, qualificados: 12 },
   { day: "Sex", leads: 42, qualificados: 19 },
   { day: "Sáb", leads: 35, qualificados: 16 },
@@ -185,8 +187,8 @@ export const leads: Lead[] = [
 ];
 
 export const sources = [
-  { name: "Instagram Ads", value: 42, color: "oklch(0.74 0.17 155)", },
-  { name: "Google Ads", value: 31, color: "oklch(0.65 0.18 200)" },
-  { name: "Facebook Ads", value: 18, color: "oklch(0.78 0.16 75)" },
-  { name: "Site/Orgânico", value: 9, color: "oklch(0.6 0.2 295)" },
+  { name: "Instagram Ads", value: 10, color: "oklch(0.74 0.17 155)", },
+  { name: "Google Ads", value: 20, color: "oklch(0.65 0.18 200)" },
+  { name: "Facebook Ads", value: 50, color: "oklch(0.78 0.16 75)" },
+  { name: "Site/Orgânico", value: 80, color: "oklch(0.6 0.2 295)" },
 ];

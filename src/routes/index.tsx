@@ -79,7 +79,7 @@ const metrics = [
   },
   {
     label: "Taxa de qualificação",
-    value: "44%",
+    value: "60%",
     delta: "+9%",
     icon: Target,
     accent: "text-warning",
