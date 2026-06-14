@@ -441,7 +441,7 @@ function Dashboard() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="truncate text-sm font-mono font-medium text-slate-300">ID: {lead.id}</p>
-                      <StatusBadge status={lead.status as any} />
+                      <StatusBadge status={lead.status} />
                     </div>
                     <p className="truncate text-xs text-muted-foreground mt-0.5">Payload: "{lead.ultimaMensagem}"</p>
                   </div>
