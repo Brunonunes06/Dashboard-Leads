@@ -1,61 +1,3 @@
-const express = require('express');
-const cors = require('cors');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-const dbLeads = {};
-
-app.use(cors());
-app.use(express.json());
-
-app.use((req, res, next) => {
-  res.setHeader('ngrok-skip-browser-warning', 'true');
-  next();
-});
-
-app.get('/', (req, res) => {
-  return res.status(200).send(`
-    <div style="font-family: sans-serif; text-align: center; margin-top: 50px; background: #0f172a; color: #f8fafc; padding: 40px; min-height: 100vh;">
-      <h1 style="color: #10B981;">🚀 Servidor de CRM Ativo!</h1>
-      <p style="color: #94a3b8;">Pronto para receber dados.</p>
-    </div>
-  `);
-});
-
-app.get('/api/leads', (req, res) => {
-  return res.json(Object.values(dbLeads));
-});
-
-app.post('/api/webhook', (req, res) => {
-  try {
-    const { id, status, ultimaMensagem } = req.body;
-
-    if (!id) {
-      return res.status(400).json({ error: "O campo 'id' é obrigatório." });
-    }
-
-    dbLeads[id] = {
-      id: id,
-      status: status || "Novo Lead",
-      ultimaMensagem: ultimaMensagem || "Nenhum histórico registrado."
-    };
-
-    console.log(`[CRM] Lead processado - ID: ${id}`);
-    return res.status(200).json({ success: true, message: "Lead processado com sucesso." });
-  } catch (error) {
-    console.error("Erro ao processar webhook:", error);
-    return res.status(500).json({ error: "Erro interno no servidor." });
-  }
-});
-
-app.get('/favicon.ico', (req, res) => res.status(204).end());
-
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta: ${PORT}`);
-});
-
-
 // ============================================================
 // PASSO 7: Adicione estas rotas ao seu server.js existente
 // ============================================================
@@ -66,13 +8,13 @@ app.listen(PORT, () => {
 // npm install stripe
 // ou: bun add stripe
 
-// const Stripe = require('stripe');
-// const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+const Stripe = require('stripe');
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Banco de tokens em memória (use seu banco real / Supabase aqui)
 const dbTokens = {};
 
-// POST /api/billing/subscribe
+POST / api / billing / subscribe
 // Recebe o paymentMethodId do frontend e cria a assinatura
 app.post('/api/billing/subscribe', async (req, res) => {
   try {
@@ -84,27 +26,27 @@ app.post('/api/billing/subscribe', async (req, res) => {
 
     // ─── INTEGRAÇÃO STRIPE REAL (descomente após configurar) ───
     // // 1. Criar ou buscar customer no Stripe
-    // const customers = await stripe.customers.list({ email, limit: 1 });
-    // let customer = customers.data[0];
-    // if (!customer) {
-    //   customer = await stripe.customers.create({ email, metadata: { userId } });
-    // }
+    const customers = await stripe.customers.list({ email, limit: 1 });
+    let customer = customers.data[0];
+    if (!customer) {
+      customer = await stripe.customers.create({ email, metadata: { userId } });
+    }
     //
     // // 2. Anexar o cartão ao customer
-    // await stripe.paymentMethods.attach(paymentMethodId, { customer: customer.id });
-    // await stripe.customers.update(customer.id, {
-    //   invoice_settings: { default_payment_method: paymentMethodId },
-    // });
+    await stripe.paymentMethods.attach(paymentMethodId, { customer: customer.id });
+    await stripe.customers.update(customer.id, {
+      invoice_settings: { default_payment_method: paymentMethodId },
+    });
     //
     // // 3. Criar a assinatura
-    // const subscription = await stripe.subscriptions.create({
-    //   customer: customer.id,
-    //   items: [{ price: process.env.STRIPE_PRICE_ID }], // ID do plano no Stripe
-    //   expand: ['latest_invoice.payment_intent'],
-    // });
+    const subscription = await stripe.subscriptions.create({
+      customer: customer.id,
+      items: [{ price: process.env.STRIPE_PRICE_ID }], // ID do plano no Stripe
+      expand: ['latest_invoice.payment_intent'],
+    });
     //
     // // 4. Salvar token no banco
-    // const token = subscription.id;
+    const token = subscription.id;
     // ─────────────────────────────────────────────────────────
 
     // MOCK para desenvolvimento (remova em produção):
@@ -126,7 +68,7 @@ app.post('/api/billing/subscribe', async (req, res) => {
   }
 });
 
-// GET /api/billing/verify/:userId
+GET /api/billing/verify/:userId
 // Verifica se o token do usuário ainda é válido
 app.get('/api/billing/verify/:userId', async (req, res) => {
   try {
@@ -138,9 +80,9 @@ app.get('/api/billing/verify/:userId', async (req, res) => {
     }
 
     // ─── VERIFICAÇÃO STRIPE REAL ───
-    // const subscription = await stripe.subscriptions.retrieve(record.token);
-    // const valid = subscription.status === 'active' || subscription.status === 'trialing';
-    // return res.json({ valid, status: subscription.status });
+    const subscription = await stripe.subscriptions.retrieve(record.token);
+    const valid = subscription.status === 'active' || subscription.status === 'trialing';
+    return res.json({ valid, status: subscription.status });
     // ──────────────────────────────
 
     return res.json({ valid: true, token: record.token });
