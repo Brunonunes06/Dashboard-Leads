@@ -4,7 +4,7 @@ import { useState } from "react"
 import { supabase } from "@/lib/supabase"
 import { useLeads } from "@/hooks/useLeads"
 import { ChatWindow } from "@/components/ChatWindow"
-import { cn } from "@/lib/utils"
+
 import type { LeadWithMeta } from "@/hooks/useLeads"
 
 const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS ?? "myhpc3301@gmail.com").split(",").map((e: string) => e.trim())

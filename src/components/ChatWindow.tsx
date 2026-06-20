@@ -4,7 +4,9 @@
 import { useEffect, useRef, useState } from "react"
 import { Send } from "lucide-react"
 import { useRealtimeChat } from "@/hooks/useRealtimeChat"
-import { cn } from "@/lib/utils"
+const [isTyping, setIsTyping] = useState(false)
+const [isOnline, setIsOnline] = useState(true)
+
 import type { LeadWithMeta } from "@/hooks/useLeads"
 
 interface ChatWindowProps {
@@ -84,25 +86,81 @@ export function ChatWindow({ lead, currentUserId, currentUserName, currentRole }
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     }}>
       {/* Header */}
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        padding: "12px 16px",
-        borderBottom: "1px solid #1e1e22",
-        background: "#0e0e10",
-      }}>
-        <div style={{
-          width: 36, height: 36, borderRadius: "50%",
-          background: "#2d2d32",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 13, fontWeight: 700, color: "#fff",
-          textTransform: "uppercase",
-        }}>
-          {lead.name.split(" ").map((w: string) => w[0]).slice(0, 2).join("")}
+      {/* Header */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "12px 16px",
+          borderBottom: "1px solid #1e1e22",
+          background: "#0e0e10",
+        }}
+      >
+        {/* Avatar */}
+        <div
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            background: "#2d2d32",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 13,
+            fontWeight: 700,
+            color: "#fff",
+            textTransform: "uppercase",
+            flexShrink: 0,
+          }}
+        >
+          {lead.name
+            .split(" ")
+            .map((w: string) => w[0])
+            .slice(0, 2)
+            .join("")}
         </div>
-        <span style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>{lead.name}</span>
+
+        {/* Nome + Status */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            minWidth: 0,
+          }}
+        >
+          <span
+            style={{
+              fontSize: 15,
+              fontWeight: 600,
+              color: "#fff",
+            }}
+          >
+            {lead.name}
+          </span>
+
+          <span
+            style={{
+              fontSize: 12,
+              color: isTyping ? "#5865f2" : "#5ad17a",
+              marginTop: 2,
+            }}
+          >
+            {isTyping ? "digitando..." : "● Online"}
+          </span>
+
+          {/* Mostrar somente quando estiver digitando */}
+          {/* <span
+      style={{
+        fontSize: 12,
+        color: "#8a8a8a",
+      }}
+    >
+      digitando...
+    </span> */}
+        </div>
       </div>
+
 
       {/* Mensagens */}
       <div ref={scrollRef} style={{

@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { PanelLeft } from "lucide-react";
 
 import { useIsMobile } from "@/hooks/use-mobile";
-import { cn } from "@/lib/utils";
+;
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -40,13 +40,13 @@ const SidebarContext = React.createContext<SidebarContextProps | null>(null);
 function useSidebar() {
   const context = React.useContext(SidebarContext);
   if (!context) {
-    throw new Error("useSidebar must be used within a SidebarProvider.");
+    throw new Error("useSidebar must be used within a import { cn } from "@/lib/utils".");
   }
 
   return context;
 }
 
-const SidebarProvider = React.forwardRef<
+const import { cn } from "@/lib/utils" = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div"> & {
     defaultOpen?: boolean;
@@ -148,7 +148,7 @@ const SidebarProvider = React.forwardRef<
     );
   },
 );
-SidebarProvider.displayName = "SidebarProvider";
+import { cn } from "@/lib/utils".displayName = "import { cn } from "@/lib/utils"";
 
 const Sidebar = React.forwardRef<
   HTMLDivElement,
@@ -736,7 +736,7 @@ export {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  SidebarProvider,
+  import { cn } from "@/lib/utils",
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,

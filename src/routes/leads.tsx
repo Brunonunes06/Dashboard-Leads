@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Card } from "@/components/ui/card";
 import { leads as initialLeads, type Lead, type LeadStatus, type Message } from "@/data/mockLeads";
-import { cn } from "@/lib/utils";
+;
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/leads")({

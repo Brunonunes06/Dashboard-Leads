@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import type { LeadStatus } from "@/data/mockLeads";
-import { cn } from "@/lib/utils";
+;
 
 const map: Record<LeadStatus, { label: string; className: string }> = {
   novo: { label: "Novo", className: "bg-chart-2/15 text-chart-2 border-chart-2/30" },
