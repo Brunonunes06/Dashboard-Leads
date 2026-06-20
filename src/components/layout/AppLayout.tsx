@@ -6,10 +6,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { BillingForm } from "@/components/billing/BillingForm";
 
 // Importa suas páginas aqui
-// import { DashboardPage } from "@/pages/DashboardPage";
-// import { ConversasPage } from "@/pages/ConversasPage";
-// import { PerfilPage } from "@/pages/PerfilPage";
-// import { LeadsPage } from "@/pages/LeadsPage";
+import { DashboardPage } from "@/pages/DashboardPage";
+import { ConversasPage } from "@/pages/ConversasPage";
+import { PerfilPage } from "@/pages/PerfilPage";
+import { LeadsPage } from "@/pages/LeadsPage";
 
 interface AppLayoutProps {
   children?: React.ReactNode;
@@ -46,11 +46,11 @@ export function AppLayout({ children }: AppLayoutProps) {
   );
 }
 
-/*
-─────────────────────────────────────────────────────
-COMO USAR COM TANSTACK ROUTER:
+// /*
+// ─────────────────────────────────────────────────────
+// COMO USAR COM TANSTACK ROUTER:
 
-No seu __root.tsx ou layout route:
+// No seu __root.tsx ou layout route:
 
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Outlet } from "@tanstack/react-router";
@@ -63,11 +63,11 @@ export function RootLayout() {
   );
 }
 
-─────────────────────────────────────────────────────
-REGRAS DE ACESSO (automático via Sidebar + RouteGuard):
+// ─────────────────────────────────────────────────────
+// REGRAS DE ACESSO (automático via Sidebar + RouteGuard):
 
-  Email admin  → vê: Dashboard, Conversas, Perfil, CRM Instagram, Configurar IA, Leads, Relatórios
-  Email cliente → vê: Dashboard, Conversas, Perfil (apenas)
+//   Email admin  → vê: Dashboard, Conversas, Perfil, CRM Instagram, Configurar IA, Leads, Relatórios
+//   Email cliente → vê: Dashboard, Conversas, Perfil (apenas)
 
-─────────────────────────────────────────────────────
-*/
+// ─────────────────────────────────────────────────────
+// */

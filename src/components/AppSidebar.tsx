@@ -14,16 +14,35 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-const items = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Conversas", url: "/leads", icon: MessagesSquare },
-  { title: "CRM Instagram", url: "/instagram", icon: Instagram },
-  { title: "Configurar IA", url: "/settings", icon: Settings2 },
-  { title: "Perfil", url: "/profile", icon: UserCircle },
+// ✏️ Emails com acesso total ao sistema
+const ADMIN_EMAILS = [
+  "myhpc3301@gmail.com",
+];
+
+const ALL_ITEMS = [
+  { title: "Dashboard", url: "/", icon: LayoutDashboard, adminOnly: false },
+  { title: "Conversas", url: "/leads", icon: MessagesSquare, adminOnly: false },
+  { title: "CRM Instagram", url: "/instagram", icon: Instagram, adminOnly: false },
+  { title: "Configurar IA", url: "/settings", icon: Settings2, adminOnly: false },
+  { title: "Perfil", url: "/profile", icon: UserCircle, adminOnly: false },
 ];
 
 export function AppSidebar() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
+
+  const email = (() => {
+    try {
+      const stored = localStorage.getItem("crm_user");
+      if (stored) return JSON.parse(stored)?.email ?? null;
+    } catch { }
+    return null;
+  })();
+
+  const admin = ADMIN_EMAILS
+    .map((e) => e.toLowerCase())
+    .includes((email ?? "").toLowerCase());
+
+  const items = ALL_ITEMS.filter((item) => admin || !item.adminOnly);
 
   return (
     <Sidebar collapsible="icon">
@@ -60,13 +79,15 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">
-        <div className="flex items-center gap-2 rounded-lg bg-sidebar-accent/60 p-2.5 group-data-[collapsible=icon]:hidden">
-          <Sparkles className="h-4 w-4 text-primary" />
-          <div className="flex flex-col leading-tight">
-            <span className="text-xs font-medium">IA ativa 24/7</span>
-            <span className="text-[10px] text-muted-foreground">Respondendo em ~3s</span>
+        {admin && (
+          <div className="flex items-center gap-2 rounded-lg bg-sidebar-accent/60 p-2.5 group-data-[collapsible=icon]:hidden">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <div className="flex flex-col leading-tight">
+              <span className="text-xs font-medium">IA ativa 24/7</span>
+              <span className="text-[10px] text-muted-foreground">Respondendo em ~3s</span>
+            </div>
           </div>
-        </div>
+        )}
       </SidebarFooter>
     </Sidebar>
   );

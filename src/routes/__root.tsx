@@ -9,17 +9,6 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
-import { AppLayout } from "@/components/layout/AppLayout";
-import { Outlet } from "@tanstack/react-router";
-
-export function RootLayout() {
-  return (
-    <AppLayout>
-      <Outlet />
-    </AppLayout>
-  );
-}
-
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppSidebar } from "@/components/AppSidebar";
