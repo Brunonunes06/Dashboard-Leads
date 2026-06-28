@@ -2,7 +2,7 @@
 // PASSO 2: Hook central de autenticação + verificação de acesso
 // ============================================================
 import { useEffect, useState } from "react";
-import { isAdminEmail } from "@/config/permissions";
+import { isAdminEmail } from "./permissions";
 
 export type UserRole = "admin" | "client" | "unauthenticated";
 

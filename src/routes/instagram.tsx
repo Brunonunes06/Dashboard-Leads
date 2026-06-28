@@ -50,7 +50,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-;
+import { cn } from "@/lib/utils";
 import {
   STATUS_META,
   useInstagramStore,

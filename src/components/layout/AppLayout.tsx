@@ -2,14 +2,7 @@
 // Envolve todas as páginas com a sidebar correta conforme o papel do usuário
 import React, { useState } from "react";
 import { Sidebar } from "./Sidebar";
-import { useAuth } from "@/hooks/useAuth";
-import { BillingForm } from "@/components/billing/BillingForm";
-
-// Importa suas páginas aqui
-import { DashboardPage } from "@/pages/DashboardPage";
-import { ConversasPage } from "@/pages/ConversasPage";
-import { PerfilPage } from "@/pages/PerfilPage";
-import { LeadsPage } from "@/pages/LeadsPage";
+import { useAuth } from "../../../useAuth";
 
 interface AppLayoutProps {
   children?: React.ReactNode;
@@ -28,11 +21,12 @@ export function AppLayout({ children }: AppLayoutProps) {
   if (!user) return null;
   if (!user.billingActive && !isAdmin) {
     return (
-      <BillingForm
-        planName="LeadsFast Pro"
-        planPrice="R$ 97/mês"
-        onSuccess={() => window.location.reload()}
-      />
+      <div className="flex h-screen items-center justify-center bg-slate-950 text-white">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold">Assinatura necessária</h2>
+          <p className="mt-2 text-slate-400">Entre em contato para ativar sua conta.</p>
+        </div>
+      </div>
     );
   }
 
@@ -45,29 +39,3 @@ export function AppLayout({ children }: AppLayoutProps) {
     </div>
   );
 }
-
-// /*
-// ─────────────────────────────────────────────────────
-// COMO USAR COM TANSTACK ROUTER:
-
-// No seu __root.tsx ou layout route:
-
-import { AppLayout } from "@/components/layout/AppLayout";
-import { Outlet } from "@tanstack/react-router";
-
-export function RootLayout() {
-  return (
-    <AppLayout>
-      <Outlet />
-    </AppLayout>
-  );
-}
-
-// ─────────────────────────────────────────────────────
-// REGRAS DE ACESSO (automático via Sidebar + RouteGuard):
-
-//   Email admin  → vê: Dashboard, Conversas, Perfil, CRM Instagram, Configurar IA, Leads, Relatórios
-//   Email cliente → vê: Dashboard, Conversas, Perfil (apenas)
-
-// ─────────────────────────────────────────────────────
-// */

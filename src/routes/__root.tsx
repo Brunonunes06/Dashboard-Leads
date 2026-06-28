@@ -14,7 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
 import { AppSidebar } from "@/components/AppSidebar";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger, SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -121,25 +121,27 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <div className="flex min-h-screen w-full bg-background">
-          <AppSidebar />
+        <SidebarProvider>
+          <div className="flex min-h-screen w-full bg-background">
+            <AppSidebar />
 
-          <div className="flex flex-1 flex-col">
-            <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b px-4">
-              <SidebarTrigger />
+            <div className="flex flex-1 flex-col">
+              <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b px-4">
+                <SidebarTrigger />
 
-              <div className="ml-auto">
-                <ThemeToggle />
-              </div>
-            </header>
+                <div className="ml-auto">
+                  <ThemeToggle />
+                </div>
+              </header>
 
-            <main className="flex-1">
-              <Outlet />
-            </main>
+              <main className="flex-1">
+                <Outlet />
+              </main>
+            </div>
           </div>
-        </div>
 
-        <Toaster />
+          <Toaster />
+        </SidebarProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
