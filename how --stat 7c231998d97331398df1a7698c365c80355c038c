@@ -1,0 +1,27 @@
+[33mcommit ed1151be5824f1a6932cf45dcbf0f86aa5a9288d[m
+Author: Brunonunes06 <bruno.nunes.santos06@escola.pr.gov.br>
+Date:   Fri Jun 19 21:44:13 2026 -0300
+
+    ,.
+
+ .env                                |   4 [32m+[m
+ AppRouter.tsx                       | 110 [32m+++++++++++++++++[m
+ BillingForm.tsx                     | 235 [32m++++++++++++++++++++++++++++++++++++[m
+ ConversasPage.tsx                   | 137 [32m+++++++++++++++++++++[m
+ README.md                           | 207 [32m+++++++++++++++++++++++++++++++[m
+ RouteGuard.tsx                      |  49 [32m++++++++[m
+ img/Team.png                        | Bin [31m0[m -> [32m107568[m bytes
+ package-lock.json                   |  43 [32m+++++++[m
+ package.json                        |   3 [32m+[m
+ permissions.ts                      |  13 [32m++[m
+ server-billing-routes.js            | 108 [32m+++++++++++++++++[m
+ server.js                           | 110 [32m+++++++++++++++++[m
+ src/components/layout/AppLayout.tsx |  73 [32m+++++++++++[m
+ src/components/layout/Sidebar.tsx   | 197 [32m++++++++++++++++++++++++++++++[m
+ src/data/mockLeads.ts               | 117 [32m+[m[31m-----------------[m
+ src/hooks/useLeads.ts               | 152 [32m+++++++++++++++++++++++[m
+ src/lib/supabase.ts                 |   7 [32m++[m
+ src/routes/README.md                |  21 [31m----[m
+ src/routes/__root.tsx               |  11 [32m++[m
+ useAuth.ts                          |  54 [32m+++++++++[m
+ 20 files changed, 1514 insertions(+), 137 deletions(-)
