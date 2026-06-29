@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Configurar IA · Resposta</title>
+<meta name="description" content="Personalize tom, perguntas de qualificação e regras de transferência da IA." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css" />
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  .switch{position:relative;display:inline-block;width:42px;height:24px}
+  .switch input{opacity:0;width:0;height:0}
+  .slider-toggle{position:absolute;cursor:pointer;inset:0;background:var(--secondary);border:1px solid var(--border);border-radius:9999px;transition:.2s}
+  .slider-toggle:before{position:absolute;content:"";height:16px;width:16px;left:3px;top:50%;transform:translateY(-50%);background:#fff;border-radius:9999px;transition:.2s}
+  input:checked + .slider-toggle{background:var(--primary)}
+  input:checked + .slider-toggle:before{transform:translate(18px,-50%)}
+  .range{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:9999px;background:var(--secondary);outline:none}
+  .range::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--primary);border-radius:9999px;cursor:pointer;border:3px solid var(--bg)}
+  .range::-moz-range-thumb{width:18px;height:18px;background:var(--primary);border-radius:9999px;cursor:pointer;border:3px solid var(--bg)}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"></aside>
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="menu-btn" onclick="openMobileSidebar()"><i data-lucide="menu"></i></button>
+        <span class="topbar-title">Configurar IA</span>
+      </div>
+      <button class="btn btn-outline btn-icon" onclick="toggleTheme()"><i data-lucide="sun-moon"></i></button>
+    </header>
+
+    <div style="max-width:900px;margin:0 auto;padding:24px;width:100%;display:flex;flex-direction:column;gap:20px">
+      <div>
+        <h1 style="font-size:28px;font-weight:600">Configurar IA</h1>
+        <p style="margin-top:6px;font-size:13px;color:var(--muted)">Personalize como a IA conversa, qualifica e transfere leads para sua equipe.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title"><i data-lucide="bot" style="width:16px;height:16px;color:var(--primary);display:inline;vertical-align:middle;margin-right:6px"></i>Personalidade da IA</h3></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:16px">
+          <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+            <div><label class="label">Nome da IA</label><input class="input" id="aiName" value="Sofia" /></div>
+            <div><label class="label">Imobiliária</label><input class="input" id="aiBrand" value="Premier Imóveis" /></div>
+          </div>
+          <div>
+            <label class="label">Tom e instruções</label>
+            <textarea class="textarea" id="aiTone" rows="5">Você é a Sofia, atendente da Premier Imóveis. Fale como um humano: linguagem natural brasileira, frases curtas, sem jargão corporativo. Use no máximo 1 emoji por conversa. Faça uma pergunta por vez. Nunca invente preços ou disponibilidade — se não souber, diga que vai confirmar com o corretor.</textarea>
+            <p style="font-size:11px;color:var(--muted);margin-top:6px">A IA segue essas instruções em todas as conversas do WhatsApp.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Perguntas de qualificação</h3>
+          <button class="btn btn-outline btn-sm" onclick="addQuestion()"><i data-lucide="plus" style="width:14px;height:14px"></i> Adicionar</button>
+        </div>
+        <div class="card-body">
+          <p style="font-size:11px;color:var(--muted);margin:0 0 10px">A IA faz essas perguntas em ordem, uma por vez, esperando a resposta antes da próxima.</p>
+          <div id="questions" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title"><i data-lucide="clock" style="width:16px;height:16px;color:var(--primary);display:inline;vertical-align:middle;margin-right:6px"></i>Regras de transferência</h3></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:18px">
+          <div style="display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border);border-radius:10px;padding:14px">
+            <div>
+              <p style="margin:0;font-size:14px;font-weight:500">Transferir automaticamente para um corretor</p>
+              <p style="margin:2px 0 0;font-size:12px;color:var(--muted)">Quando o lead atingir o score mínimo, a IA conecta um humano.</p>
+            </div>
+            <label class="switch"><input type="checkbox" id="autoTransfer" checked /><span class="slider-toggle"></span></label>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <label class="label" style="margin:0">Score mínimo para transferência</label>
+              <span id="scoreVal" style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;color:var(--primary)">70</span>
+            </div>
+            <input type="range" class="range" id="scoreRange" min="0" max="100" step="5" value="70" oninput="document.getElementById('scoreVal').textContent=this.value" />
+            <p id="scoreHint" style="font-size:11px;color:var(--muted);margin-top:8px">Leads abaixo de 70 continuam conversando com a IA ou são marcados como frios.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn btn-outline">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveSettings()">Salvar alterações</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/common.js"></script>
+<script>
+let questions = JSON.parse(localStorage.getItem('aiQuestions')||'null') || [
+  'Qual a faixa de investimento que você considera?',
+  'Quantos quartos você procura?',
+  'Qual região prefere?',
+  'Qual seu prazo de mudança?',
+];
+function renderQuestions(){
+  document.getElementById('questions').innerHTML = questions.map((q,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;border:1px solid var(--border);background:var(--bg);border-radius:10px;padding:8px">
+      <i data-lucide="grip-vertical" style="width:16px;height:16px;color:var(--muted);cursor:grab"></i>
+      <span style="width:24px;height:24px;border-radius:9999px;background:rgba(16,185,129,.15);color:var(--primary);display:grid;place-items:center;font-size:11px;font-weight:600">${i+1}</span>
+      <input class="input" style="border:0;background:transparent;padding:6px" value="${escapeHtml(q)}" oninput="questions[${i}]=this.value" />
+      <button class="btn btn-ghost btn-icon" style="width:32px;height:32px;color:var(--muted)" onclick="removeQ(${i})"><i data-lucide="trash-2" style="width:14px;height:14px"></i></button>
+    </div>`).join('');
+  lucide.createIcons();
+}
+function addQuestion(){ questions.push('Nova pergunta'); renderQuestions(); }
+function removeQ(i){ questions.splice(i,1); renderQuestions(); }
+document.getElementById('scoreRange').addEventListener('input',e=>{
+  document.getElementById('scoreHint').textContent = `Leads abaixo de ${e.target.value} continuam conversando com a IA ou são marcados como frios.`;
+});
+function saveSettings(){
+  localStorage.setItem('aiQuestions', JSON.stringify(questions));
+  localStorage.setItem('aiName', document.getElementById('aiName').value);
+  localStorage.setItem('aiBrand', document.getElementById('aiBrand').value);
+  localStorage.setItem('aiTone', document.getElementById('aiTone').value);
+  localStorage.setItem('autoTransfer', document.getElementById('autoTransfer').checked);
+  localStorage.setItem('minScore', document.getElementById('scoreRange').value);
+  toast('Configurações salvas','A IA já está usando as novas regras.');
+}
+// load saved
+['aiName','aiBrand','aiTone'].forEach(k=>{const v=localStorage.getItem(k); if(v) document.getElementById(k).value=v;});
+const ms = localStorage.getItem('minScore'); if(ms){document.getElementById('scoreRange').value=ms;document.getElementById('scoreVal').textContent=ms;}
+const at = localStorage.getItem('autoTransfer'); if(at!==null) document.getElementById('autoTransfer').checked = at==='true';
+renderQuestions();
+lucide.createIcons();
+</script>
+</body>
+</html>

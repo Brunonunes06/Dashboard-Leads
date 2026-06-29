@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Perfil · Resposta</title>
+<meta name="description" content="Gerencie sua conta, tema e integrações." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css" />
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"></aside>
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="menu-btn" onclick="openMobileSidebar()"><i data-lucide="menu"></i></button>
+        <span class="topbar-title">Perfil</span>
+      </div>
+      <button class="btn btn-outline btn-icon" onclick="toggleTheme()"><i data-lucide="sun-moon"></i></button>
+    </header>
+
+    <div style="max-width:900px;margin:0 auto;padding:24px;width:100%;display:flex;flex-direction:column;gap:20px">
+      <div>
+        <h1 style="font-size:28px;font-weight:600">Perfil</h1>
+        <p style="margin-top:6px;font-size:13px;color:var(--muted)">Seus dados, aparência e integrações da conta.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title"><i data-lucide="user" style="width:16px;height:16px;display:inline;vertical-align:middle;margin-right:6px"></i>Dados pessoais</h3></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:18px">
+          <div style="display:flex;align-items:center;gap:16px">
+            <div style="position:relative">
+              <div id="avatar" style="width:80px;height:80px;border-radius:9999px;background:linear-gradient(135deg,#10b981,#06b6d4);color:#052e1b;display:grid;place-items:center;font-size:24px;font-weight:700">U</div>
+              <button style="position:absolute;bottom:-4px;right:-4px;width:28px;height:28px;border-radius:9999px;background:var(--card);border:1px solid var(--border);display:grid;place-items:center;cursor:pointer"><i data-lucide="camera" style="width:14px;height:14px"></i></button>
+            </div>
+            <div>
+              <p id="displayName" style="margin:0;font-size:14px;font-weight:500">Usuário</p>
+              <p style="margin:2px 0 0;font-size:12px;color:var(--muted)">Administrador</p>
+            </div>
+          </div>
+          <div style="display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+            <div><label class="label">Nome completo</label><input class="input" id="name" /></div>
+            <div><label class="label">E-mail</label><input class="input" id="email" type="email" /></div>
+            <div style="grid-column:1/-1"><label class="label">Telefone WhatsApp</label><input class="input" id="phone" placeholder="+55 11 99876-5432" /></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">Aparência</h3></div>
+        <div class="card-body" style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <p style="margin:0;font-size:14px;font-weight:500">Tema</p>
+            <p style="margin:2px 0 0;font-size:12px;color:var(--muted)">Claro, escuro ou sistema.</p>
+          </div>
+          <div style="display:flex;gap:6px;border:1px solid var(--border);border-radius:9999px;padding:3px">
+            <button id="themeLight" class="btn btn-sm" onclick="setTheme('light')" style="border-radius:9999px"><i data-lucide="sun" style="width:14px;height:14px"></i> Claro</button>
+            <button id="themeDark" class="btn btn-sm" onclick="setTheme('dark')" style="border-radius:9999px"><i data-lucide="moon" style="width:14px;height:14px"></i> Escuro</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title"><i data-lucide="shield-check" style="width:16px;height:16px;display:inline;vertical-align:middle;margin-right:6px"></i>Integrações</h3></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:10px" id="integrations"></div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn btn-outline">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveProfile()">Salvar alterações</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/common.js"></script>
+<script>
+const nameI = document.getElementById('name');
+const emailI = document.getElementById('email');
+const phoneI = document.getElementById('phone');
+
+nameI.value = localStorage.getItem('userName') || 'Usuário';
+emailI.value = localStorage.getItem('userEmail') || 'rafael@premier.com.br';
+phoneI.value = localStorage.getItem('userPhone') || '+55 11 99876-5432';
+
+function refresh(){
+  const n = nameI.value || 'Usuário';
+  document.getElementById('avatar').textContent = n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  document.getElementById('displayName').textContent = n;
+}
+[nameI,emailI,phoneI].forEach(i=>i.addEventListener('input',refresh));
+refresh();
+
+function saveProfile(){
+  localStorage.setItem('userName', nameI.value);
+  localStorage.setItem('userEmail', emailI.value);
+  localStorage.setItem('userPhone', phoneI.value);
+  toast('Perfil atualizado com sucesso!');
+}
+
+function setTheme(t){
+  localStorage.setItem('theme', t);
+  document.documentElement.classList.toggle('light', t==='light');
+  updateThemeBtns();
+}
+function updateThemeBtns(){
+  const isLight = document.documentElement.classList.contains('light');
+  document.getElementById('themeLight').style.background = isLight ? 'var(--primary)' : 'transparent';
+  document.getElementById('themeLight').style.color = isLight ? 'var(--primary-fg)' : 'var(--fg)';
+  document.getElementById('themeDark').style.background = !isLight ? 'var(--primary)' : 'transparent';
+  document.getElementById('themeDark').style.color = !isLight ? 'var(--primary-fg)' : 'var(--fg)';
+}
+updateThemeBtns();
+
+const integrations = [
+  {icon:'mail',title:'Conta Google',desc:'Login único e sincronização.',status:'pending',action:'Conectar'},
+  {icon:'message-circle',title:'WhatsApp Business',desc:'Automação de mensagens.',status:'pending',action:'Conectar'},
+  {icon:'phone',title:'Telefonia',desc:'Integração de chamadas.',status:'soon'},
+];
+document.getElementById('integrations').innerHTML = integrations.map((it,i)=>`
+  <div style="display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border);border-radius:10px;padding:14px">
+    <div style="display:flex;gap:12px;align-items:center">
+      <div style="width:36px;height:36px;border-radius:10px;background:var(--secondary);display:grid;place-items:center"><i data-lucide="${it.icon}" style="width:16px;height:16px"></i></div>
+      <div><p style="margin:0;font-size:14px;font-weight:500">${it.title}</p><p style="margin:2px 0 0;font-size:12px;color:var(--muted)">${it.desc}</p></div>
+    </div>
+    ${it.status==='soon'
+      ? `<span style="font-size:12px;color:var(--muted)">Em breve</span>`
+      : `<button class="btn btn-outline btn-sm" onclick="toast('Integração em curso','${it.title} solicitada.')">${it.action}</button>`}
+  </div>`).join('');
+lucide.createIcons();
+</script>
+</body>
+</html>
