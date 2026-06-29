@@ -1,57 +1,57 @@
-import { useCallback, useEffect, useRef, useState } from "react"
-import { supabase } from "@/lib/supabase"
-import type { RealtimeMessage, SenderRole } from "@/data/chatTypes"
+import { useCallback, useEffect, useRef, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import type { RealtimeMessage, SenderRole } from "@/data/chatTypes";
 
 export function useRealtimeChat(leadId: string | null) {
-  const [messages, setMessages] = useState<RealtimeMessage[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [messages, setMessages] = useState<RealtimeMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [isOnline, setIsOnline] = useState(false)
-  const [isTyping, setIsTyping] = useState(false)
+  const [isOnline, setIsOnline] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
 
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   // Carrega mensagens iniciais
   useEffect(() => {
     if (!leadId) {
-      setMessages([])
-      setIsLoading(false)
-      return
+      setMessages([]);
+      setIsLoading(false);
+      return;
     }
 
-    let mounted = true
+    let mounted = true;
 
     const loadMessages = async () => {
-      setIsLoading(true)
+      setIsLoading(true);
 
       const { data, error } = await supabase
         .from("messages")
         .select("*")
         .eq("lead_id", leadId)
-        .order("created_at", { ascending: true })
+        .order("created_at", { ascending: true });
 
-      if (!mounted) return
+      if (!mounted) return;
 
       if (!error && data) {
-        setMessages(data as RealtimeMessage[])
+        setMessages(data as RealtimeMessage[]);
       }
 
-      setIsLoading(false)
-    }
+      setIsLoading(false);
+    };
 
-    loadMessages()
+    loadMessages();
 
     return () => {
-      mounted = false
-    }
-  }, [leadId])
+      mounted = false;
+    };
+  }, [leadId]);
 
   // Realtime
   useEffect(() => {
-    if (!leadId) return
+    if (!leadId) return;
 
     if (channelRef.current) {
-      supabase.removeChannel(channelRef.current)
+      supabase.removeChannel(channelRef.current);
     }
 
     const channel = supabase
@@ -66,20 +66,18 @@ export function useRealtimeChat(leadId: string | null) {
           filter: `lead_id=eq.${leadId}`,
         },
         (payload) => {
-          const nova = payload.new as RealtimeMessage
+          const nova = payload.new as RealtimeMessage;
 
           setMessages((prev) => {
-            const exists = prev.some((m) => m.id === nova.id)
+            const exists = prev.some((m) => m.id === nova.id);
 
-            if (exists) return prev
+            if (exists) return prev;
 
             return [...prev, nova].sort(
-              (a, b) =>
-                new Date(a.created_at).getTime() -
-                new Date(b.created_at).getTime()
-            )
-          })
-        }
+              (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+            );
+          });
+        },
       )
 
       .on(
@@ -91,39 +89,31 @@ export function useRealtimeChat(leadId: string | null) {
           filter: `lead_id=eq.${leadId}`,
         },
         (payload) => {
-          const updated = payload.new as RealtimeMessage
+          const updated = payload.new as RealtimeMessage;
 
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === updated.id ? updated : msg
-            )
-          )
-        }
+          setMessages((prev) => prev.map((msg) => (msg.id === updated.id ? updated : msg)));
+        },
       )
 
-      .subscribe()
+      .subscribe();
 
-    channelRef.current = channel
+    channelRef.current = channel;
 
     return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [leadId])
+      supabase.removeChannel(channel);
+    };
+  }, [leadId]);
 
   // Enviar mensagem
   const sendMessage = useCallback(
-    async (
-      content: string,
-      senderId: string,
-      senderRole: SenderRole
-    ) => {
-      if (!leadId) return false
+    async (content: string, senderId: string, senderRole: SenderRole) => {
+      if (!leadId) return false;
 
-      const text = content.trim()
+      const text = content.trim();
 
-      if (!text) return false
+      if (!text) return false;
 
-      const optimisticId = crypto.randomUUID()
+      const optimisticId = crypto.randomUUID();
 
       const optimistic: RealtimeMessage = {
         id: optimisticId,
@@ -133,9 +123,9 @@ export function useRealtimeChat(leadId: string | null) {
         content: text,
         created_at: new Date().toISOString(),
         read_at: null,
-      }
+      };
 
-      setMessages((prev) => [...prev, optimistic])
+      setMessages((prev) => [...prev, optimistic]);
 
       const { data, error } = await supabase
         .from("messages")
@@ -146,36 +136,30 @@ export function useRealtimeChat(leadId: string | null) {
           content: text,
         })
         .select()
-        .single()
+        .single();
 
       if (error) {
-        setMessages((prev) =>
-          prev.filter((m) => m.id !== optimisticId)
-        )
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
 
-        console.error(error)
-        return false
+        console.error(error);
+        return false;
       }
 
       if (data) {
         setMessages((prev) =>
-          prev.map((m) =>
-            m.id === optimisticId
-              ? (data as RealtimeMessage)
-              : m
-          )
-        )
+          prev.map((m) => (m.id === optimisticId ? (data as RealtimeMessage) : m)),
+        );
       }
 
-      return true
+      return true;
     },
-    [leadId]
-  )
+    [leadId],
+  );
 
   // Marcar mensagens como lidas
   const markAsRead = useCallback(
     async (readerId: string) => {
-      if (!leadId) return
+      if (!leadId) return;
 
       await supabase
         .from("messages")
@@ -184,10 +168,10 @@ export function useRealtimeChat(leadId: string | null) {
         })
         .eq("lead_id", leadId)
         .neq("sender_id", readerId)
-        .is("read_at", null)
+        .is("read_at", null);
     },
-    [leadId]
-  )
+    [leadId],
+  );
 
   return {
     messages,
@@ -202,5 +186,5 @@ export function useRealtimeChat(leadId: string | null) {
 
     sendMessage,
     markAsRead,
-  }
+  };
 }

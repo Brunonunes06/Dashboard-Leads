@@ -1,5 +1,13 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Instagram, LayoutDashboard, MessagesSquare, Settings2, Sparkles, UserCircle, Zap } from "lucide-react";
+import {
+  Instagram,
+  LayoutDashboard,
+  MessagesSquare,
+  Settings2,
+  Sparkles,
+  UserCircle,
+  Zap,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -15,15 +23,13 @@ import {
 } from "@/components/ui/sidebar";
 
 // ✏️ Emails com acesso total ao sistema
-const ADMIN_EMAILS = [
-  "myhpc3301@gmail.com",
-];
+const ADMIN_EMAILS = ["myhpc3301@gmail.com"];
 
 const ALL_ITEMS = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, adminOnly: false },
   { title: "Conversas", url: "/leads", icon: MessagesSquare, adminOnly: false },
   { title: "CRM Instagram", url: "/instagram", icon: Instagram, adminOnly: false },
-  { title: "Configurar IA", url: "/settings", icon: Settings2, adminOnly: false },
+  { title: "Configurar IA", url: "/settings", icon: Settings2, adminOnly: true },
   { title: "Perfil", url: "/profile", icon: UserCircle, adminOnly: false },
 ];
 
@@ -34,13 +40,11 @@ export function AppSidebar() {
     try {
       const stored = localStorage.getItem("crm_user");
       if (stored) return JSON.parse(stored)?.email ?? null;
-    } catch { }
+    } catch {}
     return null;
   })();
 
-  const admin = ADMIN_EMAILS
-    .map((e) => e.toLowerCase())
-    .includes((email ?? "").toLowerCase());
+  const admin = ADMIN_EMAILS.map((e) => e.toLowerCase()).includes((email ?? "").toLowerCase());
 
   const items = ALL_ITEMS.filter((item) => admin || !item.adminOnly);
 
@@ -53,7 +57,9 @@ export function AppSidebar() {
           </div>
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
             <span className="font-display text-base font-semibold tracking-tight">Resposta</span>
-            <span className="text-[11px] text-muted-foreground">IA para WhatsApp · Imobiliárias</span>
+            <span className="text-[11px] text-muted-foreground">
+              IA para WhatsApp · Imobiliárias
+            </span>
           </div>
         </div>
       </SidebarHeader>

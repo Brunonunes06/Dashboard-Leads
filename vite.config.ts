@@ -3,10 +3,11 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
+    routeFileIgnorePattern: "assets/.*",
   },
   vite: {
     server: {
-      port: 3001,       // Força o ecossistema React a rodar na porta 3001
+      port: 3001, // Força o ecossistema React a rodar na porta 3001
       strictPort: true, // Evita desvios automáticos de portas para não quebrar o proxy
     },
     optimizeDeps: {

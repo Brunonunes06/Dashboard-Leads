@@ -1,10 +1,6 @@
 import { create } from "zustand";
 
-export type IGStatus =
-  | "menu_inicial"
-  | "interessado_painel"
-  | "aguardando_suporte"
-  | "finalizado";
+export type IGStatus = "menu_inicial" | "interessado_painel" | "aguardando_suporte" | "finalizado";
 
 export type IGSender = "lead" | "bot" | "human";
 
@@ -26,10 +22,7 @@ export interface IGLead {
   messages: IGMessage[];
 }
 
-export const STATUS_META: Record<
-  IGStatus,
-  { label: string; className: string; dot: string }
-> = {
+export const STATUS_META: Record<IGStatus, { label: string; className: string; dot: string }> = {
   menu_inicial: {
     label: "Menu Inicial",
     className: "bg-slate-500/15 text-slate-300 border-slate-500/30",
@@ -67,10 +60,25 @@ const seed: IGLead[] = [
     unread: 2,
     messages: [
       { id: "1", sender: "lead", text: "Oi! Vi o anúncio de vocês.", time: "14:02" },
-      { id: "2", sender: "bot", text: "Olá Mariana! 👋 Eu sou o assistente Express. Como posso ajudar?\n\n1️⃣ Conhecer painéis solares\n2️⃣ Falar com um atendente", time: "14:02" },
+      {
+        id: "2",
+        sender: "bot",
+        text: "Olá Mariana! 👋 Eu sou o assistente Express. Como posso ajudar?\n\n1️⃣ Conhecer painéis solares\n2️⃣ Falar com um atendente",
+        time: "14:02",
+      },
       { id: "3", sender: "lead", text: "1", time: "14:03" },
-      { id: "4", sender: "bot", text: "Ótima escolha! ☀️ Temos painéis de 3kW, 5kW e 10kW. Qual te interessa?", time: "14:03" },
-      { id: "5", sender: "lead", text: "Quero saber o preço do painel solar de 5kW", time: "14:04" },
+      {
+        id: "4",
+        sender: "bot",
+        text: "Ótima escolha! ☀️ Temos painéis de 3kW, 5kW e 10kW. Qual te interessa?",
+        time: "14:03",
+      },
+      {
+        id: "5",
+        sender: "lead",
+        text: "Quero saber o preço do painel solar de 5kW",
+        time: "14:04",
+      },
     ],
   },
   {
@@ -82,11 +90,31 @@ const seed: IGLead[] = [
     lastContact: iso(0.5),
     unread: 1,
     messages: [
-      { id: "1", sender: "lead", text: "Comprei um painel mês passado e tenho dúvidas", time: "10:11" },
-      { id: "2", sender: "bot", text: "Olá João! Posso te ajudar.\n\n1️⃣ Conhecer painéis\n2️⃣ Falar com atendente", time: "10:11" },
+      {
+        id: "1",
+        sender: "lead",
+        text: "Comprei um painel mês passado e tenho dúvidas",
+        time: "10:11",
+      },
+      {
+        id: "2",
+        sender: "bot",
+        text: "Olá João! Posso te ajudar.\n\n1️⃣ Conhecer painéis\n2️⃣ Falar com atendente",
+        time: "10:11",
+      },
       { id: "3", sender: "lead", text: "2", time: "10:12" },
-      { id: "4", sender: "bot", text: "Perfeito! Vou transferir você para um especialista. Aguarde um instante. 🙏", time: "10:12" },
-      { id: "5", sender: "lead", text: "Preciso falar com alguém da equipe técnica", time: "10:13" },
+      {
+        id: "4",
+        sender: "bot",
+        text: "Perfeito! Vou transferir você para um especialista. Aguarde um instante. 🙏",
+        time: "10:12",
+      },
+      {
+        id: "5",
+        sender: "lead",
+        text: "Preciso falar com alguém da equipe técnica",
+        time: "10:13",
+      },
     ],
   },
   {
@@ -99,7 +127,12 @@ const seed: IGLead[] = [
     unread: 1,
     messages: [
       { id: "1", sender: "lead", text: "oi", time: "13:00" },
-      { id: "2", sender: "bot", text: "Olá! 👋 Eu sou o assistente Express.\n\n1️⃣ Conhecer painéis solares\n2️⃣ Falar com um atendente", time: "13:00" },
+      {
+        id: "2",
+        sender: "bot",
+        text: "Olá! 👋 Eu sou o assistente Express.\n\n1️⃣ Conhecer painéis solares\n2️⃣ Falar com um atendente",
+        time: "13:00",
+      },
     ],
   },
   {
@@ -194,7 +227,10 @@ export const useInstagramStore = create<State>((set) => ({
                   id: `m${Date.now()}`,
                   sender: "human",
                   text,
-                  time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+                  time: new Date().toLocaleTimeString("pt-BR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }),
                 },
               ],
             }

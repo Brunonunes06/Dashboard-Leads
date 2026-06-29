@@ -100,7 +100,7 @@ function Dashboard() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [inputPhone, setInputPhone] = useState("");
-  
+
   // Estado que armazena os dados reais vindos da API do seu server.js
   const [leadsReais, setLeadsReais] = useState<BackendLead[]>([]);
   const [loadingBackend, setLoadingBackend] = useState<boolean>(true);
@@ -109,10 +109,10 @@ function Dashboard() {
   useEffect(() => {
     async function carregarDadosDoServidor() {
       try {
-        const res = await fetch('http://localhost:3000/api/leads', {
+        const res = await fetch("http://localhost:3000/api/leads", {
           headers: {
-            'ngrok-skip-browser-warning': 'true'
-          }
+            "ngrok-skip-browser-warning": "true",
+          },
         });
         if (res.ok) {
           const dados = await res.json();
@@ -157,7 +157,7 @@ function Dashboard() {
         atob(base64)
           .split("")
           .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-          .join("")
+          .join(""),
       );
       return JSON.parse(jsonPayload);
     } catch (e) {
@@ -178,7 +178,7 @@ function Dashboard() {
       localStorage.setItem("userName", name);
       localStorage.setItem("userEmail", email);
       if (photo) localStorage.setItem("userPhoto", photo);
-      
+
       setUserName(name);
       setUserEmail(email);
       setIsLoggedIn(true);
@@ -186,7 +186,7 @@ function Dashboard() {
       const telefoneDestino = localStorage.getItem("userPhone") || "5511999999999";
       await enviarNotificacaoWhatsapp(
         `Olá ${name}, login efetuado com sucesso usando o e-mail: ${email}!`,
-        telefoneDestino
+        telefoneDestino,
       );
     }
   };
@@ -195,10 +195,10 @@ function Dashboard() {
     localStorage.setItem("userPhone", inputPhone);
     setUserPhone(inputPhone);
     setIsEditingPhone(false);
-    
+
     enviarNotificacaoWhatsapp(
       `Número de WhatsApp vinculado com sucesso ao perfil de ${userName}!`,
-      inputPhone
+      inputPhone,
     );
   };
 
@@ -210,7 +210,7 @@ function Dashboard() {
 
     try {
       console.log(`Disparando WhatsApp para ${numeroDestino}: "${mensagem}"`);
-      
+
       const response = await fetch("/api/whatsapp/send", {
         method: "POST",
         headers: {
@@ -243,14 +243,11 @@ function Dashboard() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6 lg:p-8">
-      
       {/* SEÇÃO DO CABEÇALHO: Login, E-mail e WhatsApp */}
       <div className="flex flex-wrap items-start justify-between gap-6 border-b border-border/40 pb-6">
         <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Bom dia, {userName} 👋
-          </h1>
-          
+          <h1 className="text-3xl font-semibold tracking-tight">Bom dia, {userName} 👋</h1>
+
           {isLoggedIn && (
             <div className="flex flex-col gap-1.5 mt-2 text-sm text-muted-foreground">
               {userEmail && (
@@ -259,7 +256,7 @@ function Dashboard() {
                   <span>{userEmail}</span>
                 </div>
               )}
-              
+
               <div className="flex items-center gap-2">
                 <Phone className="h-3.5 w-3.5 text-green-500" />
                 {isEditingPhone ? (
@@ -277,9 +274,11 @@ function Dashboard() {
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <span>{userPhone ? `WhatsApp: ${userPhone}` : "Nenhum WhatsApp cadastrado"}</span>
-                    <button 
-                      onClick={() => setIsEditingPhone(true)} 
+                    <span>
+                      {userPhone ? `WhatsApp: ${userPhone}` : "Nenhum WhatsApp cadastrado"}
+                    </span>
+                    <button
+                      onClick={() => setIsEditingPhone(true)}
                       className="text-xs text-primary underline hover:text-primary/80"
                     >
                       {userPhone ? "Alterar" : "Adicionar"}
@@ -289,9 +288,13 @@ function Dashboard() {
               </div>
             </div>
           )}
-          
+
           <p className="mt-2 text-sm text-muted-foreground">
-            Sua central processou <span className="font-medium text-foreground">{leadsReais.length} leads via webhook</span> em tempo real nesta seção.
+            Sua central processou{" "}
+            <span className="font-medium text-foreground">
+              {leadsReais.length} leads via webhook
+            </span>{" "}
+            em tempo real nesta seção.
           </p>
         </div>
 
@@ -311,7 +314,10 @@ function Dashboard() {
             </Button>
           )}
 
-          <Button asChild className="gradient-primary text-primary-foreground shadow-glow hover:opacity-90">
+          <Button
+            asChild
+            className="gradient-primary text-primary-foreground shadow-glow hover:opacity-90"
+          >
             <Link to="/leads">
               Ver detalhado <ArrowUpRight className="ml-1 h-4 w-4" />
             </Link>
@@ -325,10 +331,14 @@ function Dashboard() {
           <Card key={m.label} className="relative overflow-hidden border-border/60 bg-card">
             <CardContent className="p-5">
               <div className="flex items-start justify-between">
-                <div className={`grid h-10 w-10 place-items-center rounded-xl bg-secondary ${m.accent}`}>
+                <div
+                  className={`grid h-10 w-10 place-items-center rounded-xl bg-secondary ${m.accent}`}
+                >
                   <m.icon className="h-5 w-5" />
                 </div>
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">{m.delta}</span>
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                  {m.delta}
+                </span>
               </div>
               <p className="mt-4 text-3xl font-semibold tracking-tight">
                 {m.label === "Leads hoje" ? leadsReais.length || m.value : m.value}
@@ -344,14 +354,31 @@ function Dashboard() {
         {/* Gráfico de Barras */}
         <Card className="border-border/60 lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-base font-semibold">Leads x Qualificados · últimos 7 dias</CardTitle>
+            <CardTitle className="text-base font-semibold">
+              Leads x Qualificados · últimos 7 dias
+            </CardTitle>
           </CardHeader>
           <CardContent className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={weeklyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-                <XAxis dataKey="day" stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--color-border)"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="day"
+                  stroke="var(--color-muted-foreground)"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  stroke="var(--color-muted-foreground)"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                />
                 <Tooltip
                   cursor={{ fill: "var(--color-secondary)", opacity: 0.4 }}
                   contentStyle={{
@@ -380,8 +407,17 @@ function Dashboard() {
             <div className="h-44">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={sources} dataKey="value" innerRadius={45} outerRadius={72} paddingAngle={3} stroke="none">
-                    {sources.map((s) => <Cell key={s.name} fill={s.color} />)}
+                  <Pie
+                    data={sources}
+                    dataKey="value"
+                    innerRadius={45}
+                    outerRadius={72}
+                    paddingAngle={3}
+                    stroke="none"
+                  >
+                    {sources.map((s) => (
+                      <Cell key={s.name} fill={s.color} />
+                    ))}
                   </Pie>
                   <Tooltip
                     contentStyle={{
@@ -405,9 +441,13 @@ function Dashboard() {
                 >
                   <div className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full" style={{ background: s.color }} />
-                    <span className="text-muted-foreground transition-colors group-hover:text-white">{s.name}</span>
+                    <span className="text-muted-foreground transition-colors group-hover:text-white">
+                      {s.name}
+                    </span>
                   </div>
-                  <span className="font-medium transition-colors group-hover:text-white">{s.value}%</span>
+                  <span className="font-medium transition-colors group-hover:text-white">
+                    {s.value}%
+                  </span>
                 </div>
               ))}
             </div>
@@ -418,7 +458,9 @@ function Dashboard() {
       {/* SEÇÃO DE ATIVIDADE RECENTE INTEGRADA AO SEU SERVER.JS */}
       <Card className="border-border/60">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base font-semibold">Leads Ativos recebidos via Webhook</CardTitle>
+          <CardTitle className="text-base font-semibold">
+            Leads Ativos recebidos via Webhook
+          </CardTitle>
           <Button asChild variant="ghost" size="sm">
             <Link to="/leads">Ver tudo</Link>
           </Button>
@@ -426,10 +468,13 @@ function Dashboard() {
         <CardContent className="p-0">
           <div className="divide-y divide-border/60">
             {loadingBackend ? (
-              <div className="p-6 text-center text-xs text-muted-foreground">Conectando ao banco de dados local...</div>
+              <div className="p-6 text-center text-xs text-muted-foreground">
+                Conectando ao banco de dados local...
+              </div>
             ) : leadsReais.length === 0 ? (
               <div className="p-8 text-center text-xs text-muted-foreground italic">
-                Nenhum payload detectado. Envie requisições POST para http://localhost:3000/api/webhook para alimentar esta lista.
+                Nenhum payload detectado. Envie requisições POST para
+                http://localhost:3000/api/webhook para alimentar esta lista.
               </div>
             ) : (
               leadsReais.slice(0, 6).map((lead) => (
@@ -442,18 +487,27 @@ function Dashboard() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="truncate text-sm font-mono font-medium text-slate-300">ID: {lead.id}</p>
+                      <p className="truncate text-sm font-mono font-medium text-slate-300">
+                        ID: {lead.id}
+                      </p>
                       <StatusBadge status={lead.status} />
                     </div>
-                    <p className="truncate text-xs text-muted-foreground mt-0.5">Payload: "{lead.ultimaMensagem}"</p>
+                    <p className="truncate text-xs text-muted-foreground mt-0.5">
+                      Payload: "{lead.ultimaMensagem}"
+                    </p>
                   </div>
-                  
+
                   {/* Botão de envio rápido para disparar notificações do WhatsApp */}
-                  <Button 
-                    size="icon" 
-                    variant="ghost" 
+                  <Button
+                    size="icon"
+                    variant="ghost"
                     className="h-8 w-8 text-muted-foreground hover:text-green-500"
-                    onClick={() => enviarNotificacaoWhatsapp(`Atualização de Lead: O evento do ID ${lead.id} foi verificado no painel.`, userPhone || "5511999999999")}
+                    onClick={() =>
+                      enviarNotificacaoWhatsapp(
+                        `Atualização de Lead: O evento do ID ${lead.id} foi verificado no painel.`,
+                        userPhone || "5511999999999",
+                      )
+                    }
                     title="Disparar notificação WhatsApp"
                   >
                     <Send className="h-4 w-4" />

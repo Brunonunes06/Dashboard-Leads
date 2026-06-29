@@ -13,9 +13,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const isAdmin = user?.role === "admin";
 
   // Detecta rota atual (adapte ao seu TanStack Router se necessário)
-  const [currentPath, setCurrentPath] = useState(
-    window.location.pathname || "/conversas"
-  );
+  const [currentPath, setCurrentPath] = useState(window.location.pathname || "/conversas");
 
   // Se cliente sem billing → mostra cobrança em vez do app
   if (!user) return null;
@@ -33,9 +31,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="flex h-screen bg-slate-950 overflow-hidden">
       <Sidebar currentPath={currentPath} onNavigate={setCurrentPath} />
-      <main className="flex-1 overflow-auto">
-        {children}
-      </main>
+      <main className="flex-1 overflow-auto">{children}</main>
     </div>
   );
 }

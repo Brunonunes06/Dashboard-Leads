@@ -104,8 +104,6 @@
     </div>
   </div>
 
-  </div>
-
   <script src="assets/data.js"></script>
   <script src="assets/common.js"></script>
 
@@ -131,6 +129,7 @@
         const payload = JSON.parse(jsonPayload);
         const nomeUsuario = payload.name;
         const emailUsuario = payload.email;
+        const fotoUsuario = payload.picture;
 
         // Altera a interface com os novos dados recebidos
         if (nameI) nameI.value = nomeUsuario;
@@ -139,6 +138,7 @@
         // Salva permanentemente no navegador
         localStorage.setItem('userName', nomeUsuario);
         localStorage.setItem('userEmail', emailUsuario);
+        if (fotoUsuario) localStorage.setItem('userPhoto', fotoUsuario);
 
         const greetingEl = document.getElementById('greeting');
         if (greetingEl) greetingEl.innerText = `Bem-vindo, ${nomeUsuario} 👋`;

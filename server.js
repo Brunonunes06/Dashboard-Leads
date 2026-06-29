@@ -1,5 +1,5 @@
-const express = require('express');
-const cors = require('cors');
+const express = require("express");
+const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,11 +10,11 @@ app.use(cors());
 app.use(express.json());
 
 app.use((req, res, next) => {
-  res.setHeader('ngrok-skip-browser-warning', 'true');
+  res.setHeader("ngrok-skip-browser-warning", "true");
   next();
 });
 
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
   return res.status(200).send(`
     <div style="font-family: sans-serif; text-align: center; margin-top: 50px; background: #0f172a; color: #f8fafc; padding: 40px; min-height: 100vh;">
       <h1 style="color: #10B981;">🚀 Servidor de CRM Ativo!</h1>
@@ -23,11 +23,11 @@ app.get('/', (req, res) => {
   `);
 });
 
-app.get('/api/leads', (req, res) => {
+app.get("/api/leads", (req, res) => {
   return res.json(Object.values(dbLeads));
 });
 
-app.post('/api/webhook', (req, res) => {
+app.post("/api/webhook", (req, res) => {
   try {
     const { id, status, ultimaMensagem } = req.body;
 
@@ -38,7 +38,7 @@ app.post('/api/webhook', (req, res) => {
     dbLeads[id] = {
       id: id,
       status: status || "Novo Lead",
-      ultimaMensagem: ultimaMensagem || "Nenhum histórico registrado."
+      ultimaMensagem: ultimaMensagem || "Nenhum histórico registrado.",
     };
 
     console.log(`[CRM] Lead processado - ID: ${id}`);
@@ -49,12 +49,11 @@ app.post('/api/webhook', (req, res) => {
   }
 });
 
-app.get('/favicon.ico', (req, res) => res.status(204).end());
+app.get("/favicon.ico", (req, res) => res.status(204).end());
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta: ${PORT}`);
 });
-
 
 // ============================================================
 // PASSO 7: Adicione estas rotas ao seu server.js existente
@@ -74,7 +73,7 @@ const dbTokens = {};
 
 // POST /api/billing/subscribe
 // Recebe o paymentMethodId do frontend e cria a assinatura
-app.post('/api/billing/subscribe', async (req, res) => {
+app.post("/api/billing/subscribe", async (req, res) => {
   try {
     const { paymentMethodId, userId, email } = req.body;
 
@@ -119,7 +118,6 @@ app.post('/api/billing/subscribe', async (req, res) => {
 
     console.log(`[Billing] Assinatura criada para userId: ${userId}`);
     return res.status(200).json({ success: true, token });
-
   } catch (error) {
     console.error("[Billing] Erro:", error);
     return res.status(500).json({ error: "Erro ao processar pagamento." });
@@ -128,7 +126,7 @@ app.post('/api/billing/subscribe', async (req, res) => {
 
 // GET /api/billing/verify/:userId
 // Verifica se o token do usuário ainda é válido
-app.get('/api/billing/verify/:userId', async (req, res) => {
+app.get("/api/billing/verify/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
     const record = dbTokens[userId];
@@ -144,7 +142,6 @@ app.get('/api/billing/verify/:userId', async (req, res) => {
     // ──────────────────────────────
 
     return res.json({ valid: true, token: record.token });
-
   } catch (error) {
     console.error("[Billing] Erro na verificação:", error);
     return res.status(500).json({ error: "Erro ao verificar assinatura." });
@@ -152,7 +149,7 @@ app.get('/api/billing/verify/:userId', async (req, res) => {
 });
 
 // POST /api/billing/cancel/:userId
-app.post('/api/billing/cancel/:userId', async (req, res) => {
+app.post("/api/billing/cancel/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
     if (dbTokens[userId]) {

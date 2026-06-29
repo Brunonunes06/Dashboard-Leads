@@ -100,7 +100,9 @@ export function BillingForm({
       <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
         <div className="text-5xl">✅</div>
         <h3 className="text-xl font-bold text-white">Pagamento confirmado!</h3>
-        <p className="text-slate-400 text-sm">Acesso liberado. Nunca mais perca dinheiro por PIX.</p>
+        <p className="text-slate-400 text-sm">
+          Acesso liberado. Nunca mais perca dinheiro por PIX.
+        </p>
       </div>
     );
   }
@@ -112,7 +114,8 @@ export function BillingForm({
         <div className="text-center mb-8">
           <div className="inline-block bg-emerald-500/10 border border-emerald-500/30 rounded-2xl px-5 py-3 mb-6">
             <p className="text-emerald-400 font-semibold text-sm leading-snug">
-              💳 Hoje você vai cobrar no cartão<br />
+              💳 Hoje você vai cobrar no cartão
+              <br />
               <span className="text-white font-bold">(e nunca mais perder dinheiro por PIX)</span>
             </p>
           </div>
@@ -152,9 +155,7 @@ export function BillingForm({
                 type="text"
                 placeholder="NOME COMO NO CARTÃO"
                 value={cardData.name}
-                onChange={(e) =>
-                  setCardData({ ...cardData, name: e.target.value.toUpperCase() })
-                }
+                onChange={(e) => setCardData({ ...cardData, name: e.target.value.toUpperCase() })}
                 className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-slate-600 uppercase tracking-wider"
                 required
               />
@@ -218,15 +219,9 @@ export function BillingForm({
 
           {/* Trust badges */}
           <div className="flex items-center justify-center gap-4 mt-5">
-            <span className="text-slate-600 text-xs flex items-center gap-1">
-              🔒 SSL Seguro
-            </span>
-            <span className="text-slate-600 text-xs flex items-center gap-1">
-              💳 Stripe
-            </span>
-            <span className="text-slate-600 text-xs flex items-center gap-1">
-              ✅ Cancelável
-            </span>
+            <span className="text-slate-600 text-xs flex items-center gap-1">🔒 SSL Seguro</span>
+            <span className="text-slate-600 text-xs flex items-center gap-1">💳 Stripe</span>
+            <span className="text-slate-600 text-xs flex items-center gap-1">✅ Cancelável</span>
           </div>
         </div>
       </div>

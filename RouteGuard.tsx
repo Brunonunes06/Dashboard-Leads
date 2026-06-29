@@ -41,8 +41,11 @@ function AccessBlocked() {
       <div className="text-5xl mb-4">🔒</div>
       <h2 className="text-2xl font-bold text-white mb-2">Acesso Restrito</h2>
       <p className="text-slate-400 max-w-sm">
-        Esta área é exclusiva para administradores do sistema.
-        Volte para <a href="/conversas" className="text-emerald-400 underline">suas conversas</a>.
+        Esta área é exclusiva para administradores do sistema. Volte para{" "}
+        <a href="/conversas" className="text-emerald-400 underline">
+          suas conversas
+        </a>
+        .
       </p>
     </div>
   );

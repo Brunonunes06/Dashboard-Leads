@@ -54,7 +54,11 @@
 
   --shadow-glow: 0 0 40px -8px color-mix(in oklab, var(--primary) 45%, transparent);
   --gradient-primary: linear-gradient(135deg, oklch(0.72 0.18 155) 0%, oklch(0.62 0.16 175) 100%);
-  --gradient-surface: linear-gradient(180deg, var(--card) 0%, color-mix(in oklab, var(--card) 80%, var(--background)) 100%);
+  --gradient-surface: linear-gradient(
+    180deg,
+    var(--card) 0%,
+    color-mix(in oklab, var(--card) 80%, var(--background)) 100%
+  );
 }
 
 :root {
@@ -169,7 +173,11 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  h1, h2, h3, h4, h5 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
   }

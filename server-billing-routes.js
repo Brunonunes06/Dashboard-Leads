@@ -14,7 +14,7 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 // Banco de tokens em memória (use seu banco real / Supabase aqui)
 const dbTokens = {};
 
-POST / api / billing / subscribe
+// POST /api/billing/subscribe
 // Recebe o paymentMethodId do frontend e cria a assinatura
 app.post('/api/billing/subscribe', async (req, res) => {
   try {
@@ -26,27 +26,27 @@ app.post('/api/billing/subscribe', async (req, res) => {
 
     // ─── INTEGRAÇÃO STRIPE REAL (descomente após configurar) ───
     // // 1. Criar ou buscar customer no Stripe
-    const customers = await stripe.customers.list({ email, limit: 1 });
-    let customer = customers.data[0];
-    if (!customer) {
-      customer = await stripe.customers.create({ email, metadata: { userId } });
-    }
+    // const customers = await stripe.customers.list({ email, limit: 1 });
+    // let customer = customers.data[0];
+    // if (!customer) {
+    //   customer = await stripe.customers.create({ email, metadata: { userId } });
+    // }
     //
     // // 2. Anexar o cartão ao customer
-    await stripe.paymentMethods.attach(paymentMethodId, { customer: customer.id });
-    await stripe.customers.update(customer.id, {
-      invoice_settings: { default_payment_method: paymentMethodId },
-    });
+    // await stripe.paymentMethods.attach(paymentMethodId, { customer: customer.id });
+    // await stripe.customers.update(customer.id, {
+    //   invoice_settings: { default_payment_method: paymentMethodId },
+    // });
     //
     // // 3. Criar a assinatura
-    const subscription = await stripe.subscriptions.create({
-      customer: customer.id,
-      items: [{ price: process.env.STRIPE_PRICE_ID }], // ID do plano no Stripe
-      expand: ['latest_invoice.payment_intent'],
-    });
+    // const subscription = await stripe.subscriptions.create({
+    //   customer: customer.id,
+    //   items: [{ price: process.env.STRIPE_PRICE_ID }], // ID do plano no Stripe
+    //   expand: ['latest_invoice.payment_intent'],
+    // });
     //
     // // 4. Salvar token no banco
-    const token = subscription.id;
+    // const token = subscription.id;
     // ─────────────────────────────────────────────────────────
 
     // MOCK para desenvolvimento (remova em produção):
@@ -68,7 +68,7 @@ app.post('/api/billing/subscribe', async (req, res) => {
   }
 });
 
-GET /api/billing/verify/:userId
+// GET /api/billing/verify/:userId
 // Verifica se o token do usuário ainda é válido
 app.get('/api/billing/verify/:userId', async (req, res) => {
   try {
@@ -80,9 +80,9 @@ app.get('/api/billing/verify/:userId', async (req, res) => {
     }
 
     // ─── VERIFICAÇÃO STRIPE REAL ───
-    const subscription = await stripe.subscriptions.retrieve(record.token);
-    const valid = subscription.status === 'active' || subscription.status === 'trialing';
-    return res.json({ valid, status: subscription.status });
+    // const subscription = await stripe.subscriptions.retrieve(record.token);
+    // const valid = subscription.status === 'active' || subscription.status === 'trialing';
+    // return res.json({ valid, status: subscription.status });
     // ──────────────────────────────
 
     return res.json({ valid: true, token: record.token });

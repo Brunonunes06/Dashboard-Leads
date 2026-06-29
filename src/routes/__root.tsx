@@ -25,13 +25,8 @@ function NotFoundComponent() {
     <div className="flex min-h-screen items-center justify-center">
       <div className="text-center">
         <h1 className="text-7xl font-bold">404</h1>
-        <h2 className="mt-4 text-xl font-semibold">
-          Página não encontrada
-        </h2>
-        <Link
-          to="/"
-          className="mt-4 inline-flex rounded-md bg-primary px-4 py-2"
-        >
+        <h2 className="mt-4 text-xl font-semibold">Página não encontrada</h2>
+        <Link to="/" className="mt-4 inline-flex rounded-md bg-primary px-4 py-2">
           Voltar
         </Link>
       </div>
@@ -39,13 +34,7 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({
-  error,
-  reset,
-}: {
-  error: Error;
-  reset: () => void;
-}) {
+function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
 
   useEffect(() => {
@@ -72,36 +61,31 @@ function ErrorComponent({
   );
 }
 
-export const Route =
-  createRootRouteWithContext<{
-    queryClient: QueryClient;
-  }>()({
-    head: () => ({
-      meta: [
-        { charSet: "utf-8" },
-        {
-          name: "viewport",
-          content: "width=device-width, initial-scale=1",
-        },
-      ],
-      links: [
-        {
-          rel: "stylesheet",
-          href: appCss,
-        },
-      ],
-    }),
-    shellComponent: RootShell,
-    component: RootComponent,
-    notFoundComponent: NotFoundComponent,
-    errorComponent: ErrorComponent,
-  });
+export const Route = createRootRouteWithContext<{
+  queryClient: QueryClient;
+}>()({
+  head: () => ({
+    meta: [
+      { charSet: "utf-8" },
+      {
+        name: "viewport",
+        content: "width=device-width, initial-scale=1",
+      },
+    ],
+    links: [
+      {
+        rel: "stylesheet",
+        href: appCss,
+      },
+    ],
+  }),
+  shellComponent: RootShell,
+  component: RootComponent,
+  notFoundComponent: NotFoundComponent,
+  errorComponent: ErrorComponent,
+});
 
-function RootShell({
-  children,
-}: {
-  children: ReactNode;
-}) {
+function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-BR">
       <head>

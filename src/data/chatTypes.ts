@@ -1,16 +1,16 @@
 // src/data/chatTypes.ts
 
-export type SenderRole = "admin" | "client"
+export type SenderRole = "admin" | "client";
 
 export interface RealtimeMessage {
-  id: string
-  lead_id: string
+  id: string;
+  lead_id: string;
 
-  sender_id: string
-  sender_role: SenderRole
+  sender_id: string;
+  sender_role: SenderRole;
 
-  content: string
+  content: string;
 
-  created_at: string
-  read_at: string | null
+  created_at: string;
+  read_at: string | null;
 }
