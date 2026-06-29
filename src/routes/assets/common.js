@@ -22,7 +22,7 @@
 
   const sidebarHTML = `
     <div class="sidebar-brand">
-      <div class="brand-mark"><i data-lucide="zap" style="width:20px;height:20px"></i></div>
+          <img src="./img/logo.jpg" alt="Logo da Marca" class="brand-mark">
       <div class="brand-text"><strong>Resposta</strong><span>SaaS de leads</span></div>
     </div>
     <nav class="nav">

@@ -1,45 +1,75 @@
 <!doctype html>
 <html lang="pt-BR">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Dashboard · Resposta</title>
-<meta name="description" content="Métricas de leads, tempo de resposta e qualificação em tempo real." />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/styles.css" />
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-</head>
-<body>
-<div class="app">
-  <aside class="sidebar"></aside>
-  <div class="main">
-    <header class="topbar">
-      <div style="display:flex;align-items:center;gap:12px">
-        <button class="menu-btn" onclick="openMobileSidebar()"><i data-lucide="menu"></i></button>
-        <span class="topbar-title">Dashboard</span>
-      </div>
-      <div class="topbar-actions">
-        <button class="btn btn-outline btn-icon" onclick="toggleTheme()" title="Alternar tema"><i data-lucide="sun-moon"></i></button>
-      </div>
-    </header>
 
-    <div style="max-width:1280px;margin:0 auto;padding:24px;width:100%;display:flex;flex-direction:column;gap:24px">
-      <!-- Header -->
-      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px;padding-bottom:24px;border-bottom:1px solid var(--border-soft)">
-        <div>
-          <h1 style="font-size:28px;font-weight:600" id="greeting">Bom dia, Usuário 👋</h1>
-          <div id="profileMini" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)"></div>
-          <p style="margin-top:8px;font-size:13px;color:var(--muted)">Sua central processou <strong style="color:var(--fg)" id="leadCount">6 leads</strong> nesta sessão.</p>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard · Resposta</title>
+  <meta name="description" content="Métricas de leads, tempo de resposta e qualificação em tempo real." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="icon" href="./img/logo.jpg" type="image/jpeg">
+  <link rel="stylesheet" href="assets/styles.css" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Firebase SDKs - Carregados ANTES do código -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+</head>
+
+<body>
+  <div class="app">
+    <aside class="sidebar"></aside>
+    <div class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="menu-btn" onclick="openMobileSidebar()"><i data-lucide="menu"></i></button>
+          <span class="topbar-title">Dashboard</span>
         </div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <button class="btn btn-outline btn-sm" id="loginBtn" onclick="fakeLogin()"><i data-lucide="log-in" style="width:14px;height:14px"></i> Entrar com Google</button>
-          <button class="btn btn-outline btn-sm" id="logoutBtn" onclick="logout()" style="display:none">Sair</button>
-          <a class="btn btn-primary" href="leads.html">Ver detalhado <i data-lucide="arrow-up-right" style="width:14px;height:14px"></i></a>
+        <div class="topbar-actions">
+          <button class="btn btn-outline btn-icon" onclick="toggleTheme()" title="Alternar tema"><i
+              data-lucide="sun-moon"></i></button>
+        </div>
+      </header>
+
+      <div style="max-width:1280px;margin:0 auto;padding:24px;width:100%;display:flex;flex-direction:column;gap:24px">
+        <!-- Header -->
+        <div
+          style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px;padding-bottom:24px;border-bottom:1px solid var(--border-soft)">
+          <div>
+            <h1 style="font-size:28px;font-weight:600" id="greeting">Bom dia, Usuário 👋</h1>
+            <div id="profileMini"
+              style="margin-top:8px;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)"></div>
+            <p style="margin-top:8px;font-size:13px;color:var(--muted)">Sua central processou <strong
+                style="color:var(--fg)" id="leadCount">6 leads</strong> nesta sessão.</p>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <!-- Container exclusivo do Google (Guarda apenas o botão de login) -->
+            <div id="googleAuthContainer">
+              <div id="g_id_onload"
+                data-client_id="619932368495-394kg4luo4tvo58br6paa5f3gespmlo2.apps.googleusercontent.com"
+                data-context="signin" data-ux_mode="popup" data-callback="handleGoogleCredential"
+                data-auto_prompt="false">
+              </div>
+              <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="outline"
+                data-text="signin_with" data-size="large">
+              </div>
+            </div>
+
+            <!-- Botão de Sair e Link (Ficam de fora para não sumirem) -->
+            <button class="btn btn-outline btn-sm" id="logoutBtn" onclick="logout()" style="display:none">Sair</button>
+            <a class="btn btn-primary" href="leads.html">Ver detalhado <i data-lucide="arrow-up-right"
+                style="width:14px;height:14px"></i></a>
+          </div>
+
         </div>
       </div>
+
 
       <!-- Metrics -->
       <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))" id="metrics"></div>
@@ -47,11 +77,15 @@
       <!-- Charts -->
       <div style="display:grid;gap:16px;grid-template-columns:1fr" id="chartsGrid">
         <div class="card" style="grid-column:span 2">
-          <div class="card-header"><h3 class="card-title">Leads x Qualificados · últimos 7 dias</h3></div>
+          <div class="card-header">
+            <h3 class="card-title">Leads x Qualificados · últimos 7 dias</h3>
+          </div>
           <div class="card-body" style="height:280px"><canvas id="barChart"></canvas></div>
         </div>
         <div class="card">
-          <div class="card-header"><h3 class="card-title">Origem dos leads</h3></div>
+          <div class="card-header">
+            <h3 class="card-title">Origem dos leads</h3>
+          </div>
           <div class="card-body">
             <div style="height:180px"><canvas id="pieChart"></canvas></div>
             <div id="sourceLegend" style="margin-top:12px;display:flex;flex-direction:column;gap:6px"></div>
@@ -69,54 +103,224 @@
       </div>
     </div>
   </div>
-</div>
 
-<script src="assets/data.js"></script>
-<script src="assets/common.js"></script>
-<script>
-const { leads, weeklyData, sources, STATUS_LABEL } = APP_DATA;
+  </div>
 
-function getUser(){
-  return {
-    name: localStorage.getItem('userName') || '',
-    email: localStorage.getItem('userEmail') || '',
-    phone: localStorage.getItem('userPhone') || '',
-  };
-}
-function renderUser(){
-  const u = getUser();
-  const name = u.name || 'Usuário';
-  document.getElementById('greeting').innerHTML = `Bom dia, ${escapeHtml(name)} 👋`;
-  const mini = document.getElementById('profileMini');
-  mini.innerHTML = '';
-  if (u.email) mini.innerHTML += `<div style="display:flex;align-items:center;gap:6px"><i data-lucide="mail" style="width:14px;height:14px;color:var(--primary)"></i>${escapeHtml(u.email)}</div>`;
-  if (u.phone) mini.innerHTML += `<div style="display:flex;align-items:center;gap:6px"><i data-lucide="phone" style="width:14px;height:14px;color:#22c55e"></i>WhatsApp: ${escapeHtml(u.phone)}</div>`;
-  document.getElementById('loginBtn').style.display = u.name ? 'none' : '';
-  document.getElementById('logoutBtn').style.display = u.name ? '' : 'none';
-  lucide.createIcons();
-}
-function fakeLogin(){
-  const name = prompt('Seu nome:', 'Rafael Costa') || 'Rafael Costa';
-  const email = prompt('Seu e-mail:', 'rafael@premier.com.br') || '';
-  localStorage.setItem('userName', name);
-  localStorage.setItem('userEmail', email);
-  renderUser();
-  toast('Login efetuado', `Bem-vindo, ${name}!`);
-}
-function logout(){
-  ['userName','userEmail','userPhone'].forEach(k=>localStorage.removeItem(k));
-  renderUser();
-  toast('Você saiu da conta');
-}
+  <script src="assets/data.js"></script>
+  <script src="assets/common.js"></script>
 
-// Metrics
-const metrics = [
-  {label:'Leads hoje',value:leads.length,delta:'+19%',icon:'users',color:'#22d3ee'},
-  {label:'Tempo médio de resposta',value:'3,2s',delta:'−42%',icon:'clock',color:'#10b981'},
-  {label:'Taxa de qualificação',value:'60%',delta:'+9%',icon:'target',color:'#f59e0b'},
-  {label:'Transferidos ao vendedor',value:'21',delta:'+6',icon:'trending-up',color:'#a855f7'},
-];
-document.getElementById('metrics').innerHTML = metrics.map(m=>`
+  <script>
+
+    window.handleGoogleCredential = function (response) {
+      try {
+        console.log("Token JWT recebido com sucesso!", response.credential);
+
+        // CORREÇÃO: Adicionado o índice [1] para pegar apenas o Payload do JWT
+        const base64Url = response.credential.split('.')[1];
+
+        // Tratamento de caracteres especiais e decodificação segura para evitar erros com acentos
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          window.atob(base64)
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+
+
+        const payload = JSON.parse(jsonPayload);
+        const nomeUsuario = payload.name;
+        const emailUsuario = payload.email;
+
+        // Altera a interface com os novos dados recebidos
+        if (nameI) nameI.value = nomeUsuario;
+        if (emailI) emailI.value = emailUsuario;
+
+        // Salva permanentemente no navegador
+        localStorage.setItem('userName', nomeUsuario);
+        localStorage.setItem('userEmail', emailUsuario);
+
+        const greetingEl = document.getElementById('greeting');
+        if (greetingEl) greetingEl.innerText = `Bem-vindo, ${nomeUsuario} 👋`;
+
+        // Atualiza o avatar e os blocos visuais de login
+        refresh();
+        checkUserLogin();
+
+        if (typeof toast === "function") {
+          toast('Perfil importado do Google com sucesso!');
+        }
+
+      } catch (error) {
+        console.error("Erro ao processar o login do Google:", error);
+        if (typeof toast === "function") {
+          toast('Erro ao processar dados do Google.');
+        }
+      }
+    };
+
+    const { leads, weeklyData, sources, STATUS_LABEL } = APP_DATA;
+
+    // Função para obter o período do dia (Bom dia, Boa tarde ou Boa noite)
+    function getPeriodGreeting() {
+      const hour = new Date().getHours();
+
+      if (hour >= 5 && hour < 12) {
+        return "Bom dia";
+      } else if (hour >= 12 && hour < 18) {
+        return "Boa tarde";
+      } else {
+        return "Boa noite";
+      }
+    }
+
+    // Função que atualiza o elemento H1 com a saudação correta e o nome do usuário
+    function updateGreeting() {
+      const greetingEl = document.getElementById('greeting');
+      if (greetingEl) {
+        const savedName = localStorage.getItem('userName') || 'Usuário';
+        const saudacao = getPeriodGreeting();
+        greetingEl.innerText = `${saudacao}, ${savedName} 👋`;
+      }
+    }
+
+    function getUser() {
+      return {
+        name: localStorage.getItem('userName') || '',
+        email: localStorage.getItem('userEmail') || '',
+        phone: localStorage.getItem('userPhone') || '',
+      };
+    }
+
+    // 1. Definição das variáveis dos inputs e inicialização dos valores via localStorage
+    const nameI = document.getElementById('name');
+    const emailI = document.getElementById('email');
+    const phoneI = document.getElementById('phone');
+
+    // Carrega os dados salvos do usuário ou mantém os valores padrão se for a primeira vez
+    if (nameI) nameI.value = localStorage.getItem('userName') || 'Usuário';
+    if (emailI) emailI.value = localStorage.getItem('userEmail') || 'BomDia@gmail.com.br';
+    if (phoneI) phoneI.value = localStorage.getItem('userPhone') || '+55 11 99876-5432';
+
+    // Executa a saudação dinâmica na inicialização da página
+    updateGreeting();
+
+
+    // 2. Função para manter a sessão ativa de forma permanente ao recarregar a página
+    function checkUserLogin() {
+      const savedName = localStorage.getItem('userName');
+      const savedEmail = localStorage.getItem('userEmail');
+
+      // Verifica se existem dados salvos no localStorage (Sessão Ativa)
+      if (savedName && savedEmail) {
+        const greetingEl = document.getElementById('greeting');
+        const avatarEl = document.getElementById('avatar');
+        const displayNameEl = document.getElementById('displayName');
+
+        if (greetingEl) greetingEl.innerText = `Bem-vindo, ${savedName} 👋`;
+        if (displayNameEl) displayNameEl.textContent = savedName;
+
+        if (avatarEl) {
+          avatarEl.textContent = savedName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+        }
+
+        // Gerencia os botões visualmente na interface se eles existirem na tela
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) logoutBtn.style.display = 'inline-block';
+
+        const googleBtnContainer = document.getElementById('googleAuthContainer');
+        if (googleBtnContainer) googleBtnContainer.style.display = 'none';
+      } else {
+        // Se o localStorage estiver totalmente limpo (Usuário deslogado)
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) logoutBtn.style.display = 'none';
+
+        const googleBtnContainer = document.getElementById('googleAuthContainer');
+        if (googleBtnContainer) googleBtnContainer.style.display = 'block';
+      }
+    }
+
+    // Executa a checagem assim que o documento carregar
+    document.addEventListener('DOMContentLoaded', checkUserLogin);
+
+    // 3. Função para atualizar os elementos visuais em tempo real ao digitar
+    function refresh() {
+      if (!nameI) return;
+      const n = nameI.value || 'Usuário';
+
+      const avatarEl = document.getElementById('avatar');
+      const displayNameEl = document.getElementById('displayName');
+
+      if (avatarEl) {
+        avatarEl.textContent = n.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+      }
+      if (displayNameEl) {
+        displayNameEl.textContent = n;
+      }
+    }
+
+    // Escuta as alterações manuais do formulário
+    [nameI, emailI, phoneI].forEach(i => {
+      if (i) i.addEventListener('input', refresh);
+    });
+    refresh();
+
+
+    // 5. Salvar perfil de forma manual (Formulário)
+    function saveProfile() {
+      if (nameI) localStorage.setItem('userName', nameI.value);
+      if (emailI) localStorage.setItem('userEmail', emailI.value);
+      if (phoneI) localStorage.setItem('userPhone', phoneI.value);
+      if (typeof toast === "function") {
+        toast('Perfil atualizado com sucesso!');
+      }
+    }
+
+    // 6. Sair da Conta (Apenas remove os dados quando clicado deliberadamente)
+    function logout() {
+      localStorage.removeItem('userName');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userPhone'); // Opcional
+
+      // Força o reset para os valores padrão iniciais na tela
+      if (nameI) nameI.value = 'Usuário';
+      if (emailI) emailI.value = 'rafael@premier.com.br';
+
+      window.location.reload();
+    }
+
+    // Metrics
+    const metrics = [
+      {
+        label: 'Leads hoje',
+        value: leads.length,
+        delta: '+0%',
+        icon: 'users',
+        color: '#22d3ee'
+      },
+      {
+        label: 'Tempo médio de resposta',
+        value: '3,2s',
+        delta: '0%',
+        icon: 'clock',
+        color: '#10b981'
+      },
+      {
+        label: 'Taxa de qualificação',
+        value: '0%',
+        delta: '+0%',
+        icon: 'target',
+        color: '#f59e0b'
+      },
+      {
+        label: 'Transferidos ao vendedor',
+        value: '21',
+        delta: '+0',
+        icon: 'trending-up',
+        color: '#a855f7'
+      },
+    ];
+    document.getElementById('metrics').innerHTML = metrics.map(m => `
   <div class="card" style="padding:20px">
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
       <div style="width:40px;height:40px;border-radius:12px;background:var(--secondary);color:${m.color};display:grid;place-items:center"><i data-lucide="${m.icon}" style="width:20px;height:20px"></i></div>
@@ -125,47 +329,51 @@ document.getElementById('metrics').innerHTML = metrics.map(m=>`
     <p style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:600;margin-top:14px">${m.value}</p>
     <p style="font-size:12px;color:var(--muted);margin-top:2px">${m.label}</p>
   </div>`).join('');
-document.getElementById('leadCount').textContent = leads.length + ' leads';
+    document.getElementById('leadCount').textContent = leads.length + ' leads';
 
-// Responsive grid for charts
-function applyChartGrid(){
-  const grid = document.getElementById('chartsGrid');
-  if (window.innerWidth >= 1024){
-    grid.style.gridTemplateColumns = '2fr 1fr';
-    grid.firstElementChild.style.gridColumn = 'auto';
-  } else {
-    grid.style.gridTemplateColumns = '1fr';
-  }
-}
-applyChartGrid(); window.addEventListener('resize',applyChartGrid);
+    // Responsive grid for charts
+    function applyChartGrid() {
+      const grid = document.getElementById('chartsGrid');
+      if (window.innerWidth >= 1024) {
+        grid.style.gridTemplateColumns = '2fr 1fr';
+        grid.firstElementChild.style.gridColumn = 'auto';
+      } else {
+        grid.style.gridTemplateColumns = '1fr';
+      }
+    }
+    applyChartGrid(); window.addEventListener('resize', applyChartGrid);
 
-// Charts
-new Chart(document.getElementById('barChart'),{
-  type:'bar',
-  data:{labels:weeklyData.map(d=>d.day),datasets:[
-    {label:'Leads',data:weeklyData.map(d=>d.leads),backgroundColor:'#06b6d4',borderRadius:6},
-    {label:'Qualificados',data:weeklyData.map(d=>d.qualificados),backgroundColor:'#10b981',borderRadius:6},
-  ]},
-  options:{responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{labels:{color:'#cbd5e1'}},tooltip:{titleColor:'#fff',bodyColor:'#fff'}},
-    scales:{x:{grid:{display:false},ticks:{color:'#94a3b8'}},y:{grid:{color:'rgba(148,163,184,.1)'},ticks:{color:'#94a3b8'}}}}
-});
-new Chart(document.getElementById('pieChart'),{
-  type:'doughnut',
-  data:{labels:sources.map(s=>s.name),datasets:[{data:sources.map(s=>s.value),backgroundColor:sources.map(s=>s.color),borderWidth:0}]},
-  options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:false},tooltip:{titleColor:'#fff',bodyColor:'#fff'}}}
-});
-const total = sources.reduce((a,b)=>a+b.value,0);
-document.getElementById('sourceLegend').innerHTML = sources.map(s=>`
+    // Charts
+    new Chart(document.getElementById('barChart'), {
+      type: 'bar',
+      data: {
+        labels: weeklyData.map(d => d.day), datasets: [
+          { label: 'Leads', data: weeklyData.map(d => d.leads), backgroundColor: '#06b6d4', borderRadius: 6 },
+          { label: 'Qualificados', data: weeklyData.map(d => d.qualificados), backgroundColor: '#10b981', borderRadius: 6 },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#cbd5e1' } }, tooltip: { titleColor: '#fff', bodyColor: '#fff' } },
+        scales: { x: { grid: { display: false }, ticks: { color: '#94a3b8' } }, y: { grid: { color: 'rgba(148,163,184,.1)' }, ticks: { color: '#94a3b8' } } }
+      }
+    });
+    new Chart(document.getElementById('pieChart'), {
+      type: 'doughnut',
+      data: { labels: sources.map(s => s.name), datasets: [{ data: sources.map(s => s.value), backgroundColor: sources.map(s => s.color), borderWidth: 0 }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { display: false }, tooltip: { titleColor: '#fff', bodyColor: '#fff' } } }
+    });
+    const total = sources.reduce((a, b) => a + b.value, 0);
+    document.getElementById('sourceLegend').innerHTML = sources.map(s => `
   <div class="row-hover" style="display:flex;justify-content:space-between;padding:6px 8px;border-radius:6px;font-size:12px;cursor:default">
     <div style="display:flex;align-items:center;gap:8px"><span class="dot" style="background:${s.color}"></span><span style="color:var(--muted)">${s.name}</span></div>
-    <span style="font-weight:600">${Math.round(s.value/total*100)}%</span>
+    <span style="font-weight:600">${Math.round(s.value / total * 100)}%</span>
   </div>`).join('');
 
-// Active leads
-document.getElementById('activeLeads').innerHTML = leads.slice(0,5).map(l=>`
+    // Active leads
+    document.getElementById('activeLeads').innerHTML = leads.slice(0, 5).map(l => `
   <div style="display:flex;align-items:center;gap:16px;padding:14px 20px;border-bottom:1px solid var(--border-soft)" class="row-hover">
-    <div style="width:40px;height:40px;border-radius:9999px;background:var(--secondary);display:grid;place-items:center;font-size:12px;font-weight:600;color:#34d399">${l.name.split(' ').map(w=>w[0]).slice(0,2).join('')}</div>
+    <div style="width:40px;height:40px;border-radius:9999px;background:var(--secondary);display:grid;place-items:center;font-size:12px;font-weight:600;color:#34d399">${l.name.split(' ').map(w => w[0]).slice(0, 2).join('')}</div>
     <div style="flex:1;min-width:0">
       <div style="display:flex;align-items:center;gap:8px">
         <p style="font-size:14px;font-weight:500;margin:0">${escapeHtml(l.name)}</p>
@@ -177,8 +385,9 @@ document.getElementById('activeLeads').innerHTML = leads.slice(0,5).map(l=>`
     <div style="width:48px;height:48px;border-radius:8px;background:var(--secondary);display:grid;place-items:center"><span style="font-family:'Space Grotesk';font-size:13px;font-weight:600;color:var(--primary)">${l.score}</span></div>
   </div>`).join('');
 
-renderUser();
-lucide.createIcons();
-</script>
+    renderUser();
+    lucide.createIcons();
+  </script>
 </body>
+
 </html>

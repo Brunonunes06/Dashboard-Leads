@@ -1,93 +1,115 @@
 <!doctype html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Conversas WhatsApp · Resposta</title>
-<meta name="description" content="Acompanhe leads do WhatsApp, qualifique com IA e transfira para vendedores humanos." />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/styles.css" />
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Conversas WhatsApp · Resposta</title>
+  <meta name="description"
+    content="Acompanhe leads do WhatsApp, qualifique com IA e transfira para vendedores humanos." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Firebase SDKs - Carregados ANTES do código -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 </head>
+
 <body>
-<div class="app">
-  <aside class="sidebar"></aside>
-  <div class="main">
-    <header class="topbar">
-      <div style="display:flex;align-items:center;gap:12px">
-        <button class="menu-btn" onclick="openMobileSidebar()"><i data-lucide="menu"></i></button>
-        <span class="topbar-title">Conversas WhatsApp</span>
-      </div>
-      <div class="topbar-actions">
-        <button class="btn btn-outline btn-icon" onclick="toggleTheme()"><i data-lucide="sun-moon"></i></button>
-      </div>
-    </header>
-
-    <div id="leadsLayout" style="display:grid;grid-template-columns:340px 1fr;flex:1;min-height:0">
-      <!-- list -->
-      <aside style="display:flex;flex-direction:column;border-right:1px solid var(--border-soft);background:var(--card2);min-height:0">
-        <div style="padding:14px;border-bottom:1px solid var(--border-soft);display:flex;flex-direction:column;gap:10px">
-          <div style="position:relative">
-            <i data-lucide="search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted)"></i>
-            <input class="input" id="searchInput" placeholder="Buscar lead, telefone, imóvel…" style="padding-left:34px" />
-          </div>
-          <div id="filters" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+  <div class="app">
+    <aside class="sidebar"></aside>
+    <div class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="menu-btn" onclick="openMobileSidebar()"><i data-lucide="menu"></i></button>
+          <span class="topbar-title">Conversas WhatsApp</span>
         </div>
-        <div id="leadList" class="scrollbar-thin" style="flex:1;overflow-y:auto"></div>
-      </aside>
+        <div class="topbar-actions">
+          <button class="btn btn-outline btn-icon" onclick="toggleTheme()"><i data-lucide="sun-moon"></i></button>
+        </div>
+      </header>
 
-      <!-- conversation -->
-      <section style="display:flex;flex-direction:column;min-width:0;min-height:0">
-        <header id="convHeader" style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border-soft);background:var(--card2)"></header>
-        <div id="messages" class="scrollbar-thin" style="flex:1;overflow-y:auto;padding:24px 20px;display:flex;flex-direction:column;gap:12px"></div>
-        <form id="replyForm" style="border-top:1px solid var(--border-soft);background:var(--card2);padding:12px 20px">
-          <div style="display:flex;gap:8px;align-items:end">
-            <div style="flex:1;display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:14px;padding:8px 12px;background:var(--bg)">
-              <i data-lucide="user" style="width:16px;height:16px;color:var(--muted)"></i>
-              <input id="replyInput" placeholder="Responder como humano…" style="flex:1;background:transparent;border:0;outline:none;color:var(--fg);font-size:14px;font-family:inherit" />
+      <div id="leadsLayout" style="display:grid;grid-template-columns:340px 1fr;flex:1;min-height:0">
+        <!-- list -->
+        <aside
+          style="display:flex;flex-direction:column;border-right:1px solid var(--border-soft);background:var(--card2);min-height:0">
+          <div
+            style="padding:14px;border-bottom:1px solid var(--border-soft);display:flex;flex-direction:column;gap:10px">
+            <div style="position:relative">
+              <i data-lucide="search"
+                style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted)"></i>
+              <input class="input" id="searchInput" placeholder="Buscar lead, telefone, imóvel…"
+                style="padding-left:34px" />
             </div>
-            <button class="btn btn-primary btn-icon" style="width:40px;height:40px;border-radius:9999px"><i data-lucide="send" style="width:16px;height:16px"></i></button>
+            <div id="filters" style="display:flex;gap:6px;flex-wrap:wrap"></div>
           </div>
-          <p style="font-size:10px;color:var(--muted);margin:6px 4px 0">IA está pausada nesta conversa enquanto você digita · enter para enviar</p>
-        </form>
-      </section>
+          <div id="leadList" class="scrollbar-thin" style="flex:1;overflow-y:auto"></div>
+        </aside>
+
+        <!-- conversation -->
+        <section style="display:flex;flex-direction:column;min-width:0;min-height:0">
+          <header id="convHeader"
+            style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border-soft);background:var(--card2)">
+          </header>
+          <div id="messages" class="scrollbar-thin"
+            style="flex:1;overflow-y:auto;padding:24px 20px;display:flex;flex-direction:column;gap:12px"></div>
+          <form id="replyForm"
+            style="border-top:1px solid var(--border-soft);background:var(--card2);padding:12px 20px">
+            <div style="display:flex;gap:8px;align-items:end">
+              <div
+                style="flex:1;display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:14px;padding:8px 12px;background:var(--bg)">
+                <i data-lucide="user" style="width:16px;height:16px;color:var(--muted)"></i>
+                <input id="replyInput" placeholder="Responder como humano…"
+                  style="flex:1;background:transparent;border:0;outline:none;color:var(--fg);font-size:14px;font-family:inherit" />
+              </div>
+              <button class="btn btn-primary btn-icon" style="width:40px;height:40px;border-radius:9999px"><i
+                  data-lucide="send" style="width:16px;height:16px"></i></button>
+            </div>
+            <p style="font-size:10px;color:var(--muted);margin:6px 4px 0">IA está pausada nesta conversa enquanto você
+              digita · enter para enviar</p>
+          </form>
+        </section>
+      </div>
     </div>
   </div>
-</div>
 
-<script src="assets/data.js"></script>
-<script src="assets/common.js"></script>
-<script>
-const { leads, STATUS_LABEL } = APP_DATA;
-const filters = [
-  {key:'todos',label:'Todos'},{key:'novo',label:'Novos'},{key:'qualificando',label:'Qualificando'},
-  {key:'qualificado',label:'Qualificados'},{key:'transferido',label:'Transferidos'},
-];
-let activeId = leads[0].id, currentFilter='todos', query='';
+  <script src="assets/data.js"></script>
+  <script src="assets/common.js"></script>
+  <script>
+    const { leads, STATUS_LABEL } = APP_DATA;
+    const filters = [
+      { key: 'todos', label: 'Todos' }, { key: 'novo', label: 'Novos' }, { key: 'qualificando', label: 'Qualificando' },
+      { key: 'qualificado', label: 'Qualificados' }, { key: 'transferido', label: 'Transferidos' },
+    ];
+    let activeId = leads[0].id, currentFilter = 'todos', query = '';
 
-function renderFilters(){
-  document.getElementById('filters').innerHTML = filters.map(f=>`
-    <button onclick="setFilter('${f.key}')" class="pill" style="cursor:pointer;border-color:var(--border);background:${currentFilter===f.key?'rgba(16,185,129,.15)':'transparent'};color:${currentFilter===f.key?'var(--primary)':'var(--muted)'}">${f.label}</button>`).join('');
-}
-function setFilter(k){ currentFilter=k; renderFilters(); renderList(); }
+    function renderFilters() {
+      document.getElementById('filters').innerHTML = filters.map(f => `
+    <button onclick="setFilter('${f.key}')" class="pill" style="cursor:pointer;border-color:var(--border);background:${currentFilter === f.key ? 'rgba(16,185,129,.15)' : 'transparent'};color:${currentFilter === f.key ? 'var(--primary)' : 'var(--muted)'}">${f.label}</button>`).join('');
+    }
+    function setFilter(k) { currentFilter = k; renderFilters(); renderList(); }
 
-function renderList(){
-  const list = leads.filter(l=>{
-    if (currentFilter!=='todos' && l.status!==currentFilter) return false;
-    if (query && !`${l.name} ${l.property} ${l.phone}`.toLowerCase().includes(query.toLowerCase())) return false;
-    return true;
-  });
-  const el = document.getElementById('leadList');
-  if (!list.length){ el.innerHTML = `<div style="padding:30px;text-align:center;color:var(--muted);font-size:14px">Nenhum lead com esses filtros.</div>`; return; }
-  el.innerHTML = list.map(l=>{
-    const active = l.id===activeId;
-    const initials = l.name.split(' ').map(w=>w[0]).slice(0,2).join('');
-    return `<button onclick="selectLead('${l.id}')" style="width:100%;display:flex;gap:12px;padding:14px;border:0;border-bottom:1px solid var(--border-soft);text-align:left;cursor:pointer;background:${active?'rgba(16,185,129,.12)':'transparent'};color:inherit">
+    function renderList() {
+      const list = leads.filter(l => {
+        if (currentFilter !== 'todos' && l.status !== currentFilter) return false;
+        if (query && !`${l.name} ${l.property} ${l.phone}`.toLowerCase().includes(query.toLowerCase())) return false;
+        return true;
+      });
+      const el = document.getElementById('leadList');
+      if (!list.length) { el.innerHTML = `<div style="padding:30px;text-align:center;color:var(--muted);font-size:14px">Nenhum lead com esses filtros.</div>`; return; }
+      el.innerHTML = list.map(l => {
+        const active = l.id === activeId;
+        const initials = l.name.split(' ').map(w => w[0]).slice(0, 2).join('');
+        return `<button onclick="selectLead('${l.id}')" style="width:100%;display:flex;gap:12px;padding:14px;border:0;border-bottom:1px solid var(--border-soft);text-align:left;cursor:pointer;background:${active ? 'rgba(16,185,129,.12)' : 'transparent'};color:inherit">
       <div style="position:relative;width:40px;height:40px;border-radius:9999px;background:var(--secondary);display:grid;place-items:center;font-size:12px;font-weight:600;flex-shrink:0">
         ${initials}
-        ${l.unread>0?`<span style="position:absolute;top:-4px;right:-4px;background:var(--primary);color:var(--primary-fg);border-radius:9999px;min-width:16px;height:16px;display:grid;place-items:center;font-size:10px;font-weight:700;padding:0 4px">${l.unread}</span>`:''}
+        ${l.unread > 0 ? `<span style="position:absolute;top:-4px;right:-4px;background:var(--primary);color:var(--primary-fg);border-radius:9999px;min-width:16px;height:16px;display:grid;place-items:center;font-size:10px;font-weight:700;padding:0 4px">${l.unread}</span>` : ''}
       </div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;justify-content:space-between;gap:8px">
@@ -101,19 +123,19 @@ function renderList(){
         </div>
       </div>
     </button>`;
-  }).join('');
-}
+      }).join('');
+    }
 
-function selectLead(id){
-  const l = leads.find(x=>x.id===id); if (!l) return;
-  activeId = id; l.unread = 0;
-  renderList(); renderConversation();
-}
+    function selectLead(id) {
+      const l = leads.find(x => x.id === id); if (!l) return;
+      activeId = id; l.unread = 0;
+      renderList(); renderConversation();
+    }
 
-function renderConversation(){
-  const l = leads.find(x=>x.id===activeId); if (!l) return;
-  const initials = l.name.split(' ').map(w=>w[0]).slice(0,2).join('');
-  document.getElementById('convHeader').innerHTML = `
+    function renderConversation() {
+      const l = leads.find(x => x.id === activeId); if (!l) return;
+      const initials = l.name.split(' ').map(w => w[0]).slice(0, 2).join('');
+      document.getElementById('convHeader').innerHTML = `
     <div style="display:flex;align-items:center;gap:12px;min-width:0">
       <div style="width:40px;height:40px;border-radius:9999px;background:var(--secondary);display:grid;place-items:center;font-size:12px;font-weight:600">${initials}</div>
       <div style="min-width:0">
@@ -126,56 +148,57 @@ function renderConversation(){
       <button class="btn btn-primary btn-sm" onclick="transferLead()"><i data-lucide="check-check" style="width:14px;height:14px"></i> Transferir</button>
     </div>`;
 
-  const wrap = document.getElementById('messages');
-  wrap.innerHTML = l.messages.map(m=>{
-    const isLead = m.sender==='lead';
-    const isAI = m.sender==='ai';
-    const label = isAI ? 'IA Resposta' : 'Você';
-    const bubble = isLead
-      ? 'background:var(--secondary);border-top-left-radius:4px'
-      : isAI ? 'background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.25);border-top-right-radius:4px'
-             : 'background:linear-gradient(135deg,#10b981,#06b6d4);color:#052e1b;border-top-right-radius:4px';
-    return `<div style="display:flex;gap:8px;${isLead?'':'justify-content:flex-end'}">
-      ${isLead?`<div style="width:28px;height:28px;border-radius:9999px;background:var(--secondary);display:grid;place-items:center;font-size:10px;font-weight:600;align-self:flex-end">L</div>`:''}
-      <div style="max-width:75%;display:flex;flex-direction:column;${!isLead?'align-items:flex-end':''}">
-        ${!isLead?`<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:${isAI?'var(--primary)':'#c084fc'};display:flex;align-items:center;gap:4px;margin-bottom:4px"><i data-lucide="${isAI?'bot':'user'}" style="width:12px;height:12px"></i>${label}</div>`:''}
+      const wrap = document.getElementById('messages');
+      wrap.innerHTML = l.messages.map(m => {
+        const isLead = m.sender === 'lead';
+        const isAI = m.sender === 'ai';
+        const label = isAI ? 'IA Resposta' : 'Você';
+        const bubble = isLead
+          ? 'background:var(--secondary);border-top-left-radius:4px'
+          : isAI ? 'background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.25);border-top-right-radius:4px'
+            : 'background:linear-gradient(135deg,#10b981,#06b6d4);color:#052e1b;border-top-right-radius:4px';
+        return `<div style="display:flex;gap:8px;${isLead ? '' : 'justify-content:flex-end'}">
+      ${isLead ? `<div style="width:28px;height:28px;border-radius:9999px;background:var(--secondary);display:grid;place-items:center;font-size:10px;font-weight:600;align-self:flex-end">L</div>` : ''}
+      <div style="max-width:75%;display:flex;flex-direction:column;${!isLead ? 'align-items:flex-end' : ''}">
+        ${!isLead ? `<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:${isAI ? 'var(--primary)' : '#c084fc'};display:flex;align-items:center;gap:4px;margin-bottom:4px"><i data-lucide="${isAI ? 'bot' : 'user'}" style="width:12px;height:12px"></i>${label}</div>` : ''}
         <div style="${bubble};border-radius:14px;padding:10px 14px;font-size:14px;line-height:1.5">${escapeHtml(m.text)}</div>
         <div style="font-size:10px;color:var(--muted);margin-top:4px;padding:0 4px">${m.time}</div>
       </div>
     </div>`;
-  }).join('');
-  wrap.scrollTop = wrap.scrollHeight;
-  lucide.createIcons();
-}
+      }).join('');
+      wrap.scrollTop = wrap.scrollHeight;
+      lucide.createIcons();
+    }
 
-function transferLead(){
-  const l = leads.find(x=>x.id===activeId);
-  l.status = 'transferido';
-  renderList(); renderConversation();
-  toast('Lead transferido', `${l.name} foi marcado como transferido.`);
-}
+    function transferLead() {
+      const l = leads.find(x => x.id === activeId);
+      l.status = 'transferido';
+      renderList(); renderConversation();
+      toast('Lead transferido', `${l.name} foi marcado como transferido.`);
+    }
 
-document.getElementById('searchInput').addEventListener('input',e=>{query=e.target.value;renderList();});
-document.getElementById('replyForm').addEventListener('submit',e=>{
-  e.preventDefault();
-  const input = document.getElementById('replyInput');
-  const text = input.value.trim(); if (!text) return;
-  const l = leads.find(x=>x.id===activeId);
-  l.messages.push({sender:'human',text,time:nowLabel()});
-  l.lastMessage = text; l.lastActivity='agora';
-  input.value='';
-  renderList(); renderConversation();
-  toast('Mensagem enviada','O lead recebeu no WhatsApp.');
-});
+    document.getElementById('searchInput').addEventListener('input', e => { query = e.target.value; renderList(); });
+    document.getElementById('replyForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const input = document.getElementById('replyInput');
+      const text = input.value.trim(); if (!text) return;
+      const l = leads.find(x => x.id === activeId);
+      l.messages.push({ sender: 'human', text, time: nowLabel() });
+      l.lastMessage = text; l.lastActivity = 'agora';
+      input.value = '';
+      renderList(); renderConversation();
+      toast('Mensagem enviada', 'O lead recebeu no WhatsApp.');
+    });
 
-function applyResponsive(){
-  const layout = document.getElementById('leadsLayout');
-  layout.style.gridTemplateColumns = window.innerWidth < 768 ? '1fr' : '340px 1fr';
-}
-applyResponsive(); window.addEventListener('resize',applyResponsive);
+    function applyResponsive() {
+      const layout = document.getElementById('leadsLayout');
+      layout.style.gridTemplateColumns = window.innerWidth < 768 ? '1fr' : '340px 1fr';
+    }
+    applyResponsive(); window.addEventListener('resize', applyResponsive);
 
-renderFilters(); renderList(); renderConversation();
-lucide.createIcons();
-</script>
+    renderFilters(); renderList(); renderConversation();
+    lucide.createIcons();
+  </script>
 </body>
+
 </html>

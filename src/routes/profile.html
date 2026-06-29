@@ -1,137 +1,313 @@
 <!doctype html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Perfil · Resposta</title>
-<meta name="description" content="Gerencie sua conta, tema e integrações." />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/styles.css" />
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Perfil · Resposta</title>
+  <meta name="description" content="Gerencie sua conta, tema e integrações." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Firebase SDKs - Carregados ANTES do código -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
 </head>
+
 <body>
-<div class="app">
-  <aside class="sidebar"></aside>
-  <div class="main">
-    <header class="topbar">
-      <div style="display:flex;align-items:center;gap:12px">
-        <button class="menu-btn" onclick="openMobileSidebar()"><i data-lucide="menu"></i></button>
-        <span class="topbar-title">Perfil</span>
-      </div>
-      <button class="btn btn-outline btn-icon" onclick="toggleTheme()"><i data-lucide="sun-moon"></i></button>
-    </header>
+  <div class="app">
+    <aside class="sidebar"></aside>
+    <div class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="menu-btn" onclick="openMobileSidebar()"><i data-lucide="menu"></i></button>
+          <span class="topbar-title">Perfil</span>
+        </div>
+        <button class="btn btn-outline btn-icon" onclick="toggleTheme()"><i data-lucide="sun-moon"></i></button>
+      </header>
 
-    <div style="max-width:900px;margin:0 auto;padding:24px;width:100%;display:flex;flex-direction:column;gap:20px">
-      <div>
-        <h1 style="font-size:28px;font-weight:600">Perfil</h1>
-        <p style="margin-top:6px;font-size:13px;color:var(--muted)">Seus dados, aparência e integrações da conta.</p>
-      </div>
+      <div style="max-width:900px;margin:0 auto;padding:24px;width:100%;display:flex;flex-direction:column;gap:20px">
+        <div>
+          <h1 style="font-size:28px;font-weight:600">Perfil</h1>
+          <p style="margin-top:6px;font-size:13px;color:var(--muted)">Seus dados, aparência e integrações da conta.</p>
+        </div>
 
-      <div class="card">
-        <div class="card-header"><h3 class="card-title"><i data-lucide="user" style="width:16px;height:16px;display:inline;vertical-align:middle;margin-right:6px"></i>Dados pessoais</h3></div>
-        <div class="card-body" style="display:flex;flex-direction:column;gap:18px">
-          <div style="display:flex;align-items:center;gap:16px">
-            <div style="position:relative">
-              <div id="avatar" style="width:80px;height:80px;border-radius:9999px;background:linear-gradient(135deg,#10b981,#06b6d4);color:#052e1b;display:grid;place-items:center;font-size:24px;font-weight:700">U</div>
-              <button style="position:absolute;bottom:-4px;right:-4px;width:28px;height:28px;border-radius:9999px;background:var(--card);border:1px solid var(--border);display:grid;place-items:center;cursor:pointer"><i data-lucide="camera" style="width:14px;height:14px"></i></button>
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><i data-lucide="user"
+                style="width:16px;height:16px;display:inline;vertical-align:middle;margin-right:6px"></i>Dados pessoais
+            </h3>
+          </div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:18px">
+            <div style="display:flex;align-items:center;gap:16px">
+              <div style="position:relative">
+                <div id="avatar"
+                  style="width:80px;height:80px;border-radius:9999px;background:linear-gradient(135deg,#10b981,#06b6d4);color:#052e1b;display:grid;place-items:center;font-size:24px;font-weight:700">
+                  U</div>
+                <button
+                  style="position:absolute;bottom:-4px;right:-4px;width:28px;height:28px;border-radius:9999px;background:var(--card);border:1px solid var(--border);display:grid;place-items:center;cursor:pointer"><i
+                    data-lucide="camera" style="width:14px;height:14px"></i></button>
+              </div>
+              <div>
+                <p id="displayName" style="margin:0;font-size:14px;font-weight:500">Usuário</p>
+                <p style="margin:2px 0 0;font-size:12px;color:var(--muted)">Administrador</p>
+              </div>
             </div>
+            <div style="display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+              <div><label class="label">Nome completo</label><input class="input" id="name" placeholder="Fulado Siclano" /></div>
+
+              <div><label class="label">E-mail</label><input class="input" id="email" type="email" placeholder="bomdia@gmail.com.br"/></div>
+
+              <div style="grid-column:1/-1"><label class="label">Telefone WhatsApp</label><input class="input"
+                  id="phone" placeholder="+55 11 99876-5432" /></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Aparência</h3>
+          </div>
+          <div class="card-body" style="display:flex;justify-content:space-between;align-items:center">
             <div>
-              <p id="displayName" style="margin:0;font-size:14px;font-weight:500">Usuário</p>
-              <p style="margin:2px 0 0;font-size:12px;color:var(--muted)">Administrador</p>
+              <p style="margin:0;font-size:14px;font-weight:500">Tema</p>
+              <p style="margin:2px 0 0;font-size:12px;color:var(--muted)">Claro, escuro ou sistema.</p>
+            </div>
+            <div style="display:flex;gap:6px;border:1px solid var(--border);border-radius:9999px;padding:3px">
+              <button id="themeLight" class="btn btn-sm" onclick="setTheme('light')" style="border-radius:9999px"><i
+                  data-lucide="sun" style="width:14px;height:14px"></i> Claro</button>
+              <button id="themeDark" class="btn btn-sm" onclick="setTheme('dark')" style="border-radius:9999px"><i
+                  data-lucide="moon" style="width:14px;height:14px"></i> Escuro</button>
             </div>
           </div>
-          <div style="display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
-            <div><label class="label">Nome completo</label><input class="input" id="name" /></div>
-            <div><label class="label">E-mail</label><input class="input" id="email" type="email" /></div>
-            <div style="grid-column:1/-1"><label class="label">Telefone WhatsApp</label><input class="input" id="phone" placeholder="+55 11 99876-5432" /></div>
-          </div>
         </div>
-      </div>
 
-      <div class="card">
-        <div class="card-header"><h3 class="card-title">Aparência</h3></div>
-        <div class="card-body" style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <p style="margin:0;font-size:14px;font-weight:500">Tema</p>
-            <p style="margin:2px 0 0;font-size:12px;color:var(--muted)">Claro, escuro ou sistema.</p>
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><i data-lucide="shield-check"
+                style="width:16px;height:16px;display:inline;vertical-align:middle;margin-right:6px"></i>Integrações
+            </h3>
           </div>
-          <div style="display:flex;gap:6px;border:1px solid var(--border);border-radius:9999px;padding:3px">
-            <button id="themeLight" class="btn btn-sm" onclick="setTheme('light')" style="border-radius:9999px"><i data-lucide="sun" style="width:14px;height:14px"></i> Claro</button>
-            <button id="themeDark" class="btn btn-sm" onclick="setTheme('dark')" style="border-radius:9999px"><i data-lucide="moon" style="width:14px;height:14px"></i> Escuro</button>
-          </div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:10px" id="integrations"></div>
         </div>
-      </div>
 
-      <div class="card">
-        <div class="card-header"><h3 class="card-title"><i data-lucide="shield-check" style="width:16px;height:16px;display:inline;vertical-align:middle;margin-right:6px"></i>Integrações</h3></div>
-        <div class="card-body" style="display:flex;flex-direction:column;gap:10px" id="integrations"></div>
-      </div>
-
-      <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn btn-outline">Cancelar</button>
-        <button class="btn btn-primary" onclick="saveProfile()">Salvar alterações</button>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <button class="btn btn-outline">Cancelar</button>
+          <button class="btn btn-primary">Salvar alterações</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<script src="assets/common.js"></script>
-<script>
-const nameI = document.getElementById('name');
-const emailI = document.getElementById('email');
-const phoneI = document.getElementById('phone');
+  <script src="assets/common.js"></script>
+  <script src="https://unpkg.com">
+    // Função de segurança para manter compatibilidade caso haja alguma chamada antiga para 'renderUser'
+    function renderUser() {
+      checkUserLogin();
+    }
 
-nameI.value = localStorage.getItem('userName') || 'Usuário';
-emailI.value = localStorage.getItem('userEmail') || 'rafael@premier.com.br';
-phoneI.value = localStorage.getItem('userPhone') || '+55 11 99876-5432';
+    function checkUserLogin() {
+      const savedName = localStorage.getItem('userName');
+      const savedEmail = localStorage.getItem('userEmail');
 
-function refresh(){
-  const n = nameI.value || 'Usuário';
-  document.getElementById('avatar').textContent = n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-  document.getElementById('displayName').textContent = n;
-}
-[nameI,emailI,phoneI].forEach(i=>i.addEventListener('input',refresh));
-refresh();
+      // Só considera logado se houver dados e NÃO for o e-mail padrão de teste local
+      if (savedName && savedEmail && savedEmail !== 'usuario@premier.com.br') {
+        const greetingEl = document.getElementById('greeting');
+        const avatarEl = document.getElementById('avatar');
+        const displayNameEl = document.getElementById('displayName');
 
-function saveProfile(){
-  localStorage.setItem('userName', nameI.value);
-  localStorage.setItem('userEmail', emailI.value);
-  localStorage.setItem('userPhone', phoneI.value);
-  toast('Perfil atualizado com sucesso!');
-}
+        if (greetingEl) greetingEl.innerText = `Bem-vindo, ${savedName} 👋`;
+        if (displayNameEl) displayNameEl.textContent = savedName;
 
-function setTheme(t){
-  localStorage.setItem('theme', t);
-  document.documentElement.classList.toggle('light', t==='light');
-  updateThemeBtns();
-}
-function updateThemeBtns(){
-  const isLight = document.documentElement.classList.contains('light');
-  document.getElementById('themeLight').style.background = isLight ? 'var(--primary)' : 'transparent';
-  document.getElementById('themeLight').style.color = isLight ? 'var(--primary-fg)' : 'var(--fg)';
-  document.getElementById('themeDark').style.background = !isLight ? 'var(--primary)' : 'transparent';
-  document.getElementById('themeDark').style.color = !isLight ? 'var(--primary-fg)' : 'var(--fg)';
-}
-updateThemeBtns();
+        if (avatarEl) {
+          avatarEl.textContent = savedName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+        }
 
-const integrations = [
-  {icon:'mail',title:'Conta Google',desc:'Login único e sincronização.',status:'pending',action:'Conectar'},
-  {icon:'message-circle',title:'WhatsApp Business',desc:'Automação de mensagens.',status:'pending',action:'Conectar'},
-  {icon:'phone',title:'Telefonia',desc:'Integração de chamadas.',status:'soon'},
-];
-document.getElementById('integrations').innerHTML = integrations.map((it,i)=>`
-  <div style="display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border);border-radius:10px;padding:14px">
-    <div style="display:flex;gap:12px;align-items:center">
-      <div style="width:36px;height:36px;border-radius:10px;background:var(--secondary);display:grid;place-items:center"><i data-lucide="${it.icon}" style="width:16px;height:16px"></i></div>
-      <div><p style="margin:0;font-size:14px;font-weight:500">${it.title}</p><p style="margin:2px 0 0;font-size:12px;color:var(--muted)">${it.desc}</p></div>
-    </div>
-    ${it.status==='soon'
-      ? `<span style="font-size:12px;color:var(--muted)">Em breve</span>`
-      : `<button class="btn btn-outline btn-sm" onclick="toast('Integração em curso','${it.title} solicitada.')">${it.action}</button>`}
-  </div>`).join('');
-lucide.createIcons();
-</script>
+        // Mostra o botão de Sair se ele existir na página atual
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) logoutBtn.style.display = 'inline-block';
+
+        // Esconde APENAS o botão do Google, mantendo o "Ver detalhado" visível
+        const googleBtnContainer = document.getElementById('googleAuthContainer');
+        if (googleBtnContainer) googleBtnContainer.style.display = 'none';
+      } else {
+        // Se não estiver logado com o Google, garante que o botão do Google apareça e o de Sair fique oculto
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) logoutBtn.style.display = 'none';
+
+        const googleBtnContainer = document.getElementById('googleAuthContainer');
+        if (googleBtnContainer) googleBtnContainer.style.display = 'block';
+      }
+    }
+
+    // Vincula a execução automática assim que o HTML carregar
+    document.addEventListener('DOMContentLoaded', checkUserLogin);
+
+    // Permite deslogar limpando o armazenamento local
+    function logout() {
+      localStorage.removeItem('userName');
+      localStorage.removeItem('userEmail');
+      window.location.reload();
+    }
+
+    // 1. Definição das variáveis dos inputs e inicialização dos valores via localStorage
+    const nameI = document.getElementById('name');
+    const emailI = document.getElementById('email');
+    const phoneI = document.getElementById('phone');
+
+    if (nameI) nameI.value = localStorage.getItem('userName') || 'Usuário';
+    if (emailI) emailI.value = localStorage.getItem('userEmail') || 'rafael@premier.com.br';
+    if (phoneI) phoneI.value = localStorage.getItem('userPhone') || '+55 11 99876-5432';
+
+    // 2. Função para atualizar os elementos visuais do Avatar e do Nome de Exibição
+    function refresh() {
+      if (!nameI) return;
+      const n = nameI.value || 'Usuário';
+
+      const avatarEl = document.getElementById('avatar');
+      const displayNameEl = document.getElementById('displayName');
+
+      if (avatarEl) {
+        avatarEl.textContent = n.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+      }
+      if (displayNameEl) {
+        displayNameEl.textContent = n;
+      }
+    }
+
+    // Vincula o evento de digitação para atualizar o avatar em tempo real
+    [nameI, emailI, phoneI].forEach(i => {
+      if (i) i.addEventListener('input', refresh);
+    });
+
+    // Executa a primeira atualização visual na inicialização
+    refresh();
+
+    // 3. Função padrão do Google para capturar os dados do usuário autenticado
+    window.handleGoogleCredential = function (response) {
+      try {
+        console.log("Token JWT recebido com sucesso!", response.credential);
+
+        // 1. Divide o token e pega a segunda parte (índice 1 - Payload)
+        const base64Url = response.credential.split('.')[1];
+
+        // 2. Decodifica tratando caracteres especiais e acentos de forma segura
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          window.atob(base64)
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+
+        const payload = JSON.parse(jsonPayload);
+        const nomeUsuario = payload.name;
+        const emailUsuario = payload.email;
+
+        // 3. CAPTURA OS INPUTS DO SEU FORMULÁRIO
+        const inputNome = document.getElementById('name');
+        const inputEmail = document.getElementById('email');
+
+        // 4. PREENCHE OS CAMPOS AUTOMATICAMENTE
+        if (inputNome) inputNome.value = nomeUsuario;
+        if (inputEmail) inputEmail.value = emailUsuario;
+
+        // 5. Salva no localStorage para manter os dados salvos no navegador
+        localStorage.setItem('userName', nomeUsuario);
+        localStorage.setItem('userEmail', emailUsuario);
+
+        // 6. Atualiza o texto de boas-vindas do cabeçalho (se houver)
+        const greetingEl = document.getElementById('greeting');
+        if (greetingEl) greetingEl.innerText = `Bem-vindo, ${nomeUsuario} 👋`;
+
+        // 7. Atualiza o avatar e os estados visuais da tela
+        if (typeof refresh === "function") refresh();
+        if (typeof checkUserLogin === "function") checkUserLogin();
+
+        // 8. Alerta visual de sucesso
+        if (typeof toast === "function") {
+          toast('Perfil importado do Google com sucesso!');
+        }
+
+      } catch (error) {
+        console.error("Erro ao processar o login do Google:", error);
+        if (typeof toast === "function") {
+          toast('Erro ao processar dados do Google.');
+        }
+      }
+    };
+
+    // 4. Função para salvar o perfil manualmente via formulário
+    function saveProfile() {
+      if (nameI) localStorage.setItem('userName', nameI.value);
+      if (emailI) localStorage.setItem('userEmail', emailI.value);
+      if (phoneI) localStorage.setItem('userPhone', phoneI.value);
+      if (typeof toast === "function") {
+        toast('Perfil updated com sucesso!');
+      }
+    }
+    // 5. Gerenciamento do Tema (Light / Dark)
+    function setTheme(t) {
+      localStorage.setItem('theme', t);
+      document.documentElement.classList.toggle('light', t === 'light');
+      updateThemeBtns();
+    }
+
+    function updateThemeBtns() {
+      const isLight = document.documentElement.classList.contains('light');
+      const btnLight = document.getElementById('themeLight');
+      const btnDark = document.getElementById('themeDark');
+
+      if (btnLight) {
+        btnLight.style.background = isLight ? 'var(--primary)' : 'transparent';
+        btnLight.style.color = isLight ? 'var(--primary-fg)' : 'var(--fg)';
+      }
+      if (btnDark) {
+        btnDark.style.background = !isLight ? 'var(--primary)' : 'transparent';
+        btnDark.style.color = !isLight ? 'var(--primary-fg)' : 'var(--fg)';
+      }
+    }
+    updateThemeBtns();
+
+    // 6. Renderização dinâmica dos blocos de Integrações
+    const integrations = [
+      { icon: 'mail', title: 'Conta Google', desc: 'Login único e sincronização.', status: 'pending', action: 'Conectar' },
+      { icon: 'message-circle', title: 'WhatsApp Business', desc: 'Automação de mensagens.', status: 'pending', action: 'Conectar' },
+      { icon: 'phone', title: 'Telefonia', desc: 'Integração de chamadas.', status: 'soon' },
+    ];
+
+    const integrationsEl = document.getElementById('integrations');
+    if (integrationsEl) {
+      integrationsEl.innerHTML = integrations.map((it, i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border);border-radius:10px;padding:14px">
+      <div style="display:flex;gap:12px;align-items:center">
+        <div style="width:36px;height:36px;border-radius:10px;background:var(--secondary);display:grid;place-items:center">
+          <i data-lucide="${it.icon}" style="width:16px;height:16px"></i>
+        </div>
+        <div>
+          <p style="margin:0;font-size:14px;font-weight:500">${it.title}</p>
+          <p style="margin:2px 0 0;font-size:12px;color:var(--muted)">${it.desc}</p>
+        </div>
+      </div>
+      ${it.status === 'soon'
+          ? `<span style="font-size:12px;color:var(--muted)">Em breve</span>`
+          : `<button class="btn btn-outline btn-sm" onclick="toast('Integração em curso','${it.title} solicitada.')">${it.action}</button>`}
+    </div>`).join('');
+
+      // Renderiza os ícones do Lucide após inserir o HTML
+      if (window.lucide && typeof lucide.createIcons === "function") {
+        lucide.createIcons();
+      }
+    }
+
+  </script>
 </body>
+
 </html>

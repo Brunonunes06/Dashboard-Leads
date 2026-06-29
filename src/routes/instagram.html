@@ -1,159 +1,157 @@
 <!doctype html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>CRM Instagram · Resposta</title>
-<meta name="description" content="Painel de leads vindos do Instagram." />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/styles.css" />
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CRM Instagram · Resposta</title>
+  <meta name="description" content="Painel de leads vindos do Instagram." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Firebase SDKs - Carregados ANTES do código -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 </head>
+
 <body>
-<div class="app">
-  <aside class="sidebar"></aside>
-  <div class="main">
-    <header class="topbar">
-      <div style="display:flex;align-items:center;gap:12px">
-        <button class="menu-btn" onclick="openMobileSidebar()"><i data-lucide="menu"></i></button>
-        <span class="topbar-title">CRM Instagram</span>
-      </div>
-      <button class="btn btn-outline btn-icon" onclick="toggleTheme()"><i data-lucide="sun-moon"></i></button>
-    </header>
-
-    <div style="max-width:1280px;margin:0 auto;padding:24px;width:100%;display:flex;flex-direction:column;gap:24px">
-      <div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><i data-lucide="camera" style="width:14px;height:14px"></i> CRM · Direct Messages</div>
-        <h1 style="font-size:24px;font-weight:600;margin-top:4px">Leads do Instagram</h1>
-        <p style="font-size:13px;color:var(--muted)">Acompanhe conversas qualificadas pelo robô Express em tempo real.</p>
-      </div>
-
-      <div id="metrics" style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))"></div>
-
-      <div class="card">
-        <div class="card-header">
-          <div><h3 class="card-title">Fluxo de Leads · 7 dias</h3><p style="font-size:11px;color:var(--muted);margin:2px 0 0">Mensagens recebidas vs. leads qualificados</p></div>
+  <div class="app">
+    <aside class="sidebar"></aside>
+    <div class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="menu-btn" onclick="openMobileSidebar()"><i data-lucide="menu"></i></button>
+          <span class="topbar-title">CRM Instagram</span>
         </div>
-        <div class="card-body" style="height:260px"><canvas id="flowChart"></canvas></div>
-      </div>
+        <button class="btn btn-outline btn-icon" onclick="toggleTheme()"><i data-lucide="sun-moon"></i></button>
+      </header>
 
-      <div class="card" style="padding:14px">
-        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
-          <div style="position:relative;flex:1;min-width:240px">
-            <i data-lucide="search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted)"></i>
-            <input class="input" id="searchInput" placeholder="Buscar por @senderId ou conteúdo…" style="padding-left:34px" />
+      <div style="max-width:1280px;margin:0 auto;padding:24px;width:100%;display:flex;flex-direction:column;gap:24px">
+        <div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><i data-lucide="camera"
+              style="width:14px;height:14px"></i> CRM · Direct Messages</div>
+          <h1 style="font-size:24px;font-weight:600;margin-top:4px">Leads do Instagram</h1>
+          <p style="font-size:13px;color:var(--muted)">Acompanhe conversas qualificadas pelo robô Express em tempo real.
+          </p>
+        </div>
+
+        <div id="metrics" style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))"></div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Fluxo de Leads · 7 dias</h3>
+              <p style="font-size:11px;color:var(--muted);margin:2px 0 0">Mensagens recebidas vs. leads qualificados</p>
+            </div>
           </div>
-          <select class="select" id="statusFilter" style="width:260px">
-            <option value="todos">Todos os status</option>
-            <option value="menu_inicial">Menu Inicial</option>
-            <option value="interessado_painel">Interessado em Painel</option>
-            <option value="aguardando_suporte">Aguardando Suporte Humano</option>
-            <option value="finalizado">Finalizado</option>
-          </select>
-          <div id="counter" style="margin-left:auto;font-size:12px;color:var(--muted)"></div>
+          <div class="card-body" style="height:260px"><canvas id="flowChart"></canvas></div>
         </div>
-      </div>
 
-      <div class="card" style="overflow:hidden">
-        <table style="width:100%;border-collapse:collapse;font-size:14px">
-          <thead>
-            <tr style="text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--border-soft)">
-              <th style="padding:12px 20px">Sender</th>
-              <th style="padding:12px 20px">Última mensagem</th>
-              <th style="padding:12px 20px">Status</th>
-              <th style="padding:12px 20px;text-align:right">Último contato</th>
-            </tr>
-          </thead>
-          <tbody id="igBody"></tbody>
-        </table>
+        <div class="card" style="padding:14px">
+          <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+            <div style="position:relative;flex:1;min-width:240px">
+              <i data-lucide="search"
+                style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted)"></i>
+              <input class="input" id="searchInput" placeholder="Buscar por @senderId ou conteúdo…"
+                style="padding-left:34px" />
+            </div>
+            <select class="select" id="statusFilter" style="width:260px">
+              <option value="todos">Todos os status</option>
+              <option value="menu_inicial">Menu Inicial</option>
+              <option value="interessado_painel">Interessado em Painel</option>
+              <option value="aguardando_suporte">Aguardando Suporte Humano</option>
+              <option value="finalizado">Finalizado</option>
+            </select>
+            <div id="counter" style="margin-left:auto;font-size:12px;color:var(--muted)"></div>
+          </div>
+        </div>
+
+        <div class="card" style="overflow:hidden">
+          <table style="width:100%;border-collapse:collapse;font-size:14px">
+            <thead>
+              <tr
+                style="text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--border-soft)">
+                <th style="padding:12px 20px">Sender</th>
+                <th style="padding:12px 20px">Última mensagem</th>
+                <th style="padding:12px 20px">Status</th>
+                <th style="padding:12px 20px;text-align:right">Último contato</th>
+              </tr>
+            </thead>
+            <tbody id="igBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Sheet -->
-<div id="sheetWrap" class="sheet-wrap">
-  <div class="sheet-backdrop" onclick="closeSheet()"></div>
-  <aside class="sheet">
-    <header style="border-bottom:1px solid var(--border-soft);padding:14px;display:flex;align-items:center;gap:12px" id="sheetHeader"></header>
-    <div id="sheetMessages" class="scrollbar-thin" style="flex:1;overflow-y:auto;padding:16px;background:rgba(0,0,0,.15);display:flex;flex-direction:column;gap:10px"></div>
-    <footer style="border-top:1px solid var(--border-soft);padding:12px">
-      <div style="display:flex;gap:8px">
-        <input id="replyInput" class="input" placeholder="Responder como humano…" />
-        <button id="sendBtn" class="btn btn-primary"><i data-lucide="send" style="width:16px;height:16px"></i></button>
+  <!-- Sheet -->
+  <div id="sheetWrap" class="sheet-wrap">
+    <div class="sheet-backdrop" onclick="closeSheet()"></div>
+    <aside class="sheet">
+      <header style="border-bottom:1px solid var(--border-soft);padding:14px;display:flex;align-items:center;gap:12px"
+        id="sheetHeader"></header>
+      <div id="sheetMessages" class="scrollbar-thin"
+        style="flex:1;overflow-y:auto;padding:16px;background:rgba(0,0,0,.15);display:flex;flex-direction:column;gap:10px">
       </div>
-      <p style="font-size:10px;color:var(--muted);margin:6px 0 0">Sua resposta substitui o robô Express nesta conversa.</p>
-    </footer>
-  </aside>
-</div>
+      <footer style="border-top:1px solid var(--border-soft);padding:12px">
+        <div style="display:flex;gap:8px">
+          <input id="replyInput" class="input" placeholder="Responder como humano…" />
+          <button id="sendBtn" class="btn btn-primary"><i data-lucide="send"
+              style="width:16px;height:16px"></i></button>
+        </div>
+        <p style="font-size:10px;color:var(--muted);margin:6px 0 0">Sua resposta substitui o robô Express nesta
+          conversa.</p>
+      </footer>
+    </aside>
+  </div>
 
-<script src="assets/common.js"></script>
-<script>
-const STATUS_META = {
-  menu_inicial:        {label:'Menu Inicial',cls:'status-novo'},
-  interessado_painel:  {label:'Interessado em Painel',cls:'status-qualificado'},
-  aguardando_suporte:  {label:'Aguardando Suporte Humano',cls:'status-qualificando'},
-  finalizado:          {label:'Finalizado',cls:'status-transferido'},
-};
-const iso = h => new Date(Date.now() - h*3600*1000).toISOString();
-const igLeads = [
-  {id:'l1',senderId:'@mariana.costa',avatar:'MC',status:'interessado_painel',lastMessage:'Quero saber o preço do painel solar de 5kW',lastContact:iso(0.05),unread:2,messages:[
-    {sender:'lead',text:'Oi! Vi o anúncio de vocês.',time:'14:02'},
-    {sender:'bot',text:'Olá Mariana! 👋 Eu sou o assistente Express. Como posso ajudar?\n\n1️⃣ Conhecer painéis solares\n2️⃣ Falar com um atendente',time:'14:02'},
-    {sender:'lead',text:'1',time:'14:03'},
-    {sender:'bot',text:'Ótima escolha! ☀️ Temos painéis de 3kW, 5kW e 10kW. Qual te interessa?',time:'14:03'},
-    {sender:'lead',text:'Quero saber o preço do painel solar de 5kW',time:'14:04'},
-  ]},
-  {id:'l2',senderId:'@joao_almeida',avatar:'JA',status:'aguardando_suporte',lastMessage:'Preciso falar com alguém da equipe técnica',lastContact:iso(0.5),unread:1,messages:[
-    {sender:'lead',text:'Comprei um painel mês passado e tenho dúvidas',time:'10:11'},
-    {sender:'bot',text:'Olá João! 1️⃣ Painéis 2️⃣ Atendente',time:'10:11'},
-    {sender:'lead',text:'2',time:'10:12'},
-    {sender:'bot',text:'Vou transferir você para um especialista. 🙏',time:'10:12'},
-    {sender:'lead',text:'Preciso falar com alguém da equipe técnica',time:'10:13'},
-  ]},
-  {id:'l3',senderId:'@luiza.fern',avatar:'LF',status:'menu_inicial',lastMessage:'oi',lastContact:iso(1),unread:1,messages:[
-    {sender:'lead',text:'oi',time:'13:00'},{sender:'bot',text:'Olá! 1️⃣ Painéis 2️⃣ Atendente',time:'13:00'},
-  ]},
-  {id:'l4',senderId:'@pedro.santos',avatar:'PS',status:'finalizado',lastMessage:'Obrigado, ficou tudo certo!',lastContact:iso(3),unread:0,messages:[
-    {sender:'lead',text:'Quero comprar um painel',time:'09:00'},
-    {sender:'bot',text:'1️⃣ Painéis 2️⃣ Atendente',time:'09:00'},
-    {sender:'lead',text:'1',time:'09:01'},
-    {sender:'human',text:'Oi Pedro, sou o Rafael. Vou te ajudar!',time:'09:05'},
-    {sender:'lead',text:'Obrigado, ficou tudo certo!',time:'09:20'},
-  ]},
-  {id:'l5',senderId:'@bia.ribeiro',avatar:'BR',status:'interessado_painel',lastMessage:'Vocês instalam em SP?',lastContact:iso(2),unread:0,messages:[
-    {sender:'lead',text:'Bom dia',time:'08:30'},
-    {sender:'bot',text:'Bom dia! 1️⃣ Painéis 2️⃣ Atendente',time:'08:30'},
-    {sender:'lead',text:'Vocês instalam em SP?',time:'08:32'},
-  ]},
-  {id:'l6',senderId:'@camila.arq',avatar:'CA',status:'aguardando_suporte',lastMessage:'Posso falar com um humano?',lastContact:iso(6),unread:3,messages:[
-    {sender:'lead',text:'Posso falar com um humano?',time:'06:00'},
-    {sender:'bot',text:'Claro! Vou transferir. 🙏',time:'06:00'},
-  ]},
-];
-const days=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
-const weeklyFlow=days.map((d,i)=>({day:d,recebidas:12+Math.round(Math.sin(i)*6+i*3),qualificados:4+Math.round(Math.cos(i)*3+i*1.5)}));
+  <script src="assets/common.js"></script>
+  <script>
+    const STATUS_META = {
+      menu_inicial: { label: 'Menu Inicial', cls: 'status-novo' },
+      interessado_painel: { label: 'Interessado em Painel', cls: 'status-qualificado' },
+      aguardando_suporte: { label: 'Aguardando Suporte Humano', cls: 'status-qualificando' },
+      finalizado: { label: 'Finalizado', cls: 'status-transferido' },
+    };
+    const iso = h => new Date(Date.now() - h * 3600 * 1000).toISOString();
+    const igLeads = [
+      {
+        id: 'l1', senderId: '@mariana.costa', avatar: 'MC', status: 'interessado_painel', lastMessage: 'Quero saber o preço do painel solar de 5kW', lastContact: iso(0.05), unread: 2, messages: [
+          { sender: 'lead', text: 'Oi! Vi o anúncio de vocês.', time: '14:02' },
+          { sender: 'bot', text: 'Olá Mariana! 👋 Eu sou o assistente Express. Como posso ajudar?\n\n1️⃣ Conhecer painéis solares\n2️⃣ Falar com um atendente', time: '14:02' },
+          { sender: 'lead', text: '1', time: '14:03' },
+          { sender: 'bot', text: 'Ótima escolha! ☀️ Temos painéis de 3kW, 5kW e 10kW. Qual te interessa?', time: '14:03' },
+          { sender: 'lead', text: 'Quero saber o preço do painel solar de 5kW', time: '14:04' },
+        ]
+      }
+    ];
+    const days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    const weeklyFlow = days.map((d, i) => ({ day: d, recebidas: 12 + Math.round(Math.sin(i) * 6 + i * 3), qualificados: 4 + Math.round(Math.cos(i) * 3 + i * 1.5) }));
 
-let query='',statusFilter='todos',openId=null;
+    let query = '', statusFilter = 'todos', openId = null;
 
-function relTime(iso){const d=(Date.now()-new Date(iso).getTime())/1000;if(d<60)return'agora';if(d<3600)return Math.floor(d/60)+' min';if(d<86400)return Math.floor(d/3600)+'h';return Math.floor(d/86400)+'d';}
+    function relTime(iso) { const d = (Date.now() - new Date(iso).getTime()) / 1000; if (d < 60) return 'agora'; if (d < 3600) return Math.floor(d / 60) + ' min'; if (d < 86400) return Math.floor(d / 3600) + 'h'; return Math.floor(d / 86400) + 'd'; }
 
-function renderMetrics(){
-  const today0=new Date();today0.setHours(0,0,0,0);
-  const today=igLeads.filter(l=>new Date(l.lastContact)>=today0).length;
-  const waiting=igLeads.filter(l=>l.status==='aguardando_suporte').length;
-  const finalized=igLeads.filter(l=>l.status==='finalizado').length;
-  const rate=igLeads.length?Math.round(finalized/igLeads.length*100):0;
-  const cards=[
-    {icon:'users',label:'Total de Leads',value:igLeads.length,color:'#34d399'},
-    {icon:'inbox',label:'Recebidos Hoje',value:today,color:'#22d3ee'},
-    {icon:'clock',label:'Aguardando Resposta',value:waiting,color:'#f59e0b'},
-    {icon:'trending-up',label:'Taxa de Conversão',value:rate+'%',color:'#a855f7'},
-  ];
-  document.getElementById('metrics').innerHTML = cards.map(c=>`
+    function renderMetrics() {
+      const today0 = new Date(); today0.setHours(0, 0, 0, 0);
+      const today = igLeads.filter(l => new Date(l.lastContact) >= today0).length;
+      const waiting = igLeads.filter(l => l.status === 'aguardando_suporte').length;
+      const finalized = igLeads.filter(l => l.status === 'finalizado').length;
+      const rate = igLeads.length ? Math.round(finalized / igLeads.length * 100) : 0;
+      const cards = [
+        { icon: 'users', label: 'Total de Leads', value: igLeads.length, color: '#34d399' },
+        { icon: 'inbox', label: 'Recebidos Hoje', value: today, color: '#22d3ee' },
+        { icon: 'clock', label: 'Aguardando Resposta', value: waiting, color: '#f59e0b' },
+        { icon: 'trending-up', label: 'Taxa de Conversão', value: rate + '%', color: '#a855f7' },
+      ];
+      document.getElementById('metrics').innerHTML = cards.map(c => `
     <div class="card" style="padding:20px;display:flex;justify-content:space-between;align-items:flex-start">
       <div>
         <p style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0">${c.label}</p>
@@ -161,25 +159,25 @@ function renderMetrics(){
       </div>
       <div style="background:var(--secondary);color:${c.color};padding:8px;border-radius:10px"><i data-lucide="${c.icon}" style="width:18px;height:18px"></i></div>
     </div>`).join('');
-}
+    }
 
-function renderTable(){
-  const q=query.toLowerCase().trim();
-  const filtered=igLeads
-    .filter(l=>statusFilter==='todos'||l.status===statusFilter)
-    .filter(l=>!q||l.senderId.toLowerCase().includes(q)||l.lastMessage.toLowerCase().includes(q)||l.messages.some(m=>m.text.toLowerCase().includes(q)))
-    .sort((a,b)=>+new Date(b.lastContact)-+new Date(a.lastContact));
-  document.getElementById('counter').textContent=`${filtered.length} de ${igLeads.length} leads`;
-  const body=document.getElementById('igBody');
-  if(!filtered.length){body.innerHTML=`<tr><td colspan="4" style="padding:40px;text-align:center;color:var(--muted);font-size:13px">Nenhum lead encontrado.</td></tr>`;return;}
-  body.innerHTML=filtered.map(l=>{
-    const m=STATUS_META[l.status];
-    return `<tr class="row-hover" style="cursor:pointer;border-bottom:1px solid var(--border-soft)" onclick="openLead('${l.id}')">
+    function renderTable() {
+      const q = query.toLowerCase().trim();
+      const filtered = igLeads
+        .filter(l => statusFilter === 'todos' || l.status === statusFilter)
+        .filter(l => !q || l.senderId.toLowerCase().includes(q) || l.lastMessage.toLowerCase().includes(q) || l.messages.some(m => m.text.toLowerCase().includes(q)))
+        .sort((a, b) => +new Date(b.lastContact) - +new Date(a.lastContact));
+      document.getElementById('counter').textContent = `${filtered.length} de ${igLeads.length} leads`;
+      const body = document.getElementById('igBody');
+      if (!filtered.length) { body.innerHTML = `<tr><td colspan="4" style="padding:40px;text-align:center;color:var(--muted);font-size:13px">Nenhum lead encontrado.</td></tr>`; return; }
+      body.innerHTML = filtered.map(l => {
+        const m = STATUS_META[l.status];
+        return `<tr class="row-hover" style="cursor:pointer;border-bottom:1px solid var(--border-soft)" onclick="openLead('${l.id}')">
       <td style="padding:12px 20px"><div style="display:flex;align-items:center;gap:12px">
         <div class="grad-ig" style="width:36px;height:36px;border-radius:9999px;display:grid;place-items:center;font-size:11px;font-weight:500">${l.avatar}</div>
         <div>
           <div style="display:flex;align-items:center;gap:8px"><span style="font-weight:500">${escapeHtml(l.senderId)}</span>
-          ${l.unread>0?`<span style="background:var(--primary);color:var(--primary-fg);border-radius:9999px;padding:0 6px;font-size:10px;font-weight:700;height:16px;display:inline-grid;place-items:center">${l.unread}</span>`:''}</div>
+          ${l.unread > 0 ? `<span style="background:var(--primary);color:var(--primary-fg);border-radius:9999px;padding:0 6px;font-size:10px;font-weight:700;height:16px;display:inline-grid;place-items:center">${l.unread}</span>` : ''}</div>
           <span style="font-size:11px;color:var(--muted)">Instagram Direct</span>
         </div>
       </div></td>
@@ -187,38 +185,38 @@ function renderTable(){
       <td style="padding:12px 20px"><span class="pill ${m.cls}">${m.label}</span></td>
       <td style="padding:12px 20px;text-align:right;font-size:11px;color:var(--muted)">${relTime(l.lastContact)}</td>
     </tr>`;
-  }).join('');
-  lucide.createIcons();
-}
+      }).join('');
+      lucide.createIcons();
+    }
 
-function openLead(id){
-  openId=id;
-  const l=igLeads.find(x=>x.id===id);if(!l)return;
-  l.unread=0;
-  const m=STATUS_META[l.status];
-  document.getElementById('sheetHeader').innerHTML=`
+    function openLead(id) {
+      openId = id;
+      const l = igLeads.find(x => x.id === id); if (!l) return;
+      l.unread = 0;
+      const m = STATUS_META[l.status];
+      document.getElementById('sheetHeader').innerHTML = `
     <div class="grad-ig" style="width:40px;height:40px;border-radius:9999px;display:grid;place-items:center;font-size:13px;font-weight:500">${l.avatar}</div>
     <div style="flex:1">
       <p style="margin:0;font-family:'Space Grotesk';font-size:15px;font-weight:600">${escapeHtml(l.senderId)}</p>
       <p style="margin:0;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px"><i data-lucide="camera" style="width:12px;height:12px"></i> Direct Message</p>
     </div>
     <span class="pill ${m.cls}">${m.label}</span>`;
-  renderMessages();
-  document.getElementById('sheetWrap').classList.add('open');
-  lucide.createIcons();renderTable();renderMetrics();lucide.createIcons();
-}
-function closeSheet(){document.getElementById('sheetWrap').classList.remove('open');openId=null;}
-function renderMessages(){
-  const l=igLeads.find(x=>x.id===openId);if(!l)return;
-  const meta={
-    lead:{name:'Lead',icon:'message-square-text',bg:'var(--card)'},
-    bot:{name:'Express Bot',icon:'bot',bg:'rgba(16,185,129,.1)'},
-    human:{name:'Você',icon:'user',bg:'rgba(6,182,212,.1)'},
-  };
-  const wrap=document.getElementById('sheetMessages');
-  wrap.innerHTML=l.messages.map(m=>{
-    const me=meta[m.sender];const mine=m.sender!=='lead';
-    return `<div style="display:flex;${mine?'justify-content:flex-end':''}">
+      renderMessages();
+      document.getElementById('sheetWrap').classList.add('open');
+      lucide.createIcons(); renderTable(); renderMetrics(); lucide.createIcons();
+    }
+    function closeSheet() { document.getElementById('sheetWrap').classList.remove('open'); openId = null; }
+    function renderMessages() {
+      const l = igLeads.find(x => x.id === openId); if (!l) return;
+      const meta = {
+        lead: { name: 'Lead', icon: 'message-square-text', bg: 'var(--card)' },
+        bot: { name: 'Express Bot', icon: 'bot', bg: 'rgba(16,185,129,.1)' },
+        human: { name: 'Você', icon: 'user', bg: 'rgba(6,182,212,.1)' },
+      };
+      const wrap = document.getElementById('sheetMessages');
+      wrap.innerHTML = l.messages.map(m => {
+        const me = meta[m.sender]; const mine = m.sender !== 'lead';
+        return `<div style="display:flex;${mine ? 'justify-content:flex-end' : ''}">
       <div style="max-width:80%;background:${me.bg};border:1px solid var(--border);border-radius:14px;padding:8px 12px;font-size:13px">
         <div style="display:flex;align-items:center;gap:6px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px">
           <i data-lucide="${me.icon}" style="width:12px;height:12px"></i>${me.name}<span style="margin-left:auto">${m.time}</span>
@@ -226,33 +224,38 @@ function renderMessages(){
         <p style="margin:0;white-space:pre-line;line-height:1.5">${escapeHtml(m.text)}</p>
       </div>
     </div>`;
-  }).join('');
-  wrap.scrollTop=wrap.scrollHeight;
-  lucide.createIcons();
-}
-function sendReply(){
-  const i=document.getElementById('replyInput');const t=i.value.trim();if(!t||!openId)return;
-  const l=igLeads.find(x=>x.id===openId);
-  l.messages.push({sender:'human',text:t,time:nowLabel()});l.lastMessage=t;l.lastContact=new Date().toISOString();
-  i.value='';renderMessages();renderTable();
-}
-document.getElementById('searchInput').addEventListener('input',e=>{query=e.target.value;renderTable();});
-document.getElementById('statusFilter').addEventListener('change',e=>{statusFilter=e.target.value;renderTable();});
-document.getElementById('sendBtn').addEventListener('click',sendReply);
-document.getElementById('replyInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendReply();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet();});
+      }).join('');
+      wrap.scrollTop = wrap.scrollHeight;
+      lucide.createIcons();
+    }
+    function sendReply() {
+      const i = document.getElementById('replyInput'); const t = i.value.trim(); if (!t || !openId) return;
+      const l = igLeads.find(x => x.id === openId);
+      l.messages.push({ sender: 'human', text: t, time: nowLabel() }); l.lastMessage = t; l.lastContact = new Date().toISOString();
+      i.value = ''; renderMessages(); renderTable();
+    }
+    document.getElementById('searchInput').addEventListener('input', e => { query = e.target.value; renderTable(); });
+    document.getElementById('statusFilter').addEventListener('change', e => { statusFilter = e.target.value; renderTable(); });
+    document.getElementById('sendBtn').addEventListener('click', sendReply);
+    document.getElementById('replyInput').addEventListener('keydown', e => { if (e.key === 'Enter') sendReply(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 
-new Chart(document.getElementById('flowChart'),{
-  type:'line',
-  data:{labels:weeklyFlow.map(d=>d.day),datasets:[
-    {label:'Recebidas',data:weeklyFlow.map(d=>d.recebidas),borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,.2)',fill:true,tension:.35,borderWidth:2,pointRadius:3},
-    {label:'Qualificados',data:weeklyFlow.map(d=>d.qualificados),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.2)',fill:true,tension:.35,borderWidth:2,pointRadius:3},
-  ]},
-  options:{responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{labels:{color:'#cbd5e1'}},tooltip:{titleColor:'#fff',bodyColor:'#fff'}},
-    scales:{x:{grid:{color:'rgba(148,163,184,.1)'},ticks:{color:'#94a3b8'}},y:{grid:{color:'rgba(148,163,184,.1)'},ticks:{color:'#94a3b8'}}}}
-});
-renderMetrics();renderTable();lucide.createIcons();
-</script>
+    new Chart(document.getElementById('flowChart'), {
+      type: 'line',
+      data: {
+        labels: weeklyFlow.map(d => d.day), datasets: [
+          { label: 'Recebidas', data: weeklyFlow.map(d => d.recebidas), borderColor: '#06b6d4', backgroundColor: 'rgba(6,182,212,.2)', fill: true, tension: .35, borderWidth: 2, pointRadius: 3 },
+          { label: 'Qualificados', data: weeklyFlow.map(d => d.qualificados), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,.2)', fill: true, tension: .35, borderWidth: 2, pointRadius: 3 },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#cbd5e1' } }, tooltip: { titleColor: '#fff', bodyColor: '#fff' } },
+        scales: { x: { grid: { color: 'rgba(148,163,184,.1)' }, ticks: { color: '#94a3b8' } }, y: { grid: { color: 'rgba(148,163,184,.1)' }, ticks: { color: '#94a3b8' } } }
+      }
+    });
+    renderMetrics(); renderTable(); lucide.createIcons();
+  </script>
 </body>
+
 </html>
