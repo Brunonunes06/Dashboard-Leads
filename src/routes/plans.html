@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Planos · Resposta</title>
+    <meta name="description" content="Escolha o plano mensal ou anual da plataforma." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" href="./img/logo.jpg" type="image/jpeg" />
+    <link rel="stylesheet" href="assets/styles.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  </head>
+
+  <body>
+    <div class="app">
+      <aside class="sidebar"></aside>
+      <div class="main">
+        <header class="topbar">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <button class="menu-btn" onclick="openMobileSidebar()">
+              <i data-lucide="menu"></i>
+            </button>
+            <span class="topbar-title">Planos</span>
+          </div>
+          <button class="btn btn-outline btn-icon" onclick="toggleTheme()" title="Alternar tema">
+            <i data-lucide="sun-moon"></i>
+          </button>
+        </header>
+
+        <main class="page-shell">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Escolha seu plano</h1>
+              <p style="margin: 8px 0 0; font-size: 13px; color: var(--muted)">
+                Comece com periodo gratis e mantenha sua operacao de leads ativa.
+              </p>
+            </div>
+          </div>
+
+          <div class="metrics-grid">
+            <section class="card" style="padding: 22px">
+              <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+                <div>
+                  <p style="margin: 0; font-size: 13px; color: var(--muted)">Plano mensal</p>
+                  <h2 style="font-size: 28px; margin-top: 6px">Mensalidade</h2>
+                </div>
+                <span class="pill status-qualificado">1 semana gratis</span>
+              </div>
+
+              <div style="margin-top: 22px">
+                <p style="margin: 0; font-size: 13px; color: var(--muted)">Primeira parcela</p>
+                <p style="font-family: 'Space Grotesk', sans-serif; font-size: 38px; font-weight: 700; margin: 4px 0 0">
+                  R$ 299,99
+                </p>
+                <p style="margin: 8px 0 0; font-size: 13px; color: var(--muted)">
+                  Depois, R$ 150 por mes nas proximas parcelas.
+                </p>
+              </div>
+
+              <div style="display: grid; gap: 10px; margin-top: 22px; font-size: 13px">
+                <div style="display: flex; gap: 8px; align-items: center">
+                  <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                  <span>Acesso ao dashboard e conversas</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center">
+                  <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                  <span>Ideal para testar a plataforma com menor entrada</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center">
+                  <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                  <span>Cobranca recorrente mensal</span>
+                </div>
+              </div>
+
+              <button class="btn btn-primary" style="width: 100%; margin-top: 24px" onclick="selectPlan('mensal')">
+                Assinar mensal
+              </button>
+            </section>
+
+            <section class="card" style="padding: 22px; border-color: color-mix(in srgb, var(--primary) 55%, var(--border))">
+              <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+                <div>
+                  <p style="margin: 0; font-size: 13px; color: var(--muted)">Plano anual</p>
+                  <h2 style="font-size: 28px; margin-top: 6px">Anual</h2>
+                </div>
+                <span class="pill status-transferido">1 mes gratis</span>
+              </div>
+
+              <div style="margin-top: 22px">
+                <p style="margin: 0; font-size: 13px; color: var(--muted)">Primeira parcela</p>
+                <p style="font-family: 'Space Grotesk', sans-serif; font-size: 38px; font-weight: 700; margin: 4px 0 0">
+                  R$ 1.600,00
+                </p>
+                <p style="margin: 8px 0 0; font-size: 13px; color: var(--muted)">
+                  Depois, R$ 900 por ano nas proximas renovacoes.
+                </p>
+              </div>
+
+              <div style="display: grid; gap: 10px; margin-top: 22px; font-size: 13px">
+                <div style="display: flex; gap: 8px; align-items: center">
+                  <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                  <span>Melhor custo no longo prazo</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center">
+                  <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                  <span>1 mes completo gratis antes da cobranca</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center">
+                  <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                  <span>Renovacao anual por R$ 900</span>
+                </div>
+              </div>
+
+              <button class="btn btn-primary" style="width: 100%; margin-top: 24px" onclick="selectPlan('anual')">
+                Assinar anual
+              </button>
+            </section>
+          </div>
+
+          <section class="card">
+            <div class="card-body" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap">
+              <div>
+                <p style="margin: 0; font-size: 14px; font-weight: 600">Periodo gratis aplicado automaticamente</p>
+                <p style="margin: 4px 0 0; font-size: 12px; color: var(--muted)">
+                  Mensal libera 1 semana gratis. Anual libera 1 mes gratis.
+                </p>
+              </div>
+              <a class="btn btn-outline" href="profile.html">Ver perfil</a>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script src="assets/common.js"></script>
+    <script>
+      function selectPlan(plan) {
+        localStorage.setItem("selectedPlan", plan);
+        const message =
+          plan === "anual"
+            ? "Plano anual selecionado: R$ 1.600 na primeira parcela e R$ 900 nas renovacoes."
+            : "Plano mensal selecionado: R$  299,99 na primeira parcela e R$ 150 nas proximas.";
+        if (typeof toast === "function") toast("Plano selecionado", message);
+      }
+
+      if (window.lucide) lucide.createIcons();
+    </script>
+  </body>
+</html>

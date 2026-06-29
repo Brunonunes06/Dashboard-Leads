@@ -37,17 +37,7 @@
           </button>
         </header>
 
-        <div
-          style="
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 24px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-          "
-        >
+        <div class="page-shell">
           <div>
             <div
               style="
@@ -60,20 +50,13 @@
             >
               <i data-lucide="camera" style="width: 14px; height: 14px"></i> CRM · Direct Messages
             </div>
-            <h1 style="font-size: 24px; font-weight: 600; margin-top: 4px">Leads do Instagram</h1>
+            <h1 class="page-title" style="margin-top: 4px">Leads do Instagram</h1>
             <p style="font-size: 13px; color: var(--muted)">
               Acompanhe conversas qualificadas pelo robô Express em tempo real.
             </p>
           </div>
 
-          <div
-            id="metrics"
-            style="
-              display: grid;
-              gap: 16px;
-              grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            "
-          ></div>
+          <div id="metrics" class="metrics-grid"></div>
 
           <div class="card">
             <div class="card-header">
@@ -88,7 +71,7 @@
           </div>
 
           <div class="card" style="padding: 14px">
-            <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+            <div class="filter-row">
               <div style="position: relative; flex: 1; min-width: 240px">
                 <i
                   data-lucide="search"
@@ -109,7 +92,7 @@
                   style="padding-left: 34px"
                 />
               </div>
-              <select class="select" id="statusFilter" style="width: 260px">
+              <select class="select" id="statusFilter" style="width: min(260px, 100%)">
                 <option value="todos">Todos os status</option>
                 <option value="menu_inicial">Menu Inicial</option>
                 <option value="interessado_painel">Interessado em Painel</option>
@@ -124,6 +107,7 @@
           </div>
 
           <div class="card" style="overflow: hidden">
+            <div class="table-scroll">
             <table style="width: 100%; border-collapse: collapse; font-size: 14px">
               <thead>
                 <tr
@@ -144,6 +128,7 @@
               </thead>
               <tbody id="igBody"></tbody>
             </table>
+            </div>
           </div>
         </div>
       </div>
@@ -349,7 +334,7 @@
             const me = meta[m.sender];
             const mine = m.sender !== "lead";
             return `<div style="display:flex;${mine ? "justify-content:flex-end" : ""}">
-      <div style="max-width:80%;background:${me.bg};border:1px solid var(--border);border-radius:14px;padding:8px 12px;font-size:13px">
+      <div class="message-bubble" style="background:${me.bg};border:1px solid var(--border);border-radius:14px;padding:8px 12px;font-size:13px">
         <div style="display:flex;align-items:center;gap:6px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px">
           <i data-lucide="${me.icon}" style="width:12px;height:12px"></i>${me.name}<span style="margin-left:auto">${m.time}</span>
         </div>

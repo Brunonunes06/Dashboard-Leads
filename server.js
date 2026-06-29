@@ -1,13 +1,17 @@
 const express = require("express");
 const cors = require("cors");
+const fs = require("fs");
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const USER_IP_STORE_FILE = path.join(__dirname, "data", "user-ip-accounts.json");
 
 const dbLeads = {};
 
 app.use(cors());
 app.use(express.json());
+app.set("trust proxy", true);
 
 app.use((req, res, next) => {
   res.setHeader("ngrok-skip-browser-warning", "true");
@@ -50,6 +54,78 @@ app.post("/api/webhook", (req, res) => {
 });
 
 app.get("/favicon.ico", (req, res) => res.status(204).end());
+
+function ensureStoreDir() {
+  fs.mkdirSync(path.dirname(USER_IP_STORE_FILE), { recursive: true });
+}
+
+function readUserIpStore() {
+  try {
+    ensureStoreDir();
+    if (!fs.existsSync(USER_IP_STORE_FILE)) return { ips: {} };
+    return JSON.parse(fs.readFileSync(USER_IP_STORE_FILE, "utf8"));
+  } catch (error) {
+    console.error("[Auth] Erro ao ler limitador de IP:", error);
+    return { ips: {} };
+  }
+}
+
+function writeUserIpStore(store) {
+  ensureStoreDir();
+  fs.writeFileSync(USER_IP_STORE_FILE, JSON.stringify(store, null, 2));
+}
+
+function getClientIp(req) {
+  const forwardedFor = req.headers["x-forwarded-for"];
+  const rawIp = Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor || req.ip || "";
+  return (
+    String(rawIp)
+      .split(",")[0]
+      .trim()
+      .replace(/^::ffff:/, "") || "unknown"
+  );
+}
+
+function normalizeEmail(email) {
+  return String(email || "")
+    .trim()
+    .toLowerCase();
+}
+
+app.post("/api/auth/ip-account", (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const name = String(req.body.name || "").trim();
+
+    if (!email) {
+      return res.status(400).json({ error: "E-mail da conta e obrigatorio." });
+    }
+
+    const ip = getClientIp(req);
+    const store = readUserIpStore();
+    const existing = store.ips[ip];
+
+    if (existing && existing.email !== email) {
+      return res.status(409).json({
+        error: "Este IP ja possui uma conta cadastrada.",
+        code: "IP_ACCOUNT_LIMIT_REACHED",
+      });
+    }
+
+    store.ips[ip] = {
+      email,
+      name: name || (existing && existing.name) || "",
+      createdAt: existing ? existing.createdAt : new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    writeUserIpStore(store);
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error("[Auth] Erro no limitador de IP:", error);
+    return res.status(500).json({ error: "Erro ao validar limite de conta por IP." });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta: ${PORT}`);

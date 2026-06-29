@@ -1,10 +1,14 @@
-// Shared sidebar, theme toggle, toast — runs on every page
+// Shared sidebar, theme toggle, toast — runs on every page DEVELOPER
 (function () {
   const ADMIN_EMAILS = ["myhpc3301@gmail.com", "marudona231@gmail.com"];
   const ADMIN_ONLY_PAGES = ["settings.html"];
 
   function isAdminEmail(email) {
-    return ADMIN_EMAILS.includes(String(email || "").toLowerCase());
+    return ADMIN_EMAILS.includes(
+      String(email || "")
+        .trim()
+        .toLowerCase(),
+    );
   }
 
   window.isAdminUser = function () {
@@ -25,7 +29,8 @@
   const navItems = [
     { href: "index.html", icon: "layout-dashboard", label: "Dashboard" },
     { href: "leads.html", icon: "messages-square", label: "Conversas WhatsApp" },
-    { href: "instagram.html", icon: "instagram", label: "CRM Instagram" },
+    { href: "plans.html", icon: "credit-card", label: "Planos" },
+    { href: "instagram.html", icon: "camera", label: "CRM Instagram", adminOnly: true },
     { href: "settings.html", icon: "settings-2", label: "Configurar IA", adminOnly: true },
     { href: "profile.html", icon: "user-circle", label: "Perfil" },
   ];
@@ -41,7 +46,7 @@
     return `
     <div class="sidebar-brand">
           <img src="./img/logo.jpg" alt="Logo da Marca" class="brand-mark">
-      <div class="brand-text"><strong>Resposta</strong><span>SaaS de leads</span></div>
+      <div class="brand-text"><strong>TEAM WOLF</strong><span>SaaS de leads</span></div>
     </div>
     <nav class="nav">
       <p class="nav-section">Plataforma</p>
@@ -157,6 +162,17 @@
     };
   };
 
+  window.getUserRoleLabel = function (email) {
+    return isAdminEmail(email) ? "Administrador" : "Cliente";
+  };
+
+  window.updateUserRoleBadge = function (email) {
+    const roleEl = document.getElementById("userRoleLabel");
+    if (roleEl) {
+      roleEl.textContent = window.getUserRoleLabel(email || localStorage.getItem("userEmail"));
+    }
+  };
+
   window.syncUserProfile = function (profile) {
     const user = {
       ...window.getStoredUserProfile(),
@@ -177,6 +193,7 @@
     if (emailInput) emailInput.value = email;
     if (phoneInput && user.phone) phoneInput.value = user.phone;
     if (displayNameEl) displayNameEl.textContent = name;
+    window.updateUserRoleBadge(email);
     if (avatarEl) {
       if (photo) {
         avatarEl.innerHTML = `<img src="${window.escapeHtml(photo)}" alt="${window.escapeHtml(name)}" style="width:100%;height:100%;object-fit:cover;border-radius:9999px" referrerpolicy="no-referrer">`;
@@ -214,13 +231,43 @@
     return JSON.parse(jsonPayload);
   };
 
-  window.importGoogleProfile = function (response) {
+  window.getApiBaseUrl = function () {
+    return window.API_BASE_URL || localStorage.getItem("apiBaseUrl") || "http://localhost:3000";
+  };
+
+  window.registerUserAccountForIp = async function (profile) {
+    const email = String((profile && profile.email) || "")
+      .trim()
+      .toLowerCase();
+    if (!email) throw new Error("E-mail da conta e obrigatorio.");
+
+    const response = await fetch(`${window.getApiBaseUrl()}/api/auth/ip-account`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: profile.name || "",
+        email,
+      }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const error = new Error(data.error || "Nao foi possivel validar o limite de conta por IP.");
+      error.code = data.code;
+      throw error;
+    }
+
+    return data;
+  };
+
+  window.importGoogleProfile = async function (response) {
     const payload = window.readGoogleCredentialPayload(response);
     const profile = {
       name: payload.name || payload.given_name || "",
       email: payload.email || "",
       photo: payload.picture || "",
     };
+    await window.registerUserAccountForIp(profile);
     window.saveUserProfile(profile);
     if (typeof window.checkUserLogin === "function") window.checkUserLogin();
     if (typeof window.updateGreeting === "function") window.updateGreeting();

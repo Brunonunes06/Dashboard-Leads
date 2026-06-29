@@ -36,19 +36,9 @@
           </button>
         </header>
 
-        <div
-          style="
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 24px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-          "
-        >
+        <div class="page-shell" style="max-width: 900px">
           <div>
-            <h1 style="font-size: 28px; font-weight: 600">Perfil</h1>
+            <h1 class="page-title">Perfil</h1>
             <p style="margin-top: 6px; font-size: 13px; color: var(--muted)">
               Seus dados, aparência e integrações da conta.
             </p>
@@ -71,7 +61,7 @@
               </h3>
             </div>
             <div class="card-body" style="display: flex; flex-direction: column; gap: 18px">
-              <div style="display: flex; align-items: center; gap: 16px">
+              <div class="action-row">
                 <div style="position: relative">
                   <div
                     id="avatar"
@@ -111,7 +101,9 @@
                   <p id="displayName" style="margin: 0; font-size: 14px; font-weight: 500">
                     Usuário
                   </p>
-                  <p style="margin: 2px 0 0; font-size: 12px; color: var(--muted)">Administrador</p>
+                  <p id="userRoleLabel" style="margin: 2px 0 0; font-size: 12px; color: var(--muted)">
+                    Cliente
+                  </p>
                 </div>
               </div>
               <div
@@ -143,10 +135,7 @@
             <div class="card-header">
               <h3 class="card-title">Aparência</h3>
             </div>
-            <div
-              class="card-body"
-              style="display: flex; justify-content: space-between; align-items: center"
-            >
+            <div class="card-body settings-row">
               <div>
                 <p style="margin: 0; font-size: 14px; font-weight: 500">Tema</p>
                 <p style="margin: 2px 0 0; font-size: 12px; color: var(--muted)">
@@ -205,7 +194,7 @@
             ></div>
           </div>
 
-          <div style="display: flex; justify-content: flex-end; gap: 8px">
+          <div class="action-row" style="justify-content: flex-end">
             <button class="btn btn-outline">Cancelar</button>
             <button class="btn btn-primary" onclick="saveProfile()">Salvar alterações</button>
           </div>
@@ -227,19 +216,17 @@
         // Só considera logado se houver dados e NÃO for o e-mail padrão de teste local
         if (savedName && savedEmail && savedEmail !== "usuario@premier.com.br") {
           const greetingEl = document.getElementById("greeting");
-          const avatarEl = document.getElementById("avatar");
           const displayNameEl = document.getElementById("displayName");
 
           if (greetingEl) greetingEl.innerText = `Bem-vindo, ${savedName} 👋`;
           if (displayNameEl) displayNameEl.textContent = savedName;
 
-          if (avatarEl) {
-            avatarEl.textContent = savedName
-              .split(" ")
-              .map((w) => w[0])
-              .slice(0, 2)
-              .join("")
-              .toUpperCase();
+          if (typeof window.syncUserProfile === "function") {
+            window.syncUserProfile({
+              name: savedName,
+              email: savedEmail,
+              photo: localStorage.getItem("userPhoto") || "",
+            });
           }
 
           // Mostra o botão de Sair se ele existir na página atual
@@ -317,8 +304,16 @@
       refresh();
 
       // 3. Função padrão do Google para capturar os dados do usuário autenticado
-      window.handleGoogleCredential = function (response) {
+      window.handleGoogleCredential = async function (response) {
         try {
+          const profile = await window.importGoogleProfile(response);
+          if (typeof refresh === "function") refresh();
+          if (typeof checkUserLogin === "function") checkUserLogin();
+          if (typeof toast === "function") {
+            toast("Perfil importado do Google com sucesso!", profile.email);
+          }
+          return;
+
           console.log("Token JWT recebido com sucesso!", response.credential);
 
           // 1. Divide o token e pega a segunda parte (índice 1 - Payload)
@@ -348,9 +343,17 @@
           if (inputEmail) inputEmail.value = emailUsuario;
 
           // 5. Salva no localStorage para manter os dados salvos no navegador
-          localStorage.setItem("userName", nomeUsuario);
-          localStorage.setItem("userEmail", emailUsuario);
-          if (fotoUsuario) localStorage.setItem("userPhoto", fotoUsuario);
+          if (typeof window.saveUserProfile === "function") {
+            window.saveUserProfile({
+              name: nomeUsuario,
+              email: emailUsuario,
+              photo: fotoUsuario || "",
+            });
+          } else {
+            localStorage.setItem("userName", nomeUsuario);
+            localStorage.setItem("userEmail", emailUsuario);
+            if (fotoUsuario) localStorage.setItem("userPhoto", fotoUsuario);
+          }
 
           // 6. Atualiza o texto de boas-vindas do cabeçalho (se houver)
           const greetingEl = document.getElementById("greeting");
@@ -367,7 +370,7 @@
         } catch (error) {
           console.error("Erro ao processar o login do Google:", error);
           if (typeof toast === "function") {
-            toast("Erro ao processar dados do Google.");
+            toast("Login bloqueado", error.message || "Erro ao processar dados do Google.");
           }
         }
       };
@@ -377,8 +380,11 @@
         if (nameI) localStorage.setItem("userName", nameI.value);
         if (emailI) localStorage.setItem("userEmail", emailI.value);
         if (phoneI) localStorage.setItem("userPhone", phoneI.value);
+        if (typeof window.updateUserRoleBadge === "function") {
+          window.updateUserRoleBadge(emailI ? emailI.value : "");
+        }
         if (typeof toast === "function") {
-          toast("Perfil updated com sucesso!");
+          toast("Perfil atualizado com sucesso!");
         }
       }
       // 5. Gerenciamento do Tema (Light / Dark)
@@ -428,7 +434,7 @@
         integrationsEl.innerHTML = integrations
           .map(
             (it, i) => `
-    <div style="display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border);border-radius:10px;padding:14px">
+    <div class="integration-row" style="border:1px solid var(--border);border-radius:10px;padding:14px">
       <div style="display:flex;gap:12px;align-items:center">
         <div style="width:36px;height:36px;border-radius:10px;background:var(--secondary);display:grid;place-items:center">
           <i data-lucide="${it.icon}" style="width:16px;height:16px"></i>

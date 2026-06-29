@@ -47,6 +47,13 @@ body {
   color: var(--fg);
   font-family: Inter, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+html {
+  min-width: 320px;
+}
+body {
+  overflow-x: hidden;
 }
 h1,
 h2,
@@ -62,6 +69,26 @@ a {
 }
 button {
   font-family: inherit;
+}
+img,
+svg,
+canvas,
+video {
+  max-width: 100%;
+}
+input,
+select,
+textarea,
+button {
+  font-size: 16px;
+}
+@media (min-width: 768px) {
+  input,
+  select,
+  textarea,
+  button {
+    font-size: 14px;
+  }
 }
 
 /* ============ Layout ============ */
@@ -161,7 +188,8 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 24px;
+  gap: 12px;
+  padding: 12px clamp(14px, 3vw, 24px);
   border-bottom: 1px solid var(--border);
   background: var(--bg2);
   backdrop-filter: blur(14px);
@@ -169,14 +197,22 @@ button {
   top: 0;
   z-index: 30;
 }
+.topbar > * {
+  min-width: 0;
+}
 .topbar-title {
   font-size: 13px;
   color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .topbar-actions {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 .menu-btn {
   display: inline-grid;
@@ -199,8 +235,9 @@ button {
 .card {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 8px;
   box-shadow: 0 18px 45px -34px rgba(0, 0, 0, 0.65);
+  min-width: 0;
 }
 .card-header {
   padding: 18px 20px 0;
@@ -208,6 +245,7 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
 }
 .card-title {
   font-size: 14px;
@@ -232,6 +270,7 @@ button {
   background: transparent;
   color: var(--fg);
   white-space: nowrap;
+  min-height: 36px;
 }
 .btn:disabled {
   opacity: 0.5;
@@ -312,6 +351,7 @@ button {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   border: 1px solid;
+  white-space: nowrap;
 }
 .dot {
   width: 6px;
@@ -425,7 +465,7 @@ button {
   right: 0;
   height: 100%;
   width: 100%;
-  max-width: 440px;
+  max-width: min(440px, 100vw);
   background: var(--card2);
   border-left: 1px solid var(--border);
   display: flex;
@@ -454,7 +494,7 @@ button {
 }
 .sidebar-mobile .sb-panel {
   position: relative;
-  width: 260px;
+  width: min(280px, 86vw);
   height: 100%;
   background: var(--bg2);
   border-right: 1px solid var(--border);
@@ -465,6 +505,199 @@ button {
 /* utility */
 .row-hover:hover {
   background: var(--hover);
+}
+.page-shell {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: clamp(16px, 3vw, 24px);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 2.5vw, 24px);
+}
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.page-header > * {
+  min-width: 0;
+}
+.page-title {
+  font-size: clamp(22px, 4vw, 28px);
+  font-weight: 600;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.action-row,
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.metrics-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+}
+.charts-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 1024px) {
+  .charts-grid {
+    grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  }
+}
+.chart-panel {
+  min-height: 240px;
+}
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll table {
+  min-width: 720px;
+}
+.lead-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-soft);
+  cursor: pointer;
+}
+.lead-score {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: var(--secondary);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+.leads-layout {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+}
+.conversation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--card2);
+}
+.message-bubble {
+  max-width: min(75%, 680px);
+  overflow-wrap: anywhere;
+}
+.integration-row,
+.settings-row,
+.question-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.integration-row,
+.settings-row {
+  justify-content: space-between;
+}
+
+@media (max-width: 900px) {
+  .leads-layout {
+    grid-template-columns: 1fr;
+  }
+  .leads-layout > aside {
+    max-height: 42vh;
+    border-right: 0 !important;
+    border-bottom: 1px solid var(--border-soft);
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    align-items: flex-start;
+  }
+  .topbar-actions,
+  .action-row,
+  .filter-row {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .btn {
+    max-width: 100%;
+  }
+  .page-header {
+    gap: 14px;
+  }
+  .card-header,
+  .card-body {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .lead-row {
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px;
+  }
+  .lead-row .pill {
+    margin-top: 6px;
+  }
+  .lead-row > [style*="text-align:right"] {
+    display: none;
+  }
+  .lead-score {
+    width: 40px;
+    height: 40px;
+  }
+  .conversation-header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 12px 14px;
+  }
+  .conversation-header > div:last-child {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .message-bubble {
+    max-width: calc(100vw - 86px);
+  }
+  .sheet footer > div,
+  #replyForm > div {
+    align-items: stretch !important;
+  }
+  .integration-row,
+  .settings-row,
+  .question-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .integration-row > *,
+  .settings-row > *,
+  .question-row > * {
+    width: 100%;
+  }
+  #toast-root {
+    top: auto;
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+  }
+  .toast {
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+  }
 }
 
 html.light .sidebar,

@@ -37,10 +37,9 @@
         </div>
       </header>
 
-      <div style="max-width:1280px;margin:0 auto;padding:24px;width:100%;display:flex;flex-direction:column;gap:24px">
+      <div class="page-shell">
         <!-- Header -->
-        <div
-          style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px;padding-bottom:24px;border-bottom:1px solid var(--border-soft)">
+        <div class="page-header">
           <div>
             <h1 style="font-size:28px;font-weight:600" id="greeting">Bom dia, Usuário 👋</h1>
             <div id="profileMini"
@@ -48,7 +47,7 @@
             <p style="margin-top:8px;font-size:13px;color:var(--muted)">Sua central processou <strong
                 style="color:var(--fg)" id="leadCount">6 leads</strong> nesta sessão.</p>
           </div>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div class="action-row">
             <!-- Container exclusivo do Google (Guarda apenas o botão de login) -->
             <div id="googleAuthContainer">
               <div id="g_id_onload"
@@ -68,19 +67,16 @@
           </div>
 
         </div>
-      </div>
-
-
-      <!-- Metrics -->
-      <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))" id="metrics"></div>
+        <!-- Metrics -->
+        <div class="metrics-grid" id="metrics"></div>
 
       <!-- Charts -->
-      <div style="display:grid;gap:16px;grid-template-columns:1fr" id="chartsGrid">
-        <div class="card" style="grid-column:span 2">
+        <div class="charts-grid" id="chartsGrid">
+        <div class="card">
           <div class="card-header">
             <h3 class="card-title">Leads x Qualificados · últimos 7 dias</h3>
           </div>
-          <div class="card-body" style="height:280px"><canvas id="barChart"></canvas></div>
+          <div class="card-body chart-panel"><canvas id="barChart"></canvas></div>
         </div>
         <div class="card">
           <div class="card-header">
@@ -91,7 +87,7 @@
             <div id="sourceLegend" style="margin-top:12px;display:flex;flex-direction:column;gap:6px"></div>
           </div>
         </div>
-      </div>
+        </div>
 
       <!-- Active leads -->
       <div class="card">
@@ -101,6 +97,7 @@
         </div>
         <div id="activeLeads" style="border-top:1px solid var(--border-soft);margin-top:8px"></div>
       </div>
+      </div>
     </div>
   </div>
 
@@ -109,8 +106,14 @@
 
   <script>
 
-    window.handleGoogleCredential = function (response) {
+    window.handleGoogleCredential = async function (response) {
       try {
+        const profile = await window.importGoogleProfile(response);
+        if (typeof toast === "function") {
+          toast("Perfil importado do Google com sucesso!", profile.email);
+        }
+        return;
+
         console.log("Token JWT recebido com sucesso!", response.credential);
 
         // CORREÇÃO: Adicionado o índice [1] para pegar apenas o Payload do JWT
@@ -154,7 +157,7 @@
       } catch (error) {
         console.error("Erro ao processar o login do Google:", error);
         if (typeof toast === "function") {
-          toast('Erro ao processar dados do Google.');
+          toast("Login bloqueado", error.message || "Erro ao processar dados do Google.");
         }
       }
     };
@@ -322,7 +325,7 @@
     ];
     document.getElementById('metrics').innerHTML = metrics.map(m => `
   <div class="card" style="padding:20px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start; cursor: pointer">
       <div style="width:40px;height:40px;border-radius:12px;background:var(--secondary);color:${m.color};display:grid;place-items:center"><i data-lucide="${m.icon}" style="width:20px;height:20px"></i></div>
       <span style="background:rgba(16,185,129,.12);color:var(--primary);padding:2px 10px;border-radius:9999px;font-size:11px;font-weight:600">${m.delta}</span>
     </div>
@@ -330,18 +333,6 @@
     <p style="font-size:12px;color:var(--muted);margin-top:2px">${m.label}</p>
   </div>`).join('');
     document.getElementById('leadCount').textContent = leads.length + ' leads';
-
-    // Responsive grid for charts
-    function applyChartGrid() {
-      const grid = document.getElementById('chartsGrid');
-      if (window.innerWidth >= 1024) {
-        grid.style.gridTemplateColumns = '2fr 1fr';
-        grid.firstElementChild.style.gridColumn = 'auto';
-      } else {
-        grid.style.gridTemplateColumns = '1fr';
-      }
-    }
-    applyChartGrid(); window.addEventListener('resize', applyChartGrid);
 
     // Charts
     new Chart(document.getElementById('barChart'), {
@@ -372,17 +363,17 @@
 
     // Active leads
     document.getElementById('activeLeads').innerHTML = leads.slice(0, 5).map(l => `
-  <div style="display:flex;align-items:center;gap:16px;padding:14px 20px;border-bottom:1px solid var(--border-soft)" class="row-hover">
+  <div class="lead-row row-hover">
     <div style="width:40px;height:40px;border-radius:9999px;background:var(--secondary);display:grid;place-items:center;font-size:12px;font-weight:600;color:#34d399">${l.name.split(' ').map(w => w[0]).slice(0, 2).join('')}</div>
     <div style="flex:1;min-width:0">
       <div style="display:flex;align-items:center;gap:8px">
-        <p style="font-size:14px;font-weight:500;margin:0">${escapeHtml(l.name)}</p>
+        <p style="font-size:14px;font-weight:500;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(l.name)}</p>
         <span class="pill status-${l.status}">${STATUS_LABEL[l.status]}</span>
       </div>
       <p style="font-size:12px;color:var(--muted);margin:2px 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(l.lastMessage)}</p>
     </div>
     <div style="text-align:right;font-size:11px;color:var(--muted)">${l.lastActivity}</div>
-    <div style="width:48px;height:48px;border-radius:8px;background:var(--secondary);display:grid;place-items:center"><span style="font-family:'Space Grotesk';font-size:13px;font-weight:600;color:var(--primary)">${l.score}</span></div>
+    <div class="lead-score"><span style="font-family:'Space Grotesk';font-size:13px;font-weight:600;color:var(--primary)">${l.score}</span></div>
   </div>`).join('');
 
     renderUser();

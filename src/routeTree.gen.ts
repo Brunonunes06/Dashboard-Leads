@@ -9,15 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as LeadsChatRouteImport } from './routes/leads/chat'
 import { Route as AdminChatRouteImport } from './routes/admin/chat'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LeadsChatRoute = LeadsChatRouteImport.update({
   id: '/leads/chat',
   path: '/leads/chat',
@@ -30,44 +24,33 @@ const AdminChatRoute = AdminChatRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
   '/admin/chat': typeof AdminChatRoute
   '/leads/chat': typeof LeadsChatRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/admin/chat': typeof AdminChatRoute
   '/leads/chat': typeof LeadsChatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/admin/chat': typeof AdminChatRoute
   '/leads/chat': typeof LeadsChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin/chat' | '/leads/chat'
+  fullPaths: '/admin/chat' | '/leads/chat'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin/chat' | '/leads/chat'
-  id: '__root__' | '/' | '/admin/chat' | '/leads/chat'
+  to: '/admin/chat' | '/leads/chat'
+  id: '__root__' | '/admin/chat' | '/leads/chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   AdminChatRoute: typeof AdminChatRoute
   LeadsChatRoute: typeof LeadsChatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/leads/chat': {
       id: '/leads/chat'
       path: '/leads/chat'
@@ -86,7 +69,6 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   AdminChatRoute: AdminChatRoute,
   LeadsChatRoute: LeadsChatRoute,
 }

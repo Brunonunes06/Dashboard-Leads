@@ -113,19 +113,9 @@
           </button>
         </header>
 
-        <div
-          style="
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 24px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-          "
-        >
+        <div class="page-shell" style="max-width: 900px">
           <div>
-            <h1 style="font-size: 28px; font-weight: 600">Configurar IA</h1>
+            <h1 class="page-title">Configurar IA</h1>
             <p style="margin-top: 6px; font-size: 13px; color: var(--muted)">
               Personalize como a IA conversa, qualifica e transfere leads para sua equipe.
             </p>
@@ -211,16 +201,7 @@ Você é a Sofia, atendente da Premier Imóveis. Fale como um humano: linguagem 
               </h3>
             </div>
             <div class="card-body" style="display: flex; flex-direction: column; gap: 18px">
-              <div
-                style="
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: center;
-                  border: 1px solid var(--border);
-                  border-radius: 10px;
-                  padding: 14px;
-                "
-              >
+              <div class="settings-row" style="border: 1px solid var(--border); border-radius: 10px; padding: 14px">
                 <div>
                   <p style="margin: 0; font-size: 14px; font-weight: 500">
                     Transferir automaticamente para um corretor
@@ -273,7 +254,7 @@ Você é a Sofia, atendente da Premier Imóveis. Fale como um humano: linguagem 
             </div>
           </div>
 
-          <div style="display: flex; justify-content: flex-end; gap: 8px">
+          <div class="action-row" style="justify-content: flex-end">
             <button class="btn btn-outline">Cancelar</button>
             <button class="btn btn-primary">Salvar alterações</button>
           </div>
@@ -293,7 +274,7 @@ Você é a Sofia, atendente da Premier Imóveis. Fale como um humano: linguagem 
         document.getElementById("questions").innerHTML = questions
           .map(
             (q, i) => `
-    <div style="display:flex;align-items:center;gap:8px;border:1px solid var(--border);background:var(--bg);border-radius:10px;padding:8px">
+    <div class="question-row" style="border:1px solid var(--border);background:var(--bg);border-radius:10px;padding:8px">
       <i data-lucide="grip-vertical" style="width:16px;height:16px;color:var(--muted);cursor:grab"></i>
       <span style="width:24px;height:24px;border-radius:9999px;background:rgba(16,185,129,.15);color:var(--primary);display:grid;place-items:center;font-size:11px;font-weight:600">${i + 1}</span>
       <input class="input" style="border:0;background:transparent;padding:6px" value="${escapeHtml(q)}" oninput="questions[${i}]=this.value" />

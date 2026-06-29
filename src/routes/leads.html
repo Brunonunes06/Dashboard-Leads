@@ -41,10 +41,7 @@
           </div>
         </header>
 
-        <div
-          id="leadsLayout"
-          style="display: grid; grid-template-columns: 340px 1fr; flex: 1; min-height: 0"
-        >
+        <div id="leadsLayout" class="leads-layout">
           <!-- list -->
           <aside
             style="
@@ -93,14 +90,7 @@
           <section style="display: flex; flex-direction: column; min-width: 0; min-height: 0">
             <header
               id="convHeader"
-              style="
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 14px 20px;
-                border-bottom: 1px solid var(--border-soft);
-                background: var(--card2);
-              "
+              class="conversation-header"
             ></header>
             <div
               id="messages"
@@ -333,7 +323,7 @@
                 : "background:linear-gradient(135deg,#10b981,#06b6d4);color:#052e1b;border-top-right-radius:4px";
             return `<div style="display:flex;gap:8px;${isLead ? "" : "justify-content:flex-end"}">
       ${isLead ? `<div style="width:28px;height:28px;border-radius:9999px;background:var(--secondary);display:grid;place-items:center;font-size:10px;font-weight:600;align-self:flex-end">L</div>` : ""}
-      <div style="max-width:75%;display:flex;flex-direction:column;${!isLead ? "align-items:flex-end" : ""}">
+      <div class="message-bubble" style="display:flex;flex-direction:column;${!isLead ? "align-items:flex-end" : ""}">
         ${!isLead ? `<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:${isAI ? "var(--primary)" : "#c084fc"};display:flex;align-items:center;gap:4px;margin-bottom:4px"><i data-lucide="${isAI ? "bot" : "user"}" style="width:12px;height:12px"></i>${label}</div>` : ""}
         <div style="${bubble};border-radius:14px;padding:10px 14px;font-size:14px;line-height:1.5">${escapeHtml(m.text)}</div>
         <div style="font-size:10px;color:var(--muted);margin-top:4px;padding:0 4px">${m.time}</div>
@@ -423,13 +413,6 @@
           return true;
         },
       };
-
-      function applyResponsive() {
-        const layout = document.getElementById("leadsLayout");
-        layout.style.gridTemplateColumns = window.innerWidth < 768 ? "1fr" : "340px 1fr";
-      }
-      applyResponsive();
-      window.addEventListener("resize", applyResponsive);
 
       renderFilters();
       renderList();
