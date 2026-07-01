@@ -29,7 +29,7 @@
   const navItems = [
     { href: "index.html", icon: "layout-dashboard", label: "Dashboard" },
     { href: "leads.html", icon: "messages-square", label: "Conversas WhatsApp" },
-    { href: "plans.html", icon: "credit-card", label: "Planos" },
+    { href: "plans.html", icon: "credit-card", label: "Planos",},
     { href: "instagram.html", icon: "camera", label: "CRM Instagram", adminOnly: true },
     { href: "settings.html", icon: "settings-2", label: "Configurar IA", adminOnly: true },
     { href: "profile.html", icon: "user-circle", label: "Perfil" },

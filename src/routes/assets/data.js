@@ -37,6 +37,7 @@ window.APP_DATA = (function () {
           time: "14:02",
         },
         { sender: "human", text: "Estou olhando entre 2.5 e 3 milhões", time: "14:04" },
+        { sender: "human", text: "Estou olhando entre 2.5 e 3 milhões", time: "14:04" },
       ],
     },
   ];

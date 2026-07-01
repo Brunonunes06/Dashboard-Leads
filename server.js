@@ -7,6 +7,17 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const USER_IP_STORE_FILE = path.join(__dirname, "data", "user-ip-accounts.json");
 
+const MERCADO_PAGO_PLANS = {
+  mensal: {
+    description: "Plano mensal TEAM WOLF",
+    transaction_amount: 300,
+  },
+  anual: {
+    description: "Plano anual TEAM WOLF",
+    transaction_amount: 1600,
+  },
+};
+
 const dbLeads = {};
 
 app.use(cors());
@@ -124,6 +135,62 @@ app.post("/api/auth/ip-account", (req, res) => {
   } catch (error) {
     console.error("[Auth] Erro no limitador de IP:", error);
     return res.status(500).json({ error: "Erro ao validar limite de conta por IP." });
+  }
+});
+
+app.post("/api/payments/pix", async (req, res) => {
+  try {
+    const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
+    const plan = MERCADO_PAGO_PLANS[req.body.plan];
+    const payerEmail = normalizeEmail(req.body.email) || "cliente@teamwolf.local";
+
+    if (!plan) {
+      return res.status(400).json({ error: "Plano invalido." });
+    }
+
+    if (!accessToken) {
+      return res.status(500).json({
+        error: "Configure MERCADO_PAGO_ACCESS_TOKEN no servidor.",
+        code: "MERCADO_PAGO_TOKEN_MISSING",
+      });
+    }
+
+    const response = await fetch("https://api.mercadopago.com/v1/payments", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        "X-Idempotency-Key": `${req.body.plan}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      },
+      body: JSON.stringify({
+        transaction_amount: plan.transaction_amount,
+        description: plan.description,
+        payment_method_id: "pix",
+        payer: {
+          email: payerEmail,
+        },
+      }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      return res.status(response.status).json({
+        error: data.message || "Erro ao criar pagamento Pix no Mercado Pago.",
+        details: data,
+      });
+    }
+
+    return res.json({
+      id: data.id,
+      status: data.status,
+      qr_code: data.point_of_interaction?.transaction_data?.qr_code,
+      qr_code_base64: data.point_of_interaction?.transaction_data?.qr_code_base64,
+      ticket_url: data.point_of_interaction?.transaction_data?.ticket_url,
+    });
+  } catch (error) {
+    console.error("[Mercado Pago] Erro ao criar Pix:", error);
+    return res.status(500).json({ error: "Erro interno ao criar Pix." });
   }
 });
 
