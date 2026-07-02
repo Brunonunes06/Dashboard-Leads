@@ -116,13 +116,12 @@ app.post("/api/auth/ip-account", (req, res) => {
     const store = readUserIpStore();
     const existing = store.ips[ip];
 
-    // Removido bloqueio de IP para permitir multiplas contas no mesmo endereco IP.
-    // if (existing && existing.email !== email) {
-    //   return res.status(409).json({
-    //     error: "Este IP ja possui uma conta cadastrada.",
-    //     code: "IP_ACCOUNT_LIMIT_REACHED",
-    //   });
-    // }
+    if (existing && existing.email !== email) {
+      return res.status(409).json({
+        error: "Este IP ja possui uma conta cadastrada.",
+        code: "IP_ACCOUNT_LIMIT_REACHED",
+      });
+    }
 
     store.ips[ip] = {
       email,

@@ -15,6 +15,16 @@
   <link rel="stylesheet" href="assets/styles.css" />
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    // Fallback local shim caso o CDN seja bloqueado por Tracking Prevention
+    (function () {
+      if (window.Chart) return;
+      var s = document.createElement('script');
+      s.src = 'assets/vendor/chart-shim.js';
+      s.defer = true;
+      document.head.appendChild(s);
+    })();
+  </script>
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <!-- Firebase SDKs - Carregados ANTES do código -->
@@ -70,41 +80,43 @@
         <!-- Metrics -->
         <div class="metrics-grid" id="metrics"></div>
 
-      <!-- Charts -->
+        <!-- Charts -->
         <div class="charts-grid" id="chartsGrid">
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Leads x Qualificados · últimos 7 dias</h3>
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Leads x Qualificados · últimos 7 dias</h3>
+            </div>
+            <div class="card-body chart-panel"><canvas id="barChart"></canvas></div>
           </div>
-          <div class="card-body chart-panel"><canvas id="barChart"></canvas></div>
-        </div>
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Origem dos leads</h3>
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Origem dos leads</h3>
+            </div>
+            <div class="card-body">
+              <div style="height:180px"><canvas id="pieChart"></canvas></div>
+              <div id="sourceLegend" style="margin-top:12px;display:flex;flex-direction:column;gap:6px"></div>
+            </div>
           </div>
-          <div class="card-body">
-            <div style="height:180px"><canvas id="pieChart"></canvas></div>
-            <div id="sourceLegend" style="margin-top:12px;display:flex;flex-direction:column;gap:6px"></div>
-          </div>
-        </div>
         </div>
 
-      <!-- Active leads -->
-      <div class="card">
-        <div class="card-header">
-          <h3 class="card-title">Leads ativos recebidos</h3>
-          <a class="btn btn-ghost btn-sm" href="leads.html">Ver tudo</a>
+        <!-- Active leads -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Leads ativos recebidos</h3>
+            <a class="btn btn-ghost btn-sm" href="leads.html">Ver tudo</a>
+          </div>
+          <div id="activeLeads" style="border-top:1px solid var(--border-soft);margin-top:8px"></div>
         </div>
-        <div id="activeLeads" style="border-top:1px solid var(--border-soft);margin-top:8px"></div>
-      </div>
       </div>
     </div>
   </div>
 
   <script src="assets/data.js"></script>
   <script src="assets/common.js"></script>
+  <script src="assets/gsi-origins-check.js"></script>
 
   <script>
+    // Browser-only page: keep Node/Express code out of this script.
 
     window.handleGoogleCredential = async function (response) {
       try {
@@ -379,6 +391,7 @@
     renderUser();
     lucide.createIcons();
   </script>
+  <script src="assets/chart-fixes.js"></script>
 </body>
 
 </html>

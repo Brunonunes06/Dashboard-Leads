@@ -14,6 +14,17 @@
     <link rel="stylesheet" href="assets/styles.css" />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="icon" href="./img/logo.jpg" type="image/jpeg">
+    <script>
+      // Fallback local shim caso o CDN seja bloqueado por Tracking Prevention
+      (function(){
+        if (window.Chart) return;
+        var s = document.createElement('script');
+        s.src = 'assets/vendor/chart-shim.js';
+        s.defer = true;
+        document.head.appendChild(s);
+      })();
+    </script>
     <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!-- Firebase SDKs - Carregados ANTES do código -->
@@ -71,63 +82,63 @@
           </div>
 
           <div class="card" style="padding: 14px">
-            <div class="filter-row">
-              <div style="position: relative; flex: 1; min-width: 240px">
-                <i
-                  data-lucide="search"
-                  style="
-                    position: absolute;
-                    left: 10px;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    width: 16px;
-                    height: 16px;
-                    color: var(--muted);
-                  "
-                ></i>
-                <input
-                  class="input"
-                  id="searchInput"
-                  placeholder="Buscar por @senderId ou conteúdo…"
-                  style="padding-left: 34px"
-                />
-              </div>
-              <select class="select" id="statusFilter" style="width: min(260px, 100%)">
-                <option value="todos">Todos os status</option>
-                <option value="menu_inicial">Menu Inicial</option>
-                <option value="interessado_painel">Interessado em Painel</option>
-                <option value="aguardando_suporte">Aguardando Suporte Humano</option>
-                <option value="finalizado">Finalizado</option>
-              </select>
-              <div
-                id="counter"
-                style="margin-left: auto; font-size: 12px; color: var(--muted)"
-              ></div>
+              <div class="filter-row">
+                <div style="position: relative; flex: 1; min-width: 240px">
+                  <i
+                    data-lucide="search"
+                    style="
+                      position: absolute;
+                      left: 10px;
+                      top: 50%;
+                      transform: translateY(-50%);
+                      width: 16px;
+                      height: 16px;
+                      color: var(--muted);
+                    "
+                  ></i>
+                  <input
+                    class="input"
+                    id="searchInput"
+                    placeholder="Buscar por @senderId ou conteúdo…"
+                    style="padding-left: 34px"
+                  />
+                </div>
+                <select class="select" id="statusFilter" style="width: min(260px, 100%)">
+                  <option value="todos">Todos os status</option>
+                  <option value="menu_inicial">Menu Inicial</option>
+                  <option value="interessado_painel">Interessado em Painel</option>
+                  <option value="aguardando_suporte">Aguardando Suporte Humano</option>
+                  <option value="finalizado">Finalizado</option>
+                </select>
+                <div
+                  id="counter"
+                  style="margin-left: auto; font-size: 12px; color: var(--muted)"
+                ></div>
             </div>
           </div>
 
           <div class="card" style="overflow: hidden">
-            <div class="table-scroll">
-            <table style="width: 100%; border-collapse: collapse; font-size: 14px">
-              <thead>
-                <tr
-                  style="
-                    text-align: left;
-                    font-size: 11px;
-                    text-transform: uppercase;
-                    letter-spacing: 0.08em;
-                    color: var(--muted);
-                    border-bottom: 1px solid var(--border-soft);
-                  "
-                >
-                  <th style="padding: 12px 20px">Sender</th>
-                  <th style="padding: 12px 20px">Última mensagem</th>
-                  <th style="padding: 12px 20px">Status</th>
-                  <th style="padding: 12px 20px; text-align: right">Último contato</th>
-                </tr>
-              </thead>
-              <tbody id="igBody"></tbody>
-            </table>
+              <div class="table-scroll">
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px">
+                  <thead>
+                    <tr
+                      style="
+                        text-align: left;
+                        font-size: 11px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.08em;
+                        color: var(--muted);
+                        border-bottom: 1px solid var(--border-soft);
+                      "
+                    >
+                      <th style="padding: 12px 20px">Sender</th>
+                      <th style="padding: 12px 20px">Última mensagem</th>
+                      <th style="padding: 12px 20px">Status</th>
+                      <th style="padding: 12px 20px; text-align: right">Último contato</th>
+                    </tr>
+                  </thead>
+                  <tbody id="igBody"></tbody>
+                </table>
             </div>
           </div>
         </div>

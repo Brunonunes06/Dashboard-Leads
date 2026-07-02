@@ -11,7 +11,7 @@ window.APP_DATA = (function () {
   const leads = [
     {
       id: "1",
-      name: "Marina Albuquerque",
+      name: "Bruno Developer",
       phone: "+55 11 98123-4521",
       source: "Anúncio Instagram — Cobertura Vila Madalena",
       property: "Cobertura 3 quartos — Vila Madalena",

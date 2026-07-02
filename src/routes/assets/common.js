@@ -139,6 +139,39 @@
     return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   };
 
+  const CRM_SHARED_LEADS_KEY = "crmSharedLeads";
+
+  window.slugifyHandle = function (name) {
+    return (
+      "@" +
+      String(name || "lead")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ".")
+        .replace(/^\.+|\.+$/g, "") || "@lead"
+    );
+  };
+
+  window.loadSharedLeads = function (fallback = [], legacyKeys = ["whatsappLeads", "instagramLeads"]) {
+    const keys = [CRM_SHARED_LEADS_KEY, ...legacyKeys];
+    for (const key of keys) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(key) || "null");
+        if (Array.isArray(saved) && saved.length) return saved;
+      } catch (error) {
+        console.warn("Nao foi possivel ler conversas salvas.", error);
+      }
+    }
+    return JSON.parse(JSON.stringify(fallback));
+  };
+
+  window.saveSharedLeads = function (items, legacyKeys = ["whatsappLeads", "instagramLeads"]) {
+    const payload = JSON.stringify(items);
+    localStorage.setItem(CRM_SHARED_LEADS_KEY, payload);
+    legacyKeys.forEach((key) => localStorage.setItem(key, payload));
+  };
+
   // ----- User profile sync -----
   function initials(name) {
     return (
@@ -180,7 +213,7 @@
     };
     const name = user.name || "Usuario";
     const email = user.email || "";
-    const photo = user.photo || "";
+    const photo = /^https?:\/\//i.test(String(user.photo || "")) ? String(user.photo) : "";
 
     const nameInput = document.getElementById("name");
     const emailInput = document.getElementById("email");
@@ -218,7 +251,8 @@
   };
 
   window.readGoogleCredentialPayload = function (response) {
-    const base64Url = response && response.credential && response.credential.split(".")[1];
+    const credential = String(response && response.credential ? response.credential : "");
+    const base64Url = credential.split(".")[1];
     if (!base64Url) throw new Error("Token do Google invalido.");
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
@@ -262,12 +296,19 @@
 
   window.importGoogleProfile = async function (response) {
     const payload = window.readGoogleCredentialPayload(response);
+    const emailVerified = payload.email_verified;
+    if (emailVerified === false || emailVerified === "false") {
+      throw new Error("O e-mail do Google precisa estar verificado.");
+    }
     const profile = {
       name: payload.name || payload.given_name || "",
-      email: payload.email || "",
+      email: String(payload.email || "").trim().toLowerCase(),
       photo: payload.picture || "",
     };
-    await window.registerUserAccountForIp(profile);
+    // Chamada ao servidor para limitar contas por IP pode falhar quando o servidor
+    // local não está ativo — comentada para evitar erros no console durante desenvolvimento.
+    // await window.registerUserAccountForIp(profile);
+    // Se quiser validar no servidor, descomente a linha acima.
     window.saveUserProfile(profile);
     if (typeof window.checkUserLogin === "function") window.checkUserLogin();
     if (typeof window.updateGreeting === "function") window.updateGreeting();

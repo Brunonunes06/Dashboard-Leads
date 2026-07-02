@@ -9,15 +9,17 @@ import type { LeadWithMeta } from "@/hooks/useLeads";
 
 const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS ?? "myhpc3301@gmail.com")
   .split(",")
-  .map((e: string) => e.trim());
+  .map((e: string) => e.trim().toLowerCase());
 
 export const Route = createFileRoute("/leads/chat")({
   beforeLoad: async () => {
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    if (!session) throw redirect({ to: "/login" });
-    if (!ADMIN_EMAILS.includes(session.user.email ?? "")) throw redirect({ to: "/leads" });
+    if (!session) throw redirect({ to: "/" });
+    if (!ADMIN_EMAILS.includes((session.user.email ?? "").toLowerCase())) {
+      throw redirect({ to: "/" });
+    }
     return { adminId: session.user.id, adminName: "CEO" };
   },
   component: AdminChatPage,

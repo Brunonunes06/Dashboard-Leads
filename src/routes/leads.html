@@ -14,6 +14,7 @@
     rel="stylesheet" />
   <link rel="stylesheet" href="assets/styles.css" />
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <link rel="icon" href="./img/logo.jpg" type="image/jpeg">
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <!-- Firebase SDKs - Carregados ANTES do código -->
@@ -28,7 +29,7 @@
         <div class="flex flex-col items-center text-center">
           <div class="grid h-16 w-16 place-items-center rounded-full bg-secondary text-base font-semibold uppercase">MA
           </div>
-          <h3 class="mt-3 font-semibold">Marina Albuquerque</h3>
+          <h3 class="mt-3 font-semibold">Bruno Developer</h3>
           <p class="text-xs text-muted-foreground">+55 11 98123-4521</p>
           <div
             class="inline-flex items-center border transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-full px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-primary/15 text-primary border-primary/30 mt-2">
@@ -200,7 +201,7 @@
                 background: var(--card2);
                 padding: 12px 20px;
               ">
-            <div style="display: flex; gap: 8px; align-items: end">
+            <div style="gap: 8px; align-items: end">
               <div style="
                     flex: 1;
                     display: flex;
@@ -235,20 +236,30 @@
     </div>
   </div>
 
+  <div id="leadDetailsModal" style="display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);padding:20px">
+    <div style="width:min(460px,100%);margin:8vh auto 0;background:var(--bg);border:1px solid var(--border);border-radius:20px;box-shadow:0 24px 80px rgba(0,0,0,.45);overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border-soft)">
+        <div style="font-size:14px;font-weight:700">Informações do lead</div>
+        <button id="closeLeadDetailsBtn" class="btn btn-outline btn-sm" type="button">Fechar</button>
+      </div>
+      <div id="leadDetailsBody" style="padding:18px"></div>
+    </div>
+  </div>
+
   <script src="assets/data.js"></script>
   <script src="assets/common.js"></script>
   <script>
     const { STATUS_LABEL } = APP_DATA;
-    const STORAGE_KEY = "whatsappLeads";
-
     function cloneLeads() {
-      return JSON.parse(JSON.stringify(APP_DATA.leads));
+      return JSON.parse(JSON.stringify(APP_DATA.leads)).map((lead) => ({
+        ...lead,
+        instagramHandle: lead.instagramHandle || window.slugifyHandle(lead.name),
+      }));
     }
 
     function loadLeads() {
       try {
-        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-        return Array.isArray(saved) && saved.length ? saved : cloneLeads();
+        return window.loadSharedLeads(cloneLeads(), ["whatsappLeads"]);
       } catch (error) {
         console.warn("Nao foi possivel carregar conversas salvas.", error);
         return cloneLeads();
@@ -258,7 +269,7 @@
     let leads = loadLeads();
 
     function saveLeads() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(leads));
+      window.saveSharedLeads(leads, ["whatsappLeads"]);
     }
 
     function normalizeLead(data) {
@@ -279,6 +290,7 @@
         lastActivity: data.lastActivity || "agora",
         unread: Number(data.unread || 1),
         responseTime: data.responseTime || "agora",
+        instagramHandle: data.instagramHandle || window.slugifyHandle(data.name || "lead"),
         messages: Array.isArray(data.messages)
           ? data.messages
           : [{ sender: "lead", text: data.lastMessage || "Oi, quero atendimento.", time: nowLabel() }],
@@ -469,6 +481,57 @@
       toast("Lead transferido", `${l.name} foi marcado como transferido.`);
     }
 
+    function openLeadDetails() {
+      const l = leads.find((x) => x.id === activeId);
+      if (!l) return;
+      const modal = document.getElementById("leadDetailsModal");
+      const body = document.getElementById("leadDetailsBody");
+      if (!modal || !body) return;
+      const initials = l.name
+        .split(" ")
+        .map((w) => w[0])
+        .slice(0, 2)
+        .join("");
+
+      body.innerHTML = `
+        <div style="display:flex;align-items:center;gap:14px">
+          <div style="width:64px;height:64px;border-radius:9999px;background:var(--secondary);display:grid;place-items:center;font-size:20px;font-weight:700;flex-shrink:0">${initials}</div>
+          <div style="min-width:0;flex:1">
+            <div style="font-size:20px;font-weight:700;color:var(--fg)">${escapeHtml(l.name)}</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:4px">${escapeHtml(l.phone)}</div>
+            <div class="pill status-${l.status}" style="display:inline-flex;margin-top:10px">${STATUS_LABEL[l.status]}</div>
+          </div>
+        </div>
+        <div style="margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="border:1px solid var(--border);border-radius:14px;padding:14px">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase">Score</div>
+            <div style="font-size:28px;font-weight:800;color:var(--primary);margin-top:6px">${Number(l.score || 0)}</div>
+          </div>
+          <div style="border:1px solid var(--border);border-radius:14px;padding:14px">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase">Última atividade</div>
+            <div style="font-size:18px;font-weight:700;color:var(--fg);margin-top:6px">${escapeHtml(l.lastActivity || "agora")}</div>
+          </div>
+        </div>
+        <div style="margin-top:14px;border:1px solid var(--border);border-radius:14px;padding:14px">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase">Qualificação IA</div>
+          <div style="margin-top:10px;display:grid;gap:8px;font-size:14px;color:var(--fg)">
+            <div><span style="color:var(--muted)">Imóvel: </span>${escapeHtml(l.property || "-")}</div>
+            <div><span style="color:var(--muted)">Orçamento: </span>${escapeHtml(l.budget || "-")}</div>
+            <div><span style="color:var(--muted)">Quartos: </span>${escapeHtml(String(l.bedrooms || "-"))}</div>
+            <div><span style="color:var(--muted)">Região: </span>${escapeHtml(l.region || "-")}</div>
+            <div><span style="color:var(--muted)">Intenção: </span>${escapeHtml(l.intent || "-")}</div>
+          </div>
+        </div>
+      `;
+
+      modal.style.display = "block";
+    }
+
+    function closeLeadDetails() {
+      const modal = document.getElementById("leadDetailsModal");
+      if (modal) modal.style.display = "none";
+    }
+
     document.getElementById("searchInput").addEventListener("input", (e) => {
       query = e.target.value;
       renderList();
@@ -487,6 +550,19 @@
       renderList();
       renderConversation();
       toast("Mensagem enviada", "O lead recebeu no WhatsApp.");
+    });
+
+    document.getElementById("leadDetailsModal").addEventListener("click", (e) => {
+      if (e.target && e.target.id === "leadDetailsModal") closeLeadDetails();
+    });
+    document.getElementById("closeLeadDetailsBtn").addEventListener("click", closeLeadDetails);
+    window.addEventListener("storage", (e) => {
+      if (["crmSharedLeads", "whatsappLeads", "instagramLeads"].includes(e.key)) {
+        leads = loadLeads();
+        if (!leads.find((x) => x.id === activeId)) activeId = leads[0] ? leads[0].id : null;
+        renderList();
+        renderConversation();
+      }
     });
 
     window.whatsappTest = {
@@ -537,6 +613,10 @@
         return true;
       },
     };
+
+    window.openLeadDetails = openLeadDetails;
+    window.closeLeadDetails = closeLeadDetails;
+    window.transferLead = transferLead;
 
     renderFilters();
     renderList();

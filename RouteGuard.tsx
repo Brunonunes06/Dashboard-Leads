@@ -1,7 +1,7 @@
 // ============================================================
 // PASSO 3: Guarda de rotas — controla quem vê o quê
 // ============================================================
-import React from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
 interface RouteGuardProps {
@@ -13,6 +13,12 @@ interface RouteGuardProps {
 export function RouteGuard({ children, adminOnly = false }: RouteGuardProps) {
   const { user, loading } = useAuth();
 
+  useEffect(() => {
+    if (!loading && !user) {
+      window.location.href = "/";
+    }
+  }, [loading, user]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-950">
@@ -22,8 +28,6 @@ export function RouteGuard({ children, adminOnly = false }: RouteGuardProps) {
   }
 
   if (!user) {
-    // Redireciona para login — adapte para seu router
-    window.location.href = "/login";
     return null;
   }
 

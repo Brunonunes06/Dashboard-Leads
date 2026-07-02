@@ -14,7 +14,7 @@ export default async function LeadsChatServerPage() {
     data: { session },
   } = await supabase.auth.getSession();
 
-  if (!session) redirect("/login");
+  if (!session) redirect("/");
 
   // 2. Fetch the lead linked to this user
   const { data: lead, error } = await supabase

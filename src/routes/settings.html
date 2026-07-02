@@ -16,6 +16,7 @@
     />
     <link rel="stylesheet" href="assets/styles.css" />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <link rel="icon" href="./img/logo.jpg" type="image/jpeg" />
     <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!-- Firebase SDKs - Carregados ANTES do código -->
@@ -169,6 +170,60 @@ Você é a Sofia, atendente da Premier Imóveis. Fale como um humano: linguagem 
 
           <div class="card">
             <div class="card-header">
+              <h3 class="card-title">Configuração do bot</h3>
+            </div>
+            <div class="card-body" style="display: flex; flex-direction: column; gap: 16px">
+              <div class="settings-row" style="border: 1px solid var(--border); border-radius: 10px; padding: 14px">
+                <div>
+                  <p style="margin: 0; font-size: 14px; font-weight: 500">Bot ativo nas conversas</p>
+                  <p style="margin: 2px 0 0; font-size: 12px; color: var(--muted)">
+                    Quando desativado, as telas usam apenas atendimento humano.
+                  </p>
+                </div>
+                <label class="switch"><input type="checkbox" id="botEnabled" checked /><span class="slider-toggle"></span></label>
+              </div>
+
+              <div
+                style="
+                  display: grid;
+                  gap: 16px;
+                  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                "
+              >
+                <div>
+                  <label class="label">Nome do bot</label>
+                  <input class="input" id="botName" value="Express Bot" />
+                </div>
+                <div>
+                  <label class="label">Delay automático</label>
+                  <input class="input" id="botDelaySeconds" type="number" min="0" max="120" value="0" />
+                </div>
+              </div>
+
+              <div>
+                <label class="label">Mensagem inicial</label>
+                <textarea class="textarea" id="botGreeting" rows="4">Olá! Sou o Express Bot e posso te ajudar com imóveis, disponibilidade e agendamento.</textarea>
+              </div>
+
+              <div>
+                <label class="label">Mensagem de transferência</label>
+                <textarea class="textarea" id="botHandoff" rows="4">Perfeito. Vou te conectar agora com um especialista humano para seguir com o atendimento.</textarea>
+              </div>
+
+              <div class="settings-row" style="border: 1px solid var(--border); border-radius: 10px; padding: 14px">
+                <div>
+                  <p style="margin: 0; font-size: 14px; font-weight: 500">Resposta automática</p>
+                  <p style="margin: 2px 0 0; font-size: 12px; color: var(--muted)">
+                    Controla se o bot responde sozinho antes da transferência.
+                  </p>
+                </div>
+                <label class="switch"><input type="checkbox" id="botAutoReply" checked /><span class="slider-toggle"></span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
               <h3 class="card-title">Perguntas de qualificação</h3>
               <button class="btn btn-outline btn-sm" onclick="addQuestion()">
                 <i data-lucide="plus" style="width: 14px; height: 14px"></i> Adicionar
@@ -256,7 +311,7 @@ Você é a Sofia, atendente da Premier Imóveis. Fale como um humano: linguagem 
 
           <div class="action-row" style="justify-content: flex-end">
             <button class="btn btn-outline">Cancelar</button>
-            <button class="btn btn-primary">Salvar alterações</button>
+            <button class="btn btn-primary" onclick="saveSettings()">Salvar alterações</button>
           </div>
         </div>
       </div>
@@ -270,6 +325,7 @@ Você é a Sofia, atendente da Premier Imóveis. Fale como um humano: linguagem 
         "Qual região prefere?",
         "Qual seu prazo de mudança?",
       ];
+
       function renderQuestions() {
         document.getElementById("questions").innerHTML = questions
           .map(
@@ -284,39 +340,62 @@ Você é a Sofia, atendente da Premier Imóveis. Fale como um humano: linguagem 
           .join("");
         lucide.createIcons();
       }
+
       function addQuestion() {
         questions.push("Nova pergunta");
         renderQuestions();
       }
+
       function removeQ(i) {
         questions.splice(i, 1);
         renderQuestions();
       }
+
       document.getElementById("scoreRange").addEventListener("input", (e) => {
         document.getElementById("scoreHint").textContent =
           `Leads abaixo de ${e.target.value} continuam conversando com a IA ou são marcados como frios.`;
       });
+
       function saveSettings() {
         localStorage.setItem("aiQuestions", JSON.stringify(questions));
         localStorage.setItem("aiName", document.getElementById("aiName").value);
         localStorage.setItem("aiBrand", document.getElementById("aiBrand").value);
         localStorage.setItem("aiTone", document.getElementById("aiTone").value);
+        localStorage.setItem("botEnabled", document.getElementById("botEnabled").checked);
+        localStorage.setItem("botName", document.getElementById("botName").value);
+        localStorage.setItem("botDelaySeconds", document.getElementById("botDelaySeconds").value);
+        localStorage.setItem("botGreeting", document.getElementById("botGreeting").value);
+        localStorage.setItem("botHandoff", document.getElementById("botHandoff").value);
+        localStorage.setItem("botAutoReply", document.getElementById("botAutoReply").checked);
         localStorage.setItem("autoTransfer", document.getElementById("autoTransfer").checked);
         localStorage.setItem("minScore", document.getElementById("scoreRange").value);
         toast("Configurações salvas", "A IA já está usando as novas regras.");
       }
-      // load saved
-      ["aiName", "aiBrand", "aiTone"].forEach((k) => {
+
+      ["aiName", "aiBrand", "aiTone", "botName", "botGreeting", "botHandoff"].forEach((k) => {
         const v = localStorage.getItem(k);
         if (v) document.getElementById(k).value = v;
       });
+
+      const botEnabled = localStorage.getItem("botEnabled");
+      if (botEnabled !== null) document.getElementById("botEnabled").checked = botEnabled === "true";
+
+      const botAutoReply = localStorage.getItem("botAutoReply");
+      if (botAutoReply !== null)
+        document.getElementById("botAutoReply").checked = botAutoReply === "true";
+
+      const botDelaySeconds = localStorage.getItem("botDelaySeconds");
+      if (botDelaySeconds !== null) document.getElementById("botDelaySeconds").value = botDelaySeconds;
+
       const ms = localStorage.getItem("minScore");
       if (ms) {
         document.getElementById("scoreRange").value = ms;
         document.getElementById("scoreVal").textContent = ms;
       }
+
       const at = localStorage.getItem("autoTransfer");
       if (at !== null) document.getElementById("autoTransfer").checked = at === "true";
+
       renderQuestions();
       lucide.createIcons();
     </script>

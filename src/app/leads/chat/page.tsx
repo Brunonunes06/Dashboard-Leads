@@ -17,7 +17,7 @@ export default function ClientChatPage({ lead, userId }: ClientChatPageProps) {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    router.push("/login");
+    router.push("/");
   };
 
   return (
