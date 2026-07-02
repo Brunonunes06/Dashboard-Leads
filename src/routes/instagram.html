@@ -302,6 +302,8 @@
         if (!l) return;
         l.unread = 0;
         const m = STATUS_META[l.status];
+        const senderId = getSenderId(l);
+        const avatar = getAvatar(l);
         document.getElementById("sheetHeader").innerHTML = `
     <div class="grad-ig" style="width:40px;height:40px;border-radius:9999px;display:grid;place-items:center;font-size:13px;font-weight:500">${l.avatar}</div>
     <div style="flex:1">
@@ -338,7 +340,7 @@
         <div style="display:flex;align-items:center;gap:6px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px">
           <i data-lucide="${me.icon}" style="width:12px;height:12px"></i>${me.name}<span style="margin-left:auto">${m.time}</span>
         </div>
-        <p style="margin:0;white-space:pre-line;line-height:1.5">${escapeHtml(m.text)}</p>
+        <p style="margin:0;white-space:pre-line;line-height:1.55">${escapeHtml(m.text)}</p>
       </div>
     </div>`;
           })
