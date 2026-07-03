@@ -7,7 +7,7 @@ import { ChatWindow } from "@/components/ChatWindow";
 
 import type { LeadWithMeta } from "@/hooks/useLeads";
 
-const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS ?? "myhpc3301@gmail.com" ?? "bruno.nunes.santos06@escola.pr.gov.br")
+const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS ?? "myhpc3301@gmail.com, bruno.nunes.santos06@escola.pr.gov.br")
   .split(",")
   .map((e: string) => e.trim().toLowerCase());
 

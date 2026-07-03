@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/sidebar";
 
 // ✏️ Emails com acesso total ao sistema
-const ADMIN_EMAILS = ["myhpc3301@gmail.com", "bruno.nunes.santos06@escola.pr.gov.br"];
+const ADMIN_EMAILS = ["myhpc3301@gmail.com, bruno.nunes.santos06@escola.pr.gov.br"];
 
 const ALL_ITEMS = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, adminOnly: false },
