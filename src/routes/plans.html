@@ -1,570 +1,698 @@
 <!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Planos · Resposta</title>
-    <meta name="description" content="Escolha o plano mensal ou anual da plataforma." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="icon" href="./img/logo.jpg" type="image/jpeg" />
-    <link rel="stylesheet" href="assets/styles.css" />
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <style>
-      .payment-modal {
-        position: fixed;
-        inset: 0;
-        z-index: 90;
-        display: none;
-      }
 
-      .payment-modal.open {
-        display: block;
-      }
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Planos · Resposta</title>
+  <meta name="description" content="Escolha o plano mensal ou anual da plataforma." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="icon" href="./img/logo.jpg" type="image/jpeg" />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    .payment-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      display: none;
+    }
 
-      .payment-backdrop {
-        position: absolute;
-        inset: 0;
-        background: rgba(2, 6, 23, 0.72);
-        backdrop-filter: blur(6px);
-      }
+    .card:hover {
+      border-color: color-mix(in srgb, var(--primary) 55%, var(--border))
+    }
 
+    .payment-modal.open {
+      display: block;
+    }
+
+    .payment-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.72);
+      backdrop-filter: blur(6px);
+    }
+
+    .payment-panel {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: min(920px, calc(100vw - 24px));
+      max-height: calc(100vh - 24px);
+      transform: translate(-50%, -50%);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: minmax(260px, 0.85fr) minmax(0, 1.15fr);
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 28px 80px -30px rgba(0, 0, 0, 0.75);
+    }
+
+    .payment-summary {
+      padding: 22px;
+      background: color-mix(in srgb, var(--card) 82%, var(--bg));
+      border-right: 1px solid var(--border);
+    }
+
+    .payment-body {
+      padding: 22px;
+      overflow-y: auto;
+    }
+
+    .payment-methods {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .payment-method {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 72px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      background: var(--card);
+      cursor: pointer;
+    }
+
+    .payment-method.active {
+      border-color: var(--primary);
+      color: var(--fg);
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 70%, transparent);
+    }
+
+    .payment-form {
+      display: none;
+      margin-top: 18px;
+    }
+
+    .payment-form.active {
+      display: grid;
+      gap: 14px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .copy-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    .pix-qr-card {
+      display: grid;
+      place-items: center;
+      gap: 10px;
+      padding: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .pix-qr-card img {
+      width: min(220px, 100%);
+      aspect-ratio: 1;
+      padding: 10px;
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    @media (max-width: 760px) {
       .payment-panel {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: min(920px, calc(100vw - 24px));
-        max-height: calc(100vh - 24px);
-        transform: translate(-50%, -50%);
-        overflow: hidden;
-        display: grid;
-        grid-template-columns: minmax(260px, 0.85fr) minmax(0, 1.15fr);
-        background: var(--card2);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        box-shadow: 0 28px 80px -30px rgba(0, 0, 0, 0.75);
+        grid-template-columns: 1fr;
       }
 
       .payment-summary {
-        padding: 22px;
-        background: color-mix(in srgb, var(--card) 82%, var(--bg));
-        border-right: 1px solid var(--border);
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
       }
 
-      .payment-body {
-        padding: 22px;
-        overflow-y: auto;
-      }
-
-      .payment-methods {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 8px;
-        margin-top: 14px;
-      }
-
-      .payment-method {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        min-height: 72px;
-        padding: 10px;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        color: var(--muted);
-        background: var(--card);
-        cursor: pointer;
-      }
-
-      .payment-method.active {
-        border-color: var(--primary);
-        color: var(--fg);
-        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 70%, transparent);
-      }
-
-      .payment-form {
-        display: none;
-        margin-top: 18px;
-      }
-
-      .payment-form.active {
-        display: grid;
-        gap: 14px;
-      }
-
+      .payment-methods,
       .field-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
+        grid-template-columns: 1fr;
       }
+    }
+  </style>
+</head>
 
-      .copy-box {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px;
-        background: var(--input-bg);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        font-size: 12px;
-        color: var(--muted);
-        word-break: break-all;
-      }
-
-      .pix-qr-card {
-        display: grid;
-        place-items: center;
-        gap: 10px;
-        padding: 14px;
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-      }
-
-      .pix-qr-card img {
-        width: min(220px, 100%);
-        aspect-ratio: 1;
-        padding: 10px;
-        border-radius: 8px;
-        background: #ffffff;
-      }
-
-      @media (max-width: 760px) {
-        .payment-panel {
-          grid-template-columns: 1fr;
-        }
-
-        .payment-summary {
-          border-right: 0;
-          border-bottom: 1px solid var(--border);
-        }
-
-        .payment-methods,
-        .field-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-    </style>
-  </head>
-
-  <body>
-    <div class="app">
-      <aside class="sidebar"></aside>
-      <div class="main">
-        <header class="topbar">
-          <div style="display: flex; align-items: center; gap: 12px">
-            <button class="menu-btn" onclick="openMobileSidebar()">
-              <i data-lucide="menu"></i>
-            </button>
-            <span class="topbar-title">Planos</span>
-          </div>
-          <button class="btn btn-outline btn-icon" onclick="toggleTheme()" title="Alternar tema">
-            <i data-lucide="sun-moon"></i>
+<body>
+  <div class="app">
+    <aside class="sidebar"></aside>
+    <div class="main">
+      <header class="topbar">
+        <div style="display: flex; align-items: center; gap: 12px">
+          <button class="menu-btn" onclick="openMobileSidebar()">
+            <i data-lucide="menu"></i>
           </button>
-        </header>
-
-        <main class="page-shell">
-          <div class="page-header">
-            <div>
-              <h1 class="page-title">Escolha seu plano</h1>
-              <p style="margin: 8px 0 0; font-size: 13px; color: var(--muted)">
-                Comece com periodo gratis e mantenha sua operacao de leads ativa.
-              </p>
-            </div>
-          </div>
-
-          <div class="metrics-grid">
-            <section class="card" style="padding: 22px">
-              <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
-                <div>
-                  <p style="margin: 0; font-size: 13px; color: var(--muted)">Plano mensal</p>
-                  <h2 style="font-size: 28px; margin-top: 6px">Mensalidade</h2>
-                </div>
-                <span class="pill status-qualificado">1 semana gratis</span>
-              </div>
-
-              <div style="margin-top: 22px">
-                <p style="margin: 0; font-size: 13px; color: var(--muted)">Primeira parcela</p>
-                <p style="font-family: 'Space Grotesk', sans-serif; font-size: 38px; font-weight: 700; margin: 4px 0 0">
-                  R$ 299,99
-                </p>
-                <p style="margin: 8px 0 0; font-size: 13px; color: var(--muted)">
-                  Depois, R$ 150 por mes nas proximas parcelas.
-                </p>
-              </div>
-
-              <div style="display: grid; gap: 10px; margin-top: 22px; font-size: 13px">
-                <div style="display: flex; gap: 8px; align-items: center">
-                  <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                  <span>Acesso ao dashboard e conversas</span>
-                </div>
-                <div style="display: flex; gap: 8px; align-items: center">
-                  <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                  <span>Ideal para testar a plataforma com menor entrada</span>
-                </div>
-                <div style="display: flex; gap: 8px; align-items: center">
-                  <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                  <span>Cobranca recorrente mensal</span>
-                </div>
-              </div>
-
-              <button class="btn btn-primary" style="width: 100%; margin-top: 24px" onclick="selectPlan('mensal')">
-                Assinar mensal
-              </button>
-            </section>
-
-            <section class="card" style="padding: 22px; border-color: color-mix(in srgb, var(--primary) 55%, var(--border))">
-              <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
-                <div>
-                  <p style="margin: 0; font-size: 13px; color: var(--muted)">Plano anual</p>
-                  <h2 style="font-size: 28px; margin-top: 6px">Anual</h2>
-                </div>
-                <span class="pill status-transferido">1 mes gratis</span>
-              </div>
-
-              <div style="margin-top: 22px">
-                <p style="margin: 0; font-size: 13px; color: var(--muted)">Primeira parcela</p>
-                <p style="font-family: 'Space Grotesk', sans-serif; font-size: 38px; font-weight: 700; margin: 4px 0 0">
-                  R$ 1.600,00
-                </p>
-                <p style="margin: 8px 0 0; font-size: 13px; color: var(--muted)">
-                  Depois, R$ 900 por ano nas proximas renovacoes.
-                </p>
-              </div>
-
-              <div style="display: grid; gap: 10px; margin-top: 22px; font-size: 13px">
-                <div style="display: flex; gap: 8px; align-items: center">
-                  <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                  <span>Melhor custo no longo prazo</span>
-                </div>
-                <div style="display: flex; gap: 8px; align-items: center">
-                  <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                  <span>1 mes completo gratis antes da cobranca</span>
-                </div>
-                <div style="display: flex; gap: 8px; align-items: center">
-                  <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                  <span>Renovacao anual por R$ 900</span>
-                </div>
-              </div>
-
-              <button class="btn btn-primary" style="width: 100%; margin-top: 24px" onclick="selectPlan('anual')">
-                Assinar anual
-              </button>
-            </section>
-          </div>
-
-          <section class="card">
-            <div class="card-body" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap">
-              <div>
-                <p style="margin: 0; font-size: 14px; font-weight: 600">Periodo gratis aplicado automaticamente</p>
-                <p style="margin: 4px 0 0; font-size: 12px; color: var(--muted)">
-                  Mensal libera 1 semana gratis. Anual libera 1 mes gratis.
-                </p>
-              </div>
-              <a class="btn btn-outline" href="profile.html">Ver perfil</a>
-            </div>
-          </section>
-        </main>
-      </div>
-    </div>
-
-    <div class="payment-modal" id="paymentModal" aria-hidden="true">
-      <div class="payment-backdrop" onclick="closePaymentModal()"></div>
-      <section class="payment-panel" role="dialog" aria-modal="true" aria-labelledby="paymentTitle">
-        <aside class="payment-summary">
-          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
-            <span class="pill status-qualificado" id="paymentTrial">Periodo gratis</span>
-            <button class="btn btn-outline btn-icon" onclick="closePaymentModal()" aria-label="Fechar">
-              <i data-lucide="x"></i>
-            </button>
-          </div>
-          <h2 id="paymentTitle" style="font-size: 26px; margin-top: 18px">Assinar plano</h2>
-          <p id="paymentSubtitle" style="margin: 8px 0 0; font-size: 13px; color: var(--muted)"></p>
-
-          <div style="display: grid; gap: 12px; margin-top: 22px">
-            <div class="card" style="padding: 14px">
-              <p style="margin: 0; font-size: 12px; color: var(--muted)">Primeira parcela</p>
-              <p id="paymentFirstPrice" style="font-family: 'Space Grotesk'; font-size: 28px; font-weight: 700; margin: 4px 0 0">
-                R$ 0
-              </p>
-            </div>
-            <div class="card" style="padding: 14px">
-              <p style="margin: 0; font-size: 12px; color: var(--muted)">Depois</p>
-              <p id="paymentNextPrice" style="font-size: 14px; font-weight: 600; margin: 4px 0 0">R$ 0</p>
-            </div>
-          </div>
-        </aside>
-
-        <div class="payment-body">
-          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
-            <div>
-              <p style="margin: 0; font-size: 13px; color: var(--muted)">Forma de pagamento</p>
-              <h3 style="font-size: 20px; margin-top: 4px">Como deseja pagar?</h3>
-            </div>
-          </div>
-
-          <div class="payment-methods" role="tablist">
-            <button class="payment-method active" type="button" data-method="pix" onclick="setPaymentMethod('pix')">
-              <i data-lucide="qr-code"></i>
-              <span>Pix</span>
-            </button>
-            <button class="payment-method" type="button" data-method="card" onclick="setPaymentMethod('card')">
-              <i data-lucide="credit-card"></i>
-              <span>Cartao</span>
-            </button>
-            <button class="payment-method" type="button" data-method="boleto" onclick="setPaymentMethod('boleto')">
-              <i data-lucide="barcode"></i>
-              <span>Boleto</span>
-            </button>
-            <button class="payment-method" type="button" data-method="transfer" onclick="setPaymentMethod('transfer')">
-              <i data-lucide="landmark"></i>
-              <span>Transfer.</span>
-            </button>
-          </div>
-
-          <form id="paymentForm" onsubmit="confirmPayment(event)">
-            <div class="payment-form active" data-form="pix">
-              <p style="margin: 0; font-size: 13px; color: var(--muted)">
-                Use o codigo Pix copia e cola abaixo. O plano fica reservado apos confirmar.
-              </p>
-              <div class="pix-qr-card">
-                <img id="pixQrCode" src="" alt="QR Code Pix" />
-                <p style="margin: 0; font-size: 12px; color: var(--muted); text-align: center">
-                  Escaneie o QR Code pelo app do seu banco.
-                </p>
-                <p id="pixStatus" style="margin: 0; font-size: 11px; color: var(--muted); text-align: center"></p>
-              </div>
-              <div class="copy-box">
-                <span id="pixCode">PIX-TEAMWOLF-PLANO</span>
-                <button class="btn btn-outline btn-sm" type="button" onclick="copyPixCode()">Copiar</button>
-              </div>
-            </div>
-
-            <div class="payment-form" data-form="card">
-              <div>
-                <label class="label" for="cardName">Nome impresso no cartao</label>
-                <input class="input" id="cardName" autocomplete="cc-name" placeholder="Nome completo" />
-              </div>
-              <div>
-                <label class="label" for="cardNumber">Numero do cartao</label>
-                <input class="input" id="cardNumber" inputmode="numeric" autocomplete="cc-number" maxlength="19" placeholder="0000 0000 0000 0000" />
-              </div>
-              <div class="field-grid">
-                <div>
-                  <label class="label" for="cardExpiry">Validade</label>
-                  <input class="input" id="cardExpiry" inputmode="numeric" autocomplete="cc-exp" maxlength="5" placeholder="MM/AA" />
-                </div>
-                <div>
-                  <label class="label" for="cardCvv">CVV</label>
-                  <input class="input" id="cardCvv" inputmode="numeric" autocomplete="cc-csc" maxlength="4" placeholder="123" />
-                </div>
-              </div>
-            </div>
-
-            <div class="payment-form" data-form="boleto">
-              <div>
-                <label class="label" for="payerName">Nome do pagador</label>
-                <input class="input" id="payerName" placeholder="Nome completo" />
-              </div>
-              <div>
-                <label class="label" for="payerDocument">CPF ou CNPJ</label>
-                <input class="input" id="payerDocument" inputmode="numeric" placeholder="Somente numeros" />
-              </div>
-              <p style="margin: 0; font-size: 12px; color: var(--muted)">O boleto simulado sera gerado apos a confirmacao.</p>
-            </div>
-
-            <div class="payment-form" data-form="transfer">
-              <p style="margin: 0; font-size: 13px; color: var(--muted)">Dados para transferencia:</p>
-              <div class="copy-box">
-                Banco: 000 | Agencia: 0001 | Conta: 12345-6 | TEAM WOLF
-              </div>
-              <div>
-                <label class="label" for="transferReceipt">Codigo ou identificacao do comprovante</label>
-                <input class="input" id="transferReceipt" placeholder="Ex: comprovante 123" />
-              </div>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 20px">
-              <button class="btn btn-outline" type="button" onclick="closePaymentModal()">Cancelar</button>
-              <button class="btn btn-primary" type="submit">Confirmar assinatura</button>
-            </div>
-          </form>
+          <span class="topbar-title">Planos</span>
         </div>
-      </section>
-    </div>
+        <button class="btn btn-outline btn-icon" onclick="toggleTheme()" title="Alternar tema">
+          <i data-lucide="sun-moon"></i>
+        </button>
+      </header>
 
-    <script src="assets/common.js"></script>
-    <script>
-      const planDetails = {
-        mensal: {
-          name: "Plano mensal",
-          key: "mensal",
-          trial: "1 semana gratis",
-          firstPrice: "R$ 300,00",
-          nextPrice: "R$ 150 por mes nas proximas parcelas",
-          pixCode: "00020126360014br.gov.bcb.pix0114+55449973681295204000053039865406300.005802BR5924BRUNO PERANDRE NUNES DOS6009Sao Paulo62240520daqr339692014860677563049CDA",
-        },
-        anual: {
-          name: "Plano anual",
-          key: "anual",
-          trial: "1 mes gratis",
-          firstPrice: "R$ 1.600,00",
-          nextPrice: "R$ 900 por ano nas proximas renovacoes",
-          pixCode: "00020126580014BR.GOV.BCB.PIX0136TEAMWOLF-ANUAL-1600005204000053039865802BR5925TEAM WOLF6009SAO PAULO62070503***6304EFGH",
-        },
+      <main class="page-shell">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Escolha seu plano</h1>
+            <p style="margin: 8px 0 0; font-size: 13px; color: var(--muted)">
+              Comece com periodo gratis e mantenha sua operacao de leads ativa.
+            </p>
+          </div>
+        </div>
+
+        <div class="metrics-grid">
+          <!-- SEMANAL -->
+          <section class="card" style="padding: 22px;">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+              <div>
+                <p style="margin: 0; font-size: 13px; color: var(--muted)">Plano Free</p>
+                <h2 style="font-size: 28px; margin-top: 6px">Plano Semanal </h2>
+              </div>
+              <span class="pill status-transferido">Plano Free</span>
+            </div>
+
+            <div style="margin-top: 22px">
+              <p style="margin: 0; font-size: 13px; color: var(--muted)">Primeira Semana</p>
+              <p style="font-family: 'Space Grotesk', sans-serif; font-size: 38px; font-weight: 700; margin: 4px 0 0">
+                (Gratuito)
+              </p>
+              <p style="margin: 8px 0 0; font-size: 13px; color: var(--muted)">
+                Experimente todos os principais recursos da plataforma durante 7 dias, sem qualquer compromisso Conheça
+                nossa tecnologia, explore as funcionalidades e descubra como ela pode transformar sua rotina antes de
+                decidir assinar.
+              </p>
+            </div>
+
+            <div style="display: grid; gap: 10px; margin-top: 22px; font-size: 13px">
+              <div style="display: flex; gap: 8px; align-items: center">
+                <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                <span>Acesso completo por 7 dias</span>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center">
+                <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                <span>Sem cobrança durante o período de teste</span>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center">
+                <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                <span> Sem compromisso de permanência</span>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center">
+                <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                <span> Ideal para conhecer a plataforma</span>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%; margin-top: 24px" onclick="selectPlan('semanal')">
+              Assinar Semanal
+            </button>
+          </section>
+
+          <!-- MENSAL -->
+          <section class="card" style="padding: 22px">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+              <div>
+                <p style="margin: 0; font-size: 13px; color: var(--muted)">Plano mensal</p>
+                <h2 style="font-size: 28px; margin-top: 6px">Mensalidade</h2>
+              </div>
+              <span class="pill status-qualificado">MENSAL</span>
+            </div>
+
+            <div style="margin-top: 22px">
+              <p style="margin: 0; font-size: 13px; color: var(--muted)">Primeira Parcelas</p>
+              <p style="font-family: 'Space Grotesk', sans-serif; font-size: 38px; font-weight: 700; margin: 4px 0 0">
+                R$ 299,99
+              </p>
+              <p style="margin: 8px 0 0; font-size: 13px; color: var(--muted)">
+                Ideal para quem busca flexibilidade e acesso contínuo aos recursos da plataforma. Aproveite atualizações
+                constantes, suporte dedicado e todos os benefícios da assinatura sem precisar assumir um compromisso
+                anual.
+              </p>
+            </div>
+
+            <div style="display: grid; gap: 10px; margin-top: 22px; font-size: 13px">
+              <div style="display: flex; gap: 8px; align-items: center">
+                <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                <span>Acesso ilimitado a todos os recursos</span>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center">
+                <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                <span>Atualizações constantes da plataforma</span>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center">
+                <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                <span>Suporte prioritário</span>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center">
+                <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                <span>Cobrança mensal recorrente</span>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center">
+                <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                <span>Cancele quando desejar</span>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%; margin-top: 24px" onclick="selectPlan('mensal')">
+              Assinar Plano Mensal
+            </button>
+          </section>
+
+          <!-- ANUAL -->
+          <section class="card" style="padding: 22px; ">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+              <div>
+                <p style="margin: 0; font-size: 13px; color: var(--muted)">Plano anual</p>
+                <h2 style="font-size: 28px; margin-top: 6px">Anual</h2>
+              </div>
+              <span class="pill status-transferido">ANUAL</span>
+            </div>
+
+            <div style="margin-top: 22px">
+              <p style="margin: 0; font-size: 13px; color: var(--muted)">Primeira Parcelas</p>
+              <p style="font-family: 'Space Grotesk', sans-serif; font-size: 38px; font-weight: 700; margin: 4px 0 0">
+                R$ 1.600,00
+              </p>
+              <p style="margin: 8px 0 0; font-size: 13px; color: var(--muted)">
+                A opção mais vantajosa para quem pretende utilizar a plataforma a longo prazo. Economize
+                significativamente em relação ao plano mensal e tenha acesso contínuo a todos os recursos durante todo o
+                ano.
+              </p>
+            </div>
+
+            <div style="display: grid; gap: 10px; margin-top: 22px; font-size: 13px">
+              <div style="display: flex; gap: 8px; align-items: center">
+                <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                <span>Melhor custo-benefício</span>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center">
+                <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                <span> Economia nas renovações anuais</span>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center">
+                <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                <span>Acesso completo durante 12 meses</span>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center">
+                <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                <span>Prioridade em novos recursos</span>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center">
+                <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
+                <span> Suporte prioritário</span>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%; margin-top: 24px" onclick="selectPlan('anual')">
+              Assinar anual
+            </button>
+          </section>
+        </div>
+
+        <section class="card">
+          <div class="card-body"
+            style="display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap">
+            <div>
+              <p style="margin: 0; font-size: 14px; font-weight: 600">👑 Dica de marketing </p>
+              <p style="margin: 4px 0 0; font-size: 12px; color: var(--muted)">
+                Em vez de destacar apenas "Plano Mensal" e "Plano Anual", da para usar nomes mais fortes, como:
+                🚀 Start (Teste Gratuito)
+                ⭐ Pro (Mensal)
+                👑 Elite (Anual)
+              </p>
+            </div>
+            <a class="btn btn-outline" href="profile.html">Ver perfil</a>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="payment-modal" id="paymentModal" aria-hidden="true">
+    <div class="payment-backdrop" onclick="closePaymentModal()"></div>
+    <section class="payment-panel" role="dialog" aria-modal="true" aria-labelledby="paymentTitle">
+      <aside class="payment-summary">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+          <span class="pill status-qualificado" id="paymentTrial">Periodo gratis</span>
+          <button class="btn btn-outline btn-icon" onclick="closePaymentModal()" aria-label="Fechar">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <h2 id="paymentTitle" style="font-size: 26px; margin-top: 18px">Assinar plano</h2>
+        <p id="paymentSubtitle" style="margin: 8px 0 0; font-size: 13px; color: var(--muted)"></p>
+
+        <div style="display: grid; gap: 12px; margin-top: 22px">
+          <div class="card" style="padding: 14px">
+            <p style="margin: 0; font-size: 12px; color: var(--muted)">Primeira Parcelas</p>
+            <p id="paymentFirstPrice"
+              style="font-family: 'Space Grotesk'; font-size: 28px; font-weight: 700; margin: 4px 0 0">
+              R$ 0
+            </p>
+          </div>
+          <div class="card" style="padding: 14px">
+            <p style="margin: 0; font-size: 12px; color: var(--muted)">Depois</p>
+            <p id="paymentNextPrice" style="font-size: 14px; font-weight: 600; margin: 4px 0 0">R$ 0</p>
+          </div>
+        </div>
+      </aside>
+
+      <div class="payment-body">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+          <div>
+            <p style="margin: 0; font-size: 13px; color: var(--muted)">Forma de pagamento</p>
+            <h3 style="font-size: 20px; margin-top: 4px">Como deseja pagar?</h3>
+          </div>
+        </div>
+
+        <div class="payment-methods" role="tablist">
+          <button class="payment-method active" type="button" data-method="pix" onclick="setPaymentMethod('pix')">
+            <i data-lucide="qr-code"></i>
+            <span>Pix</span>
+          </button>
+          <button class="payment-method" type="button" data-method="card" onclick="setPaymentMethod('card')">
+            <i data-lucide="credit-card"></i>
+            <span>Cartao</span>
+          </button>
+          <button class="payment-method" type="button" data-method="boleto" onclick="setPaymentMethod('boleto')">
+            <i data-lucide="barcode"></i>
+            <span>Boleto</span>
+          </button>
+          <button class="payment-method" type="button" data-method="transfer" onclick="setPaymentMethod('transfer')">
+            <i data-lucide="landmark"></i>
+            <span>Transfer.</span>
+          </button>
+        </div>
+
+        <form id="paymentForm" onsubmit="confirmPayment(event)">
+          <div class="payment-form active" data-form="pix">
+            <p style="margin: 0; font-size: 13px; color: var(--muted)">
+              Use o codigo Pix copia e cola abaixo. O plano fica reservado apos confirmar.
+            </p>
+            <div class="pix-qr-card">
+              <img id="pixQrCode" src="" alt="QR Code Pix" />
+              <p style="margin: 0; font-size: 12px; color: var(--muted); text-align: center">
+                Escaneie o QR Code pelo app do seu banco.
+              </p>
+              <p id="pixStatus" style="margin: 0; font-size: 11px; color: var(--muted); text-align: center"></p>
+            </div>
+            <div class="copy-box">
+              <span id="pixCode">PIX-TEAMWOLF-PLANO</span>
+              <button class="btn btn-outline btn-sm" type="button" onclick="copyPixCode()">Copiar</button>
+            </div>
+          </div>
+
+          <div class="payment-form" data-form="card">
+            <div>
+              <label class="label" for="cardName">Nome impresso no cartao</label>
+              <input class="input" id="cardName" autocomplete="cc-name" placeholder="Nome completo" />
+            </div>
+            <div>
+              <label class="label" for="cardNumber">Numero do cartao</label>
+              <input class="input" id="cardNumber" inputmode="numeric" autocomplete="cc-number" maxlength="19"
+                placeholder="0000 0000 0000 0000" />
+            </div>
+            <div class="field-grid">
+              <div>
+                <label class="label" for="cardExpiry">Validade</label>
+                <input class="input" id="cardExpiry" inputmode="numeric" autocomplete="cc-exp" maxlength="5"
+                  placeholder="MM/AA" />
+              </div>
+              <div>
+                <label class="label" for="cardCvv">CVV</label>
+                <input class="input" id="cardCvv" inputmode="numeric" autocomplete="cc-csc" maxlength="4"
+                  placeholder="123" />
+              </div>
+            </div>
+          </div>
+
+          <div class="payment-form" data-form="boleto">
+            <div>
+              <label class="label" for="payerName">Nome do pagador</label>
+              <input class="input" id="payerName" placeholder="Nome completo" />
+            </div>
+            <div>
+              <label class="label" for="payerDocument">CPF ou CNPJ</label>
+              <input class="input" id="payerDocument" inputmode="numeric" placeholder="Somente numeros" />
+            </div>
+            <p style="margin: 0; font-size: 12px; color: var(--muted)">O boleto simulado sera gerado apos a confirmacao.
+            </p>
+          </div>
+
+          <div class="payment-form" data-form="transfer">
+            <p style="margin: 0; font-size: 13px; color: var(--muted)">Dados para transferencia:</p>
+            <div class="copy-box">
+              Banco: 000 | Agencia: 0001 | Conta: 12345-6 | TEAM WOLF
+            </div>
+            <div>
+              <label class="label" for="transferReceipt">Codigo ou identificacao do comprovante</label>
+              <input class="input" id="transferReceipt" placeholder="Ex: comprovante 123" />
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 20px">
+            <button class="btn btn-outline" type="button" onclick="closePaymentModal()">Cancelar</button>
+            <button class="btn btn-primary" type="submit">Confirmar assinatura</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    function renderPlanTags() {
+      try {
+        const email = (localStorage.getItem('userEmail')||'').toLowerCase();
+        if (!email || typeof window.loadPersistedUserProfile !== 'function') return;
+        const p = window.loadPersistedUserProfile(email) || {};
+        const billing = String(p.billingPlan || '').toLowerCase();
+        const tags = p.tags || [];
+        const sections = document.querySelectorAll('.metrics-grid > section.card');
+        const map = ['semanal','mensal','anual'];
+        sections.forEach((sec, idx) => {
+          const planKey = map[idx];
+          // remove existing badge if any
+          // const existing = sec.querySelector('.plan-tag-badge');
+          if (existing) existing.remove();
+          const should = billing === planKey || tags.some(t => t.toLowerCase().includes(planKey));
+          if (should) {
+            const badge = document.createElement('span');
+            badge.className = 'plan-tag-badge';
+            badge.textContent = 'Liberado';
+            badge.style.marginLeft = '8px';
+            badge.style.padding = '6px 8px';
+            badge.style.background = 'var(--primary)';
+            badge.style.color = 'var(--primary-fg)';
+            badge.style.borderRadius = '999px';
+            const titleEl = sec.querySelector('h2');
+            if (titleEl) titleEl.appendChild(badge);
+          }
+        });
+      } catch (err) {
+        console.warn('renderPlanTags error', err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', renderPlanTags);
+    window.renderPlanTags = renderPlanTags;
+  </script>
+
+  <script src="assets/common.js"></script>
+  <script>
+    const planDetails = {
+      mensal: {
+        name: "Plano mensal",
+        key: "mensal",
+        trial: "1 semana gratis",
+        firstPrice: "R$ 300,00",
+        nextPrice: "R$ 150 por mês nas prôximas Parcelass",
+        pixCode: "00020126360014br.gov.bcb.pix0114+55449973681295204000053039865406300.005802BR5924BRUNO PERANDRE NUNES DOS6009Sao Paulo62240520daqr339692014860677563049CDA",
+      },
+      anual: {
+        name: "Plano anual",
+        key: "anual",
+        trial: "1 mês gratis",
+        firstPrice: "R$ 1.600,00",
+        nextPrice: "R$ 900 por ano nas prôximas renovações",
+        pixCode: "00020126580014BR.GOV.BCB.PIX0136TEAMWOLF-ANUAL-1600005204000053039865802BR5925TEAM WOLF6009SAO PAULO62070503***6304EFGH",
+      },
+      semanal: {
+        name: "Plano semanal",
+        key: "semanal",
+        trial: "1 semana gratis",
+        firstPrice: "GRATUITO",
+        nextPrice: "Escolha plano pagar para ter melhor experiencia",
+        pixCode: "00020126360014br.gov.bcb.pix0114+55449973681295204000053039865406300.005802BR5924BRUNO PERANDRE NUNES DOS6009Sao Paulo62240520daqr339692014860677563049CDA",
+      },
+    };
+
+    let selectedPlan = null;
+    let selectedPaymentMethod = "pix";
+
+    function selectPlan(plan) {
+      selectedPlan = planDetails[plan];
+      localStorage.setItem("selectedPlan", plan);
+      document.getElementById("paymentTitle").textContent = `Assinar ${selectedPlan.name}`;
+      document.getElementById("paymentSubtitle").textContent = "Confira os valores e escolha a forma de pagamento.";
+      document.getElementById("paymentTrial").textContent = selectedPlan.trial;
+      document.getElementById("paymentFirstPrice").textContent = selectedPlan.firstPrice;
+      document.getElementById("paymentNextPrice").textContent = selectedPlan.nextPrice;
+      document.getElementById("pixCode").textContent = selectedPlan.pixCode;
+      document.getElementById("pixQrCode").src = getQrCodeUrl(selectedPlan.pixCode);
+      document.getElementById("pixStatus").textContent = "Gerando Pix no Mercado Pago...";
+      setPaymentMethod("pix");
+      document.getElementById("paymentModal").classList.add("open");
+      document.getElementById("paymentModal").setAttribute("aria-hidden", "false");
+      createMercadoPagoPix(selectedPlan);
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function getQrCodeUrl(value) {
+      return `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=12&data=${encodeURIComponent(value)}`;
+    }
+
+    async function createMercadoPagoPix(plan) {
+      try {
+        const response = await fetch(`${window.getApiBaseUrl()}/api/payments/pix`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            plan: plan.key,
+            email: localStorage.getItem("userEmail") || "cliente@teamwolf.local",
+          }),
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "Nao foi possivel gerar o Pix.");
+
+        if (data.qr_code) {
+          document.getElementById("pixCode").textContent = data.qr_code;
+        }
+
+        if (data.qr_code_base64) {
+          document.getElementById("pixQrCode").src = `data:image/png;base64,${data.qr_code_base64}`;
+        } else if (data.qr_code) {
+          document.getElementById("pixQrCode").src = getQrCodeUrl(data.qr_code);
+        }
+
+        document.getElementById("pixStatus").textContent = "Pix gerado pelo Mercado Pago.";
+      } catch (error) {
+        document.getElementById("pixStatus").textContent =
+          "Usando QR temporario. Configure MERCADO_PAGO_ACCESS_TOKEN para gerar pelo Mercado Pago.";
+        console.warn("[Mercado Pago] Pix fallback:", error);
+      }
+    }
+
+    function closePaymentModal() {
+      document.getElementById("paymentModal").classList.remove("open");
+      document.getElementById("paymentModal").setAttribute("aria-hidden", "true");
+    }
+
+    function setPaymentMethod(method) {
+      selectedPaymentMethod = method;
+      document.querySelectorAll(".payment-method").forEach((button) => {
+        button.classList.toggle("active", button.dataset.method === method);
+      });
+      document.querySelectorAll(".payment-form").forEach((form) => {
+        form.classList.toggle("active", form.dataset.form === method);
+      });
+    }
+
+    function onlyNumbers(value) {
+      return String(value || "").replace(/\D/g, "");
+    }
+
+    function validatePayment() {
+      if (selectedPaymentMethod === "card") {
+        const cardName = document.getElementById("cardName").value.trim();
+        const cardNumber = onlyNumbers(document.getElementById("cardNumber").value);
+        const cardExpiry = document.getElementById("cardExpiry").value.trim();
+        const cardCvv = onlyNumbers(document.getElementById("cardCvv").value);
+        if (!cardName || cardNumber.length < 13 || !/^\d{2}\/\d{2}$/.test(cardExpiry) || cardCvv.length < 3) {
+          return "Preencha os dados do cartao corretamente.";
+        }
+      }
+
+      if (selectedPaymentMethod === "boleto") {
+        const payerName = document.getElementById("payerName").value.trim();
+        const payerDocument = onlyNumbers(document.getElementById("payerDocument").value);
+        if (!payerName || payerDocument.length < 11) {
+          return "Informe nome e CPF/CNPJ para gerar o boleto.";
+        }
+      }
+
+      if (selectedPaymentMethod === "transfer") {
+        const transferReceipt = document.getElementById("transferReceipt").value.trim();
+        if (!transferReceipt) return "Informe uma identificacao do comprovante.";
+      }
+
+      return "";
+    }
+
+    function confirmPayment(event) {
+      event.preventDefault();
+      const error = validatePayment();
+      if (error) {
+        if (typeof toast === "function") toast("Revise o pagamento", error);
+        return;
+      }
+
+      const subscription = {
+        plan: selectedPlan.name,
+        trial: selectedPlan.trial,
+        firstPrice: selectedPlan.firstPrice,
+        nextPrice: selectedPlan.nextPrice,
+        paymentMethod: selectedPaymentMethod,
+        status: selectedPaymentMethod === "pix" || selectedPaymentMethod === "boleto" ? "aguardando_pagamento" : "ativo",
+        createdAt: new Date().toISOString(),
       };
 
-      let selectedPlan = null;
-      let selectedPaymentMethod = "pix";
+      localStorage.setItem("subscription", JSON.stringify(subscription));
+      closePaymentModal();
 
-      function selectPlan(plan) {
-        selectedPlan = planDetails[plan];
-        localStorage.setItem("selectedPlan", plan);
-        document.getElementById("paymentTitle").textContent = `Assinar ${selectedPlan.name}`;
-        document.getElementById("paymentSubtitle").textContent = "Confira os valores e escolha a forma de pagamento.";
-        document.getElementById("paymentTrial").textContent = selectedPlan.trial;
-        document.getElementById("paymentFirstPrice").textContent = selectedPlan.firstPrice;
-        document.getElementById("paymentNextPrice").textContent = selectedPlan.nextPrice;
-        document.getElementById("pixCode").textContent = selectedPlan.pixCode;
-        document.getElementById("pixQrCode").src = getQrCodeUrl(selectedPlan.pixCode);
-        document.getElementById("pixStatus").textContent = "Gerando Pix no Mercado Pago...";
-        setPaymentMethod("pix");
-        document.getElementById("paymentModal").classList.add("open");
-        document.getElementById("paymentModal").setAttribute("aria-hidden", "false");
-        createMercadoPagoPix(selectedPlan);
-        if (window.lucide) lucide.createIcons();
+      const methodLabel = {
+        pix: "Pix",
+        card: "cartao",
+        boleto: "boleto",
+        transfer: "transferencia",
+      }[selectedPaymentMethod];
+
+      if (typeof toast === "function") {
+        toast("Assinatura registrada", `${selectedPlan.name} selecionado com pagamento via ${methodLabel}.`);
       }
+    }
 
-      function getQrCodeUrl(value) {
-        return `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=12&data=${encodeURIComponent(value)}`;
-      }
+    function copyPixCode() {
+      const code = document.getElementById("pixCode").textContent;
+      navigator.clipboard
+        .writeText(code)
+        .then(() => toast("Codigo Pix copiado"))
+        .catch(() => toast("Copie manualmente", code));
+    }
 
-      async function createMercadoPagoPix(plan) {
-        try {
-          const response = await fetch(`${window.getApiBaseUrl()}/api/payments/pix`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              plan: plan.key,
-              email: localStorage.getItem("userEmail") || "cliente@teamwolf.local",
-            }),
-          });
+    if (window.lucide) lucide.createIcons();
+  </script>
+</body>
 
-          const data = await response.json().catch(() => ({}));
-          if (!response.ok) throw new Error(data.error || "Nao foi possivel gerar o Pix.");
-
-          if (data.qr_code) {
-            document.getElementById("pixCode").textContent = data.qr_code;
-          }
-
-          if (data.qr_code_base64) {
-            document.getElementById("pixQrCode").src = `data:image/png;base64,${data.qr_code_base64}`;
-          } else if (data.qr_code) {
-            document.getElementById("pixQrCode").src = getQrCodeUrl(data.qr_code);
-          }
-
-          document.getElementById("pixStatus").textContent = "Pix gerado pelo Mercado Pago.";
-        } catch (error) {
-          document.getElementById("pixStatus").textContent =
-            "Usando QR temporario. Configure MERCADO_PAGO_ACCESS_TOKEN para gerar pelo Mercado Pago.";
-          console.warn("[Mercado Pago] Pix fallback:", error);
-        }
-      }
-
-      function closePaymentModal() {
-        document.getElementById("paymentModal").classList.remove("open");
-        document.getElementById("paymentModal").setAttribute("aria-hidden", "true");
-      }
-
-      function setPaymentMethod(method) {
-        selectedPaymentMethod = method;
-        document.querySelectorAll(".payment-method").forEach((button) => {
-          button.classList.toggle("active", button.dataset.method === method);
-        });
-        document.querySelectorAll(".payment-form").forEach((form) => {
-          form.classList.toggle("active", form.dataset.form === method);
-        });
-      }
-
-      function onlyNumbers(value) {
-        return String(value || "").replace(/\D/g, "");
-      }
-
-      function validatePayment() {
-        if (selectedPaymentMethod === "card") {
-          const cardName = document.getElementById("cardName").value.trim();
-          const cardNumber = onlyNumbers(document.getElementById("cardNumber").value);
-          const cardExpiry = document.getElementById("cardExpiry").value.trim();
-          const cardCvv = onlyNumbers(document.getElementById("cardCvv").value);
-          if (!cardName || cardNumber.length < 13 || !/^\d{2}\/\d{2}$/.test(cardExpiry) || cardCvv.length < 3) {
-            return "Preencha os dados do cartao corretamente.";
-          }
-        }
-
-        if (selectedPaymentMethod === "boleto") {
-          const payerName = document.getElementById("payerName").value.trim();
-          const payerDocument = onlyNumbers(document.getElementById("payerDocument").value);
-          if (!payerName || payerDocument.length < 11) {
-            return "Informe nome e CPF/CNPJ para gerar o boleto.";
-          }
-        }
-
-        if (selectedPaymentMethod === "transfer") {
-          const transferReceipt = document.getElementById("transferReceipt").value.trim();
-          if (!transferReceipt) return "Informe uma identificacao do comprovante.";
-        }
-
-        return "";
-      }
-
-      function confirmPayment(event) {
-        event.preventDefault();
-        const error = validatePayment();
-        if (error) {
-          if (typeof toast === "function") toast("Revise o pagamento", error);
-          return;
-        }
-
-        const subscription = {
-          plan: selectedPlan.name,
-          trial: selectedPlan.trial,
-          firstPrice: selectedPlan.firstPrice,
-          nextPrice: selectedPlan.nextPrice,
-          paymentMethod: selectedPaymentMethod,
-          status: selectedPaymentMethod === "pix" || selectedPaymentMethod === "boleto" ? "aguardando_pagamento" : "ativo",
-          createdAt: new Date().toISOString(),
-        };
-
-        localStorage.setItem("subscription", JSON.stringify(subscription));
-        closePaymentModal();
-
-        const methodLabel = {
-          pix: "Pix",
-          card: "cartao",
-          boleto: "boleto",
-          transfer: "transferencia",
-        }[selectedPaymentMethod];
-
-        if (typeof toast === "function") {
-          toast("Assinatura registrada", `${selectedPlan.name} selecionado com pagamento via ${methodLabel}.`);
-        }
-      }
-
-      function copyPixCode() {
-        const code = document.getElementById("pixCode").textContent;
-        navigator.clipboard
-          .writeText(code)
-          .then(() => toast("Codigo Pix copiado"))
-          .catch(() => toast("Copie manualmente", code));
-      }
-
-      if (window.lucide) lucide.createIcons();
-    </script>
-  </body>
 </html>

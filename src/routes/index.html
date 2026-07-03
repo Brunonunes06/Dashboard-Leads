@@ -215,7 +215,7 @@
     // Carrega os dados salvos do usuário ou mantém os valores padrão se for a primeira vez
     if (nameI) nameI.value = localStorage.getItem('userName') || 'Usuário';
     if (emailI) emailI.value = localStorage.getItem('userEmail') || 'BomDia@gmail.com.br';
-    if (phoneI) phoneI.value = localStorage.getItem('userPhone') || '+55 11 99876-5432';
+    if (phoneI) phoneI.value = localStorage.getItem('userPhone') || '+99 99 99999-9999';
 
     // Executa a saudação dinâmica na inicialização da página
     updateGreeting();
@@ -357,14 +357,37 @@
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { labels: { color: '#cbd5e1' } }, tooltip: { titleColor: '#fff', bodyColor: '#fff' } },
+        plugins: {
+          legend: { labels: { color: '#cbd5e1' } },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.92)',
+            borderColor: '#334155',
+            borderWidth: 1,
+            titleColor: '#fff',
+            bodyColor: '#fff',
+          },
+        },
         scales: { x: { grid: { display: false }, ticks: { color: '#94a3b8' } }, y: { grid: { color: 'rgba(148,163,184,.1)' }, ticks: { color: '#94a3b8' } } }
       }
     });
     new Chart(document.getElementById('pieChart'), {
       type: 'doughnut',
       data: { labels: sources.map(s => s.name), datasets: [{ data: sources.map(s => s.value), backgroundColor: sources.map(s => s.color), borderWidth: 0 }] },
-      options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { display: false }, tooltip: { titleColor: '#fff', bodyColor: '#fff' } } }
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '62%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.92)',
+            borderColor: '#334155',
+            borderWidth: 1,
+            titleColor: '#fff',
+            bodyColor: '#fff',
+          },
+        },
+      },
     });
     const total = sources.reduce((a, b) => a + b.value, 0);
     document.getElementById('sourceLegend').innerHTML = sources.map(s => `

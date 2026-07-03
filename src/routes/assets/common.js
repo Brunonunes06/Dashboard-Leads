@@ -17,13 +17,34 @@
 
   // ----- Theme -----
   const savedTheme = localStorage.getItem("theme") || "dark";
-  document.documentElement.classList.toggle("light", savedTheme === "light");
 
-  window.toggleTheme = function () {
-    const isLight = document.documentElement.classList.toggle("light");
-    localStorage.setItem("theme", isLight ? "light" : "dark");
+  function getSystemTheme() {
+    return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  }
+
+  function applyTheme(theme) {
+    const resolved = theme === "system" ? getSystemTheme() : theme;
+    document.documentElement.classList.toggle("light", resolved === "light");
+    localStorage.setItem("theme", theme);
+    if (theme === "system") {
+      const mql = window.matchMedia("(prefers-color-scheme: light)");
+      mql.addEventListener("change", () => applyTheme("system"));
+    }
+    return resolved;
+  }
+
+  window.setTheme = function (theme) {
+    applyTheme(theme);
     if (window.lucide) lucide.createIcons();
   };
+
+  window.toggleTheme = function () {
+    const current = localStorage.getItem("theme") || "dark";
+    const next = current === "light" ? "dark" : current === "dark" ? "system" : "light";
+    window.setTheme(next);
+  };
+
+  applyTheme(savedTheme);
 
   // ----- Sidebar injection -----
   const navItems = [
@@ -187,12 +208,137 @@
   }
 
   window.getStoredUserProfile = function () {
+    const email = localStorage.getItem("userEmail") || "";
+    const persisted = email ? window.loadPersistedUserProfile(email) || {} : {};
     return {
-      name: localStorage.getItem("userName") || "",
-      email: localStorage.getItem("userEmail") || "",
-      phone: localStorage.getItem("userPhone") || "",
-      photo: localStorage.getItem("userPhoto") || "",
+      name: localStorage.getItem("userName") || persisted.name || "",
+      email: localStorage.getItem("userEmail") || persisted.email || "",
+      phone: localStorage.getItem("userPhone") || persisted.phone || "",
+      photo: localStorage.getItem("userPhoto") || persisted.photo || "",
     };
+  };
+
+  function getPersistedProfileKey(email) {
+    return `crm_user_profile:${String(email || "").trim().toLowerCase()}`;
+  }
+
+  window.loadPersistedUserProfile = function (email) {
+    if (!email) return null;
+    const key = getPersistedProfileKey(email);
+    try {
+      return JSON.parse(localStorage.getItem(key) || "null");
+    } catch (error) {
+      console.warn("Erro ao ler perfil persistido:", error);
+      return null;
+    }
+  };
+
+  window.savePersistedUserProfile = function (profile) {
+    const email = String(profile?.email || "").trim().toLowerCase();
+    if (!email) return null;
+    const key = getPersistedProfileKey(email);
+    const existing = window.loadPersistedUserProfile(email) || {};
+    const payload = {
+      ...existing,
+      ...profile,
+      email,
+    };
+    localStorage.setItem(key, JSON.stringify(payload));
+    return payload;
+  };
+
+  window.dataURLToBlob = function (dataUrl) {
+    const parts = dataUrl.split(",");
+    const meta = parts[0] || "";
+    const base64 = parts[1] || "";
+    const mimeMatch = meta.match(/:(.*?);/);
+    const mime = mimeMatch ? mimeMatch[1] : "image/png";
+    const binary = atob(base64);
+    const buffer = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) {
+      buffer[i] = binary.charCodeAt(i);
+    }
+    return new Blob([buffer], { type: mime });
+  };
+
+  window.openProfilePhotoDb = function () {
+    return new Promise(function (resolve, reject) {
+      if (!window.indexedDB) {
+        reject(new Error("IndexedDB não suportado."));
+        return;
+      }
+      const request = indexedDB.open("crmUserPhotos", 1);
+      request.onupgradeneeded = function () {
+        const db = request.result;
+        if (!db.objectStoreNames.contains("avatars")) {
+          db.createObjectStore("avatars", { keyPath: "email" });
+        }
+      };
+      request.onsuccess = function () {
+        resolve(request.result);
+      };
+      request.onerror = function () {
+        reject(request.error);
+      };
+    });
+  };
+
+  window.saveProfilePhoto = function (email, dataUrl) {
+    if (!email || !dataUrl || !/^data:image\//i.test(dataUrl)) {
+      return Promise.resolve(dataUrl);
+    }
+    return window
+      .openProfilePhotoDb()
+      .then(function (db) {
+        return new Promise(function (resolve, reject) {
+          const tx = db.transaction("avatars", "readwrite");
+          const store = tx.objectStore("avatars");
+          const blob = window.dataURLToBlob(dataUrl);
+          const req = store.put({ email, blob, updatedAt: Date.now() });
+          req.onsuccess = function () {
+            resolve(`indexeddb:${email}`);
+          };
+          req.onerror = function () {
+            reject(req.error);
+          };
+        });
+      })
+      .catch(function () {
+        return dataUrl;
+      });
+  };
+
+  window.loadProfilePhoto = function (photoRef) {
+    if (!photoRef) return Promise.resolve(null);
+    if (/^https?:\/\//i.test(photoRef) || /^data:image\//i.test(photoRef)) {
+      return Promise.resolve(photoRef);
+    }
+    if (!/^indexeddb:/i.test(photoRef)) return Promise.resolve(null);
+    const email = photoRef.replace(/^indexeddb:/i, "");
+    return window
+      .openProfilePhotoDb()
+      .then(function (db) {
+        return new Promise(function (resolve, reject) {
+          const tx = db.transaction("avatars", "readonly");
+          const store = tx.objectStore("avatars");
+          const req = store.get(email);
+          req.onsuccess = function () {
+            const record = req.result;
+            if (!record || !record.blob) {
+              resolve(null);
+              return;
+            }
+            const url = URL.createObjectURL(record.blob);
+            resolve(url);
+          };
+          req.onerror = function () {
+            reject(req.error);
+          };
+        });
+      })
+      .catch(function () {
+        return null;
+      });
   };
 
   window.getUserRoleLabel = function (email) {
@@ -213,7 +359,7 @@
     };
     const name = user.name || "Usuario";
     const email = user.email || "";
-    const photo = /^https?:\/\//i.test(String(user.photo || "")) ? String(user.photo) : "";
+    const photo = String(user.photo || "");
 
     const nameInput = document.getElementById("name");
     const emailInput = document.getElementById("email");
@@ -226,10 +372,53 @@
     if (emailInput) emailInput.value = email;
     if (phoneInput && user.phone) phoneInput.value = user.phone;
     if (displayNameEl) displayNameEl.textContent = name;
+    // Exibe pill de plano ao lado do nome do usuário (visível para todos após login)
+    try {
+      let qualPill = document.getElementById("displayQualPill");
+      const persisted = window.loadPersistedUserProfile(email) || {};
+      const billing = String(persisted.billingPlan || "").toLowerCase();
+      const tags = persisted.tags || [];
+      let label = "Free";
+      let cls = "pill status-transferido";
+      if (billing === "mensal") {
+        label = "MENSAL";
+        cls = "pill status-qualificado";
+      } else if (billing === "anual") {
+        label = "ANUAL";
+        cls = "pill status-transferido";
+      } else if (billing === "semanal" || tags.some((t) => /Plano:/i.test(t))) {
+        label = "Plano Free";
+        cls = "pill status-transferido";
+      }
+
+      if (!qualPill) {
+        qualPill = document.createElement("span");
+        qualPill.id = "displayQualPill";
+        qualPill.style.marginLeft = "8px";
+        if (displayNameEl && displayNameEl.parentNode) {
+          displayNameEl.parentNode.insertBefore(qualPill, displayNameEl.nextSibling);
+        }
+      }
+      qualPill.className = cls;
+      qualPill.textContent = label;
+      qualPill.style.display = "inline-block";
+    } catch (err) {
+      console.warn("Erro ao renderizar pill de plano ao lado do nome:", err);
+    }
     window.updateUserRoleBadge(email);
+    // plan pill is rendered next to the display name (handled above)
     if (avatarEl) {
-      if (photo) {
+      if (/^https?:\/\//i.test(photo) || /^data:image\//i.test(photo)) {
         avatarEl.innerHTML = `<img src="${window.escapeHtml(photo)}" alt="${window.escapeHtml(name)}" style="width:100%;height:100%;object-fit:cover;border-radius:9999px" referrerpolicy="no-referrer">`;
+      } else if (/^indexeddb:/i.test(photo)) {
+        avatarEl.textContent = initials(name);
+        window.loadProfilePhoto(photo).then(function (resolvedUrl) {
+          if (!resolvedUrl) return;
+          const currentPhoto = String(user.photo || "");
+          if (currentPhoto !== photo) return;
+          if (!avatarEl) return;
+          avatarEl.innerHTML = `<img src="${window.escapeHtml(resolvedUrl)}" alt="${window.escapeHtml(name)}" style="width:100%;height:100%;object-fit:cover;border-radius:9999px" referrerpolicy="no-referrer">`;
+        });
       } else {
         avatarEl.textContent = initials(name);
       }
@@ -243,11 +432,51 @@
   };
 
   window.saveUserProfile = function (profile) {
-    if (profile.name) localStorage.setItem("userName", profile.name);
-    if (profile.email) localStorage.setItem("userEmail", profile.email);
-    if (profile.phone) localStorage.setItem("userPhone", profile.phone);
-    if (profile.photo) localStorage.setItem("userPhoto", profile.photo);
-    window.syncUserProfile(profile);
+    const email = String(profile?.email || localStorage.getItem("userEmail") || "").trim().toLowerCase();
+    const save = function (resolvedPhoto) {
+      const profileToSave = { ...profile, email };
+      if (resolvedPhoto != null) profileToSave.photo = resolvedPhoto;
+
+      const savedProfile = window.savePersistedUserProfile(profileToSave);
+      if (!savedProfile) return;
+      if (savedProfile.name) localStorage.setItem("userName", savedProfile.name);
+      if (savedProfile.email) localStorage.setItem("userEmail", savedProfile.email);
+      if (savedProfile.phone) localStorage.setItem("userPhone", savedProfile.phone);
+      if (savedProfile.photo) localStorage.setItem("userPhoto", savedProfile.photo);
+      window.syncUserProfile(savedProfile);
+      // Also update CRM client-side auth storage (`crm_user`) so React hooks reflect changes
+      try {
+        const existing = JSON.parse(localStorage.getItem("crm_user") || "null");
+        const role = isAdminEmail(savedProfile.email) ? "admin" : "client";
+        const updated = {
+          id: existing && existing.id ? existing.id : savedProfile.email || "",
+          email: savedProfile.email || (existing && existing.email) || "",
+          name: savedProfile.name || (existing && existing.name) || "",
+          avatarUrl: savedProfile.photo || (existing && existing.avatarUrl) || "",
+          role,
+          billingToken: (existing && existing.billingToken) || null,
+          billingActive: Boolean(savedProfile.billingPlan) || (existing && existing.billingActive),
+          billingPlan: savedProfile.billingPlan || (existing && existing.billingPlan) || null,
+        };
+        localStorage.setItem("crm_user", JSON.stringify(updated));
+        // dispatch event so React hooks can react
+        window.dispatchEvent(new CustomEvent("crm_user_profile_updated", { detail: updated }));
+      } catch (err) {
+        // ignore
+      }
+    };
+
+    if (profile.photo && /^data:image\//i.test(profile.photo)) {
+      window.saveProfilePhoto(email, profile.photo)
+        .then(function (photoRef) {
+          save(photoRef);
+        })
+        .catch(function () {
+          save(profile.photo);
+        });
+    } else {
+      save(profile.photo);
+    }
   };
 
   window.readGoogleCredentialPayload = function (response) {
@@ -305,11 +534,16 @@
       email: String(payload.email || "").trim().toLowerCase(),
       photo: payload.picture || "",
     };
+    const persisted = window.loadPersistedUserProfile(profile.email);
+    const mergedProfile = {
+      ...profile,
+      ...(persisted || {}),
+    };
     // Chamada ao servidor para limitar contas por IP pode falhar quando o servidor
     // local não está ativo — comentada para evitar erros no console durante desenvolvimento.
     // await window.registerUserAccountForIp(profile);
     // Se quiser validar no servidor, descomente a linha acima.
-    window.saveUserProfile(profile);
+    window.saveUserProfile(mergedProfile);
     if (typeof window.checkUserLogin === "function") window.checkUserLogin();
     if (typeof window.updateGreeting === "function") window.updateGreeting();
     if (typeof window.refresh === "function") window.refresh();
@@ -490,4 +724,204 @@
     console.info("[devTestData] Dados visuais alterados apenas nesta tela.", changed);
     return changed;
   };
+
+  // ----- Developer console & commands (F2 to toggle) -----
+  (function () {
+    const commands = new Map();
+
+    function register(name, fn, desc) {
+      commands.set(name, { fn, desc: desc || "" });
+      // Expose command globally only for admin users
+      try {
+        if (typeof window.isAdminUser === "function" && window.isAdminUser()) {
+          window[name] = function (...args) {
+            try {
+              const r = fn.apply(null, args);
+              console.info(`[devcmd] ${name} executed`, args, r);
+              return r;
+            } catch (e) {
+              console.error(`[devcmd] ${name} error:`, e);
+              throw e;
+            }
+          };
+        }
+      } catch (err) {
+        // do not expose command if check fails
+      }
+    }
+
+    // Pagar command: simula pagamento para o usuário atual (localStorage only)
+    register(
+      "Pagar",
+      function (plan) {
+        const storedEmail = localStorage.getItem("userEmail") || "";
+        if (!storedEmail) throw new Error("Nenhum usuário logado (userEmail não definido). Faça login antes de usar Pagar().");
+        const email = String(storedEmail).trim().toLowerCase();
+        const persisted = window.loadPersistedUserProfile(email) || {};
+        const now = new Date().toISOString();
+        const billingPlan = String(plan || "").toLowerCase();
+        const tags = persisted.tags || [];
+        // Adiciona tag do plano para mostrar no perfil
+        const planTag = `Plano: ${String(plan)}`;
+        if (!tags.includes(planTag)) tags.push(planTag);
+        const newProfile = {
+          ...persisted,
+          email,
+          billingPlan: billingPlan,
+          billingPaidAt: now,
+          tags,
+          // marca como simulação de desenvolvedor para não confundir com dados reais
+          devSimulation: true,
+        };
+        window.savePersistedUserProfile(newProfile);
+        // Atualiza localStorage exibido em páginas
+        if (newProfile.name) localStorage.setItem("userName", newProfile.name);
+        if (newProfile.email) localStorage.setItem("userEmail", newProfile.email);
+        if (newProfile.phone) localStorage.setItem("userPhone", newProfile.phone);
+        if (newProfile.photo) localStorage.setItem("userPhoto", newProfile.photo);
+        window.syncUserProfile(newProfile);
+        if (typeof window.renderPlanTags === "function") window.renderPlanTags();
+        return newProfile;
+      },
+      "Simula pagamento (local) para o usuário logado. Uso: Pagar('Semanal')",
+    );
+
+    register(
+      "ListDevCommands",
+      function () {
+        const list = Array.from(commands.keys()).map((k) => ({ name: k, desc: commands.get(k).desc }));
+        console.table(list);
+        return list;
+      },
+      "Lista comandos de desenvolvedor disponíveis",
+    );
+
+    register(
+      "DevHelp",
+      function () {
+        const list = Array.from(commands.entries()).map(([name, info]) => ({
+          name,
+          usage: info.desc || "Sem descrição disponível",
+        }));
+        console.table(list);
+        return list;
+      },
+      "Mostra todos os comandos dev e como usar cada um",
+    );
+
+    register(
+      "ResetDevPayment",
+      function () {
+        const storedEmail = localStorage.getItem("userEmail") || "";
+        if (!storedEmail) throw new Error("Nenhum usuário logado (userEmail não definido).");
+        const email = String(storedEmail).trim().toLowerCase();
+        const persisted = window.loadPersistedUserProfile(email) || {};
+        delete persisted.billingPlan;
+        delete persisted.billingPaidAt;
+        delete persisted.devSimulation;
+        persisted.tags = (persisted.tags || []).filter((t) => !t.startsWith("Plano:"));
+        window.savePersistedUserProfile(persisted);
+        window.syncUserProfile(persisted);
+        if (typeof window.renderPlanTags === "function") window.renderPlanTags();
+        return persisted;
+      },
+      "Remove simulação de pagamento do usuário logado",
+    );
+
+    // Expose a safe command runner for the overlay
+    window.__dev_commands = commands;
+
+    // Build overlay
+    let overlay;
+    function createOverlay() {
+      if (overlay) return overlay;
+      overlay = document.createElement("div");
+      overlay.id = "dev-console-overlay";
+      overlay.style.position = "fixed";
+      overlay.style.right = "18px";
+      overlay.style.bottom = "18px";
+      overlay.style.width = "420px";
+      overlay.style.maxWidth = "calc(100% - 36px)";
+      overlay.style.zIndex = 99999;
+      overlay.style.background = "rgba(2,6,23,0.9)";
+      overlay.style.color = "#fff";
+      overlay.style.border = "1px solid rgba(255,255,255,0.06)";
+      overlay.style.borderRadius = "10px";
+      overlay.style.padding = "10px";
+      overlay.style.boxShadow = "0 10px 30px rgba(2,6,23,0.6)";
+      overlay.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <strong>Dev Console</strong>
+          <button id="dev-console-close" style="background:transparent;border:0;color:#9ca3af;cursor:pointer">Fechar</button>
+        </div>
+        <div style="font-size:12px;color:#9ca3af;margin-bottom:6px">Comandos: Pagar('Semanal'|'Mensal'|'Anual'), ListDevCommands(), ResetDevPayment(), DevHelp()</div>
+        <input id="dev-console-input" placeholder="Comando ex: Pagar('Mensal')" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:#fff" />
+        <div id="dev-console-help" style="margin-top:10px;padding:10px;border:1px solid rgba(255,255,255,0.08);border-radius:8px;background:rgba(255,255,255,0.03);font-size:12px;color:#d1fae5;max-height:160px;overflow:auto"></div>
+        <div id="dev-console-output" style="margin-top:8px;font-size:13px;max-height:180px;overflow:auto;color:#d1fae5"></div>
+      `;
+      document.body.appendChild(overlay);
+      document.getElementById("dev-console-close").addEventListener("click", () => toggleOverlay(false));
+      const input = document.getElementById("dev-console-input");
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          runCommand(input.value.trim());
+          input.value = "";
+        }
+      });
+      renderDevHelp();
+      return overlay;
+    }
+
+    function toggleOverlay(force) {
+      const el = createOverlay();
+      const visible = el.style.display !== "none" && el.style.display !== "";
+      const show = typeof force === "boolean" ? force : !visible;
+      el.style.display = show ? "block" : "none";
+      if (show) document.getElementById("dev-console-input").focus();
+    }
+
+    function renderDevHelp() {
+      const helpEl = document.getElementById("dev-console-help");
+      if (!helpEl) return;
+      const list = Array.from(commands.entries()).map(([name, info]) => {
+        return `<div style="margin-bottom:8px"><strong>${name}</strong>: ${window.escapeHtml(info.desc || "Sem descrição disponível")}</div>`;
+      });
+      helpEl.innerHTML = list.join("");
+    }
+
+    function runCommand(text) {
+      const out = document.getElementById("dev-console-output");
+      if (!text) return;
+      try {
+        // naive parser: extract name and args
+        const m = text.match(/^([a-zA-Z_$][\w$]*)\s*\((.*)\)\s*$/);
+        if (!m) throw new Error("Comando inválido. Use NomeComando(arg1, arg2)");
+        const name = m[1];
+        const argsText = m[2].trim();
+        const args = argsText ? JSON.parse(`[${argsText.replace(/'/g, '"')}]`) : [];
+        const cmd = commands.get(name);
+        if (!cmd) throw new Error(`Comando não encontrado: ${name}`);
+        const res = cmd.fn.apply(null, args);
+        out.innerText = `> ${text}\n` + JSON.stringify(res, null, 2);
+        console.info("[dev-console] executed", name, args, res);
+        return res;
+      } catch (err) {
+        out.innerText = `Erro: ${err.message || err}`;
+        console.error(err);
+        return null;
+      }
+    }
+
+    // Toggle overlay with F2
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "F2") {
+        try {
+          if (typeof window.isAdminUser === "function" && window.isAdminUser()) toggleOverlay();
+        } catch (err) {
+          // swallow
+        }
+      }
+    });
+  })();
 })();

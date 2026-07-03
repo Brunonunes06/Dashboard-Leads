@@ -81,6 +81,7 @@
                     U
                   </div>
                   <button
+                    id="avatarUploadBtn"
                     style="
                       position: absolute;
                       bottom: -4px;
@@ -94,17 +95,20 @@
                       place-items: center;
                       cursor: pointer;
                     "
+                    type="button"
                   >
                     <i data-lucide="camera" style="width: 14px; height: 14px"></i>
                   </button>
+                  <input id="avatarUploadInput" type="file" accept="image/*,.gif,.webp,.svg,.bmp" style="display:none" />
                 </div>
                 <div>
                   <p id="displayName" style="margin: 0; font-size: 14px; font-weight: 500">
                     Usuário
                   </p>
-                  <p id="userRoleLabel" style="margin: 2px 0 0; font-size: 12px; color: var(--muted)">
-                    Cliente
-                  </p>
+                  <div style="display:flex;align-items:center;gap:8px;margin:2px 0 0">
+                    <p id="userRoleLabel" style="margin:0;font-size:12px;color:var(--muted)">Cliente</p>
+                    <span id="userRoleBadge" class="pill status-qualificado" style="display:none;padding:4px 8px;font-size:12px;border-radius:999px"></span>
+                  </div>
                 </div>
               </div>
               <div
@@ -127,6 +131,15 @@
                 <div style="grid-column: 1/-1">
                   <label class="label">Telefone WhatsApp</label
                   ><input class="input" id="phone" placeholder="+55 11 99876-5432" />
+                </div>
+
+                <div id="paidTagsContainer" style="grid-column: 1/-1; display:none;">
+                  <label class="label">Tags liberadas (após pagamento)</label>
+                  <div id="paidTags" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
+                </div>
+
+                <div style="grid-column: 1/-1; display:flex;gap:8px;align-items:center">
+                  <button class="btn btn-ghost btn-sm" id="devListCmdsBtn" type="button">Listar comandos dev</button>
                 </div>
               </div>
             </div>
@@ -155,7 +168,7 @@
                 <button
                   id="themeLight"
                   class="btn btn-sm"
-                  onclick="setTheme('light')"
+                  onclick="handleThemeSelection('light')"
                   style="border-radius: 9999px"
                 >
                   <i data-lucide="sun" style="width: 14px; height: 14px"></i> Claro
@@ -163,10 +176,18 @@
                 <button
                   id="themeDark"
                   class="btn btn-sm"
-                  onclick="setTheme('dark')"
+                  onclick="handleThemeSelection('dark')"
                   style="border-radius: 9999px"
                 >
                   <i data-lucide="moon" style="width: 14px; height: 14px"></i> Escuro
+                </button>
+                <button
+                  id="themeSystem"
+                  class="btn btn-sm"
+                  onclick="handleThemeSelection('system')"
+                  style="border-radius: 9999px"
+                >
+                  <i data-lucide="monitor" style="width: 14px; height: 14px"></i> Sistema
                 </button>
               </div>
             </div>
@@ -264,8 +285,8 @@
       const phoneI = document.getElementById("phone");
 
       if (nameI) nameI.value = localStorage.getItem("userName") || "Usuário";
-      if (emailI) emailI.value = localStorage.getItem("userEmail") || "rafael@premier.com.br";
-      if (phoneI) phoneI.value = localStorage.getItem("userPhone") || "+55 11 99876-5432";
+      if (emailI) emailI.value = localStorage.getItem("userEmail") || "BomDia@premier.com.br";
+      if (phoneI) phoneI.value = localStorage.getItem("userPhone") || "+99 99 99999-9999";
 
       // 2. Função para atualizar os elementos visuais do Avatar e do Nome de Exibição
       function refresh() {
@@ -313,6 +334,7 @@
           if (typeof toast === "function") {
             toast("Perfil importado do Google com sucesso!", profile.email);
           }
+          if (typeof renderPaidTags === "function") renderPaidTags();
           return;
 
           console.log("Token JWT recebido com sucesso!", response.credential);
@@ -378,35 +400,54 @@
 
       // 4. Função para salvar o perfil manualmente via formulário
       function saveProfile() {
-        if (nameI) localStorage.setItem("userName", nameI.value);
-        if (emailI) localStorage.setItem("userEmail", emailI.value);
-        if (phoneI) localStorage.setItem("userPhone", phoneI.value);
+        if (typeof window.saveUserProfile === "function") {
+          window.saveUserProfile({
+            name: nameI ? nameI.value : "",
+            email: emailI ? emailI.value : "",
+            phone: phoneI ? phoneI.value : "",
+          });
+        } else {
+          if (nameI) localStorage.setItem("userName", nameI.value);
+          if (emailI) localStorage.setItem("userEmail", emailI.value);
+          if (phoneI) localStorage.setItem("userPhone", phoneI.value);
+        }
         if (typeof window.updateUserRoleBadge === "function") {
           window.updateUserRoleBadge(emailI ? emailI.value : "");
         }
         if (typeof toast === "function") {
           toast("Perfil atualizado com sucesso!");
         }
+        if (typeof renderPaidTags === "function") renderPaidTags();
       }
       // 5. Gerenciamento do Tema (Light / Dark)
-      function setTheme(t) {
-        localStorage.setItem("theme", t);
-        document.documentElement.classList.toggle("light", t === "light");
+      function handleThemeSelection(t) {
+        if (typeof window.setTheme === "function" && window.setTheme !== handleThemeSelection) {
+          window.setTheme(t);
+        } else {
+          localStorage.setItem("theme", t);
+          document.documentElement.classList.toggle("light", t === "light");
+        }
         updateThemeBtns();
       }
 
       function updateThemeBtns() {
+        const currentTheme = localStorage.getItem("theme") || "dark";
         const isLight = document.documentElement.classList.contains("light");
         const btnLight = document.getElementById("themeLight");
         const btnDark = document.getElementById("themeDark");
+        const btnSystem = document.getElementById("themeSystem");
 
         if (btnLight) {
-          btnLight.style.background = isLight ? "var(--primary)" : "transparent";
-          btnLight.style.color = isLight ? "var(--primary-fg)" : "var(--fg)";
+          btnLight.style.background = currentTheme === "light" ? "var(--primary)" : "transparent";
+          btnLight.style.color = currentTheme === "light" ? "var(--primary-fg)" : "var(--fg)";
         }
         if (btnDark) {
-          btnDark.style.background = !isLight ? "var(--primary)" : "transparent";
-          btnDark.style.color = !isLight ? "var(--primary-fg)" : "var(--fg)";
+          btnDark.style.background = currentTheme === "dark" ? "var(--primary)" : "transparent";
+          btnDark.style.color = currentTheme === "dark" ? "var(--primary-fg)" : "var(--fg)";
+        }
+        if (btnSystem) {
+          btnSystem.style.background = currentTheme === "system" ? "var(--primary)" : "transparent";
+          btnSystem.style.color = currentTheme === "system" ? "var(--primary-fg)" : "var(--fg)";
         }
       }
       updateThemeBtns();
@@ -459,6 +500,98 @@
           lucide.createIcons();
         }
       }
+
+      // Render paid tags if available in persisted profile
+      function renderPaidTags() {
+        const container = document.getElementById("paidTagsContainer");
+        const tagsEl = document.getElementById("paidTags");
+        if (!container || !tagsEl) return;
+        const email = (localStorage.getItem("userEmail") || "").toLowerCase();
+        if (!email || typeof window.loadPersistedUserProfile !== "function") {
+          container.style.display = "none";
+          return;
+        }
+        const persisted = window.loadPersistedUserProfile(email) || {};
+        const tags = persisted.tags || [];
+        tagsEl.innerHTML = "";
+        if (Array.isArray(tags) && tags.length) {
+          tags.forEach((t) => {
+            const span = document.createElement("span");
+            span.textContent = t;
+            span.style.padding = "6px 8px";
+            span.style.borderRadius = "999px";
+            span.style.background = "var(--muted-bg, rgba(255,255,255,0.04))";
+            span.style.color = "var(--fg)";
+            span.style.fontSize = "13px";
+            tagsEl.appendChild(span);
+          });
+          container.style.display = "block";
+        } else {
+          container.style.display = "none";
+        }
+      }
+
+      // Upload local de avatar
+      const avatarUploadBtn = document.getElementById("avatarUploadBtn");
+      const avatarUploadInput = document.getElementById("avatarUploadInput");
+
+      function handleAvatarFileChange(event) {
+        const input = event.target;
+        if (!input || !input.files || !input.files[0]) return;
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function () {
+          const photoDataUrl = String(reader.result || "");
+          if (!photoDataUrl) return;
+          if (typeof window.saveUserProfile === "function") {
+            window.saveUserProfile({
+              name: nameI ? nameI.value : "",
+              email: emailI ? emailI.value : "",
+              phone: phoneI ? phoneI.value : "",
+              photo: photoDataUrl,
+            });
+          }
+          if (typeof toast === "function") {
+            toast("Foto atualizada", "Avatar carregado com sucesso.");
+          }
+          if (avatarUploadInput) {
+            avatarUploadInput.value = "";
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+
+      if (avatarUploadBtn && avatarUploadInput) {
+        avatarUploadBtn.addEventListener("click", function () {
+          avatarUploadInput.click();
+        });
+        avatarUploadInput.addEventListener("change", handleAvatarFileChange);
+      }
+
+      // Bind dev list button
+      const devListBtn = document.getElementById("devListCmdsBtn");
+      if (devListBtn) {
+        // show button only for admin users
+        try {
+          devListBtn.style.display = window.isAdminUser() ? "inline-flex" : "none";
+        } catch (e) {
+          devListBtn.style.display = "none";
+        }
+        devListBtn.addEventListener("click", function () {
+          if (typeof window.ListDevCommands === "function") {
+            window.ListDevCommands();
+          } else if (window.__dev_commands) {
+            const keys = Array.from(window.__dev_commands.keys());
+            console.table(keys);
+            alert(`Comandos dev: ${keys.join(", ")}`);
+          } else {
+            alert("Nenhum comando de desenvolvedor disponível.");
+          }
+        });
+      }
+
+      // Initial render
+      renderPaidTags();
     </script>
   </body>
 </html>

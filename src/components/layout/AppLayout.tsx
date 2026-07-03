@@ -2,7 +2,7 @@
 // Envolve todas as páginas com a sidebar correta conforme o papel do usuário
 import React, { useState } from "react";
 import { Sidebar } from "./Sidebar";
-import { useAuth } from "../../../useAuth";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AppLayoutProps {
   children?: React.ReactNode;

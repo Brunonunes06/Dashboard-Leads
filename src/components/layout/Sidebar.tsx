@@ -220,7 +220,14 @@ export function Sidebar({ currentPath = "/conversas", onNavigate }: SidebarProps
             {user?.name?.[0] ?? "U"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white text-xs font-medium truncate">{user?.name ?? "Usuário"}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-white text-xs font-medium truncate">{user?.name ?? "Usuário"}</p>
+              {user?.billingPlan && (
+                <span className="pill status-transferido text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300">
+                  {`Plano ${user.billingPlan}`}
+                </span>
+              )}
+            </div>
             <p className="text-slate-500 text-xs truncate">{user?.email ?? ""}</p>
           </div>
           <button
