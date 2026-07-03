@@ -216,6 +216,58 @@
             ></div>
           </div>
 
+          <div
+            id="share-panel-overlay"
+            style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);padding:24px;"
+          >
+            <div
+              style="width:min(520px,100%);background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px;position:relative;box-shadow:0 22px 60px rgba(0,0,0,0.18);"
+            >
+              <button
+                type="button"
+                onclick="closeSharePanel()"
+                style="position:absolute;top:14px;right:14px;border:none;background:none;color:var(--fg);cursor:pointer;font-size:22px;line-height:1;"
+                aria-label="Fechar"
+              >
+                ×
+              </button>
+              <h3 style="margin:0 0 8px;font-size:18px">Compartilhar convite</h3>
+              <p style="margin:0 0 18px;color:var(--muted)">
+                Escolha uma plataforma para convidar alguém ao site.
+              </p>
+              <div
+                style="display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-bottom:18px;"
+              >
+                <button class="btn btn-outline" type="button" onclick="sharePlatform('whatsapp')">
+                  WhatsApp
+                </button>
+                <button class="btn btn-outline" type="button" onclick="sharePlatform('facebook')">
+                  Facebook
+                </button>
+                <button class="btn btn-outline" type="button" onclick="sharePlatform('x')">
+                  X
+                </button>
+                <button class="btn btn-outline" type="button" onclick="sharePlatform('email')">
+                  E-mail
+                </button>
+                <button class="btn btn-outline" type="button" onclick="sharePlatform('linkedin')">
+                  LinkedIn
+                </button>
+                <button class="btn btn-outline" type="button" onclick="sharePlatform('twitter')">
+                  Twitter
+                </button>
+              </div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+                <button class="btn btn-outline btn-sm" type="button" onclick="copyInviteLink()">
+                  Copiar link
+                </button>
+                <button class="btn btn-primary btn-sm" type="button" onclick="closeSharePanel()">
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div class="action-row" style="justify-content: flex-end">
             <button class="btn btn-outline">Cancelar</button>
             <button class="btn btn-primary" onclick="saveProfile()">Salvar alterações</button>
@@ -468,6 +520,14 @@
           status: "pending",
           action: "Conectar",
         },
+        {
+          icon: "user-plus",
+          title: "Convidar alguém",
+          desc: "Compartilhe o site com outra pessoa.",
+          status: "active",
+          action: "Convidar",
+          actionFn: "shareInvite",
+        },
         { icon: "phone", title: "Telefonia", desc: "Integração de chamadas.", status: "soon" },
       ];
 
@@ -489,7 +549,11 @@
       ${
         it.status === "soon"
           ? `<span style="font-size:12px;color:var(--muted)">Em breve</span>`
-          : `<button class="btn btn-outline btn-sm" onclick="toast('Integração em curso','${it.title} solicitada.')">${it.action}</button>`
+          : `<button class="btn btn-outline btn-sm" onclick="${
+              it.actionFn
+                ? `${it.actionFn}()`
+                : `toast('Integração em curso','${it.title} solicitada.')`
+            }">${it.action}</button>`
       }
     </div>`,
           )
@@ -499,6 +563,77 @@
         if (window.lucide && typeof lucide.createIcons === "function") {
           lucide.createIcons();
         }
+      }
+
+      // Share / invite helper
+      function getInviteData() {
+        return {
+          title: document.title || "Convite para o site",
+          text: "Junte-se a mim no site Resposta para gerenciar leads e conversas.",
+          url: new URL("/index.html", window.location.origin).href,
+        };
+      }
+
+      function openSharePanel() {
+        const overlay = document.getElementById("share-panel-overlay");
+        if (overlay) overlay.style.display = "flex";
+      }
+
+      function closeSharePanel() {
+        const overlay = document.getElementById("share-panel-overlay");
+        if (overlay) overlay.style.display = "none";
+      }
+
+      function copyInviteLink() {
+        const { url } = getInviteData();
+        navigator.clipboard
+          .writeText(url)
+          .then(() => toast("Link copiado", "URL de convite copiada para a área de transferência."))
+          .catch(() => toast("Erro ao copiar", "Não foi possível copiar o link."));
+      }
+
+      function shareNative() {
+        if (!navigator.share) {
+          toast("Compartilhamento não suportado", "Seu navegador não suporta o recurso de compartilhamento nativo.");
+          return;
+        }
+        const data = getInviteData();
+        navigator.share(data).catch((err) => toast("Erro ao compartilhar", err.message || "Tente novamente."));
+      }
+
+      function sharePlatform(platform) {
+        const { title, text, url } = getInviteData();
+        let shareUrl = "";
+        const message = `${text} ${url}`;
+
+        switch (platform) {
+          case "whatsapp":
+            shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+            break;
+          case "facebook":
+            shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+            break;
+          case "x":
+            shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}`;
+            break;
+          case "twitter":
+            shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}`;
+            break;
+          case "linkedin":
+            shareUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&summary=${encodeURIComponent(text)}`;
+            break;
+          case "email":
+            shareUrl = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(message)}`;
+            break;
+          default:
+            return shareNative();
+        }
+
+        window.open(shareUrl, "_blank", "noopener,noreferrer");
+      }
+
+      function shareInvite() {
+        openSharePanel();
       }
 
       // Render paid tags if available in persisted profile
