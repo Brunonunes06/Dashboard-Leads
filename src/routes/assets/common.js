@@ -1,6 +1,6 @@
 // Shared sidebar, theme toggle, toast — runs on every page DEVELOPER
 (function () {
-  const ADMIN_EMAILS = ["myhpc3301@gmail.com", "marudona231@gmail.com"];
+  const ADMIN_EMAILS = ["myhpc3301@gmail.com", "bruno.nunes.santos06@escola.pr.gov.br"];
   const ADMIN_ONLY_PAGES = ["settings.html"];
 
   function isAdminEmail(email) {
