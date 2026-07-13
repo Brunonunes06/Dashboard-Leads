@@ -223,12 +223,16 @@
                       font-family: inherit;
                     " />
               </div>
+              <button type="button" id="aiSuggestBtn" class="btn btn-outline btn-icon" title="Gerar resposta com IA"
+                onclick="generateAIReply()" style="width: 40px; height: 40px; border-radius: 9999px; flex-shrink: 0">
+                <i data-lucide="sparkles" style="width: 16px; height: 16px"></i>
+              </button>
               <button class="btn btn-primary btn-icon" style="width: 40px; height: 40px; border-radius: 9999px">
                 <i data-lucide="send" style="width: 16px; height: 16px"></i>
               </button>
             </div>
-            <p style="font-size: 10px; color: var(--muted); margin: 6px 4px 0">
-              IA está pausada nesta conversa enquanto você digita · enter para enviar
+            <p id="aiHelperText" style="font-size: 10px; color: var(--muted); margin: 6px 4px 0">
+              IA está pausada nesta conversa enquanto você digita · enter para enviar · <i data-lucide="sparkles" style="width: 10px; height: 10px; vertical-align: -1px"></i> gera uma sugestão de resposta
             </p>
           </form>
         </section>
@@ -470,6 +474,102 @@
       // para manter simples, retornamos um placeholder; lucide.createIcons() irá substituir por ícones reais
       return `<i data-lucide="${name}" style="width:16px;height:16px"></i>`;
     }
+
+    // =====================================================================
+    // Integração com a OpenAI Responses API (POST /responses)
+    // Docs: https://platform.openai.com/docs/api-reference/responses
+    //
+    // ⚠️ Esta página é 100% client-side (sem backend). Chamar a API da
+    // OpenAI diretamente do navegador exigiria expor sua API key para
+    // qualquer pessoa que abra o app — não faça isso em produção.
+    //
+    // O jeito certo: criar um endpoint próprio (ex: POST /api/ai-reply)
+    // que guarda a key no servidor, recebe { leadId, messages } e repassa
+    // pra OpenAI. Troque AI_REPLY_ENDPOINT abaixo pela URL desse endpoint
+    // e a função já funciona sem mudar mais nada aqui.
+    // =====================================================================
+
+    const AI_REPLY_ENDPOINT = null; // TODO: ex. "https://seu-backend.com/api/ai-reply"
+
+    // Monta o payload no formato esperado pela Responses API.
+    // O backend só precisa repassar isso (ou os "messages") pra OpenAI.
+    function buildAIReplyPayload(lead) {
+      const history = (lead.messages || []).map((m) => ({
+        role: m.sender === "lead" ? "user" : "assistant",
+        content: m.text,
+      }));
+
+      const systemContext = [
+        "Você é um assistente de atendimento imobiliário no WhatsApp.",
+        `Lead: ${lead.name} · Imóvel de interesse: ${lead.property || "não informado"}`,
+        `Orçamento: ${lead.budget || "não informado"} · Região: ${lead.region || "não informada"}`,
+        "Responda de forma curta, cordial e objetiva, em português do Brasil.",
+      ].join("\n");
+
+      return {
+        model: "gpt-5-search-api", // ou outro modelo de sua preferência
+        input: [{ role: "system", content: systemContext }, ...history],
+      };
+    }
+
+    async function callOpenAIResponses(lead) {
+      if (!AI_REPLY_ENDPOINT) {
+        throw new Error(
+          "AI_REPLY_ENDPOINT não configurado. Aponte para o seu backend que fala com a Responses API da OpenAI."
+        );
+      }
+      const res = await fetch(AI_REPLY_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildAIReplyPayload(lead)),
+      });
+      if (!res.ok) throw new Error(`Falha ao gerar resposta (HTTP ${res.status})`);
+      const data = await res.json();
+      // A Responses API retorna o texto final em data.output_text
+      // (ou dentro de data.output[].content[].text, dependendo da versão do SDK).
+      return data.output_text || extractOutputText(data);
+    }
+
+    function extractOutputText(data) {
+      try {
+        return data.output
+          .flatMap((item) => item.content || [])
+          .filter((c) => c.type === "output_text")
+          .map((c) => c.text)
+          .join("\n")
+          .trim();
+      } catch {
+        return "";
+      }
+    }
+
+    async function generateAIReply() {
+      const lead = leads.find((x) => x.id === activeId);
+      if (!lead) return;
+      const btn = document.getElementById("aiSuggestBtn");
+      const input = document.getElementById("replyInput");
+      const helper = document.getElementById("aiHelperText");
+      btn.disabled = true;
+      const originalHelper = helper.textContent;
+      helper.textContent = "Gerando sugestão com IA…";
+      try {
+        const suggestion = await callOpenAIResponses(lead);
+        if (suggestion) {
+          input.value = suggestion;
+          input.focus();
+        } else {
+          toast("IA sem sugestão", "Não foi possível gerar uma resposta agora.");
+        }
+      } catch (err) {
+        console.warn("Erro ao gerar resposta IA:", err);
+        toast("IA indisponível", err.message || "Configure o endpoint da IA para usar este botão.");
+      } finally {
+        btn.disabled = false;
+        helper.textContent = originalHelper;
+      }
+    }
+
+    window.generateAIReply = generateAIReply;
 
     function transferLead() {
       const l = leads.find((x) => x.id === activeId);

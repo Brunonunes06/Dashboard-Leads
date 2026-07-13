@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
+require("dotenv").config();
+const aiRoutes = require("./server-ai-routes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,6 +21,7 @@ const MERCADO_PAGO_PLANS = {
 };
 
 const dbLeads = {};
+const dbTokens = {};
 
 app.use(cors());
 app.use(express.json());
@@ -27,6 +30,16 @@ app.set("trust proxy", true);
 app.use((req, res, next) => {
   res.setHeader("ngrok-skip-browser-warning", "true");
   next();
+});
+
+app.use(aiRoutes);
+
+app.get("/config.js", (req, res) => {
+  res.type("application/javascript");
+  res.send(`window.__SUPABASE_CONFIG__ = ${JSON.stringify({
+    url: process.env.SUPABASE_URL || "",
+    anonKey: process.env.SUPABASE_ANON_KEY || "",
+  })};`);
 });
 
 app.get("/", (req, res) => {
@@ -194,28 +207,6 @@ app.post("/api/payments/pix", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta: ${PORT}`);
-});
-
-// ============================================================
-// PASSO 7: Adicione estas rotas ao seu server.js existente
-// ============================================================
-// Cole este código DENTRO do seu server.js, antes do app.listen()
-// ============================================================
-
-// ⚠️ Instale o Stripe no servidor:
-// npm install stripe
-// ou: bun add stripe
-
-// const Stripe = require('stripe');
-// const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-
-// Banco de tokens em memória (use seu banco real / Supabase aqui)
-const dbTokens = {};
-
-// POST /api/billing/subscribe
-// Recebe o paymentMethodId do frontend e cria a assinatura
 app.post("/api/billing/subscribe", async (req, res) => {
   try {
     const { paymentMethodId, userId, email } = req.body;
@@ -224,32 +215,6 @@ app.post("/api/billing/subscribe", async (req, res) => {
       return res.status(400).json({ error: "paymentMethodId e userId são obrigatórios." });
     }
 
-    // ─── INTEGRAÇÃO STRIPE REAL (descomente após configurar) ───
-    // // 1. Criar ou buscar customer no Stripe
-    // const customers = await stripe.customers.list({ email, limit: 1 });
-    // let customer = customers.data[0];
-    // if (!customer) {
-    //   customer = await stripe.customers.create({ email, metadata: { userId } });
-    // }
-    //
-    // // 2. Anexar o cartão ao customer
-    // await stripe.paymentMethods.attach(paymentMethodId, { customer: customer.id });
-    // await stripe.customers.update(customer.id, {
-    //   invoice_settings: { default_payment_method: paymentMethodId },
-    // });
-    //
-    // // 3. Criar a assinatura
-    // const subscription = await stripe.subscriptions.create({
-    //   customer: customer.id,
-    //   items: [{ price: process.env.STRIPE_PRICE_ID }], // ID do plano no Stripe
-    //   expand: ['latest_invoice.payment_intent'],
-    // });
-    //
-    // // 4. Salvar token no banco
-    // const token = subscription.id;
-    // ─────────────────────────────────────────────────────────
-
-    // MOCK para desenvolvimento (remova em produção):
     const token = `sub_mock_${userId}_${Date.now()}`;
 
     dbTokens[userId] = {
@@ -267,8 +232,6 @@ app.post("/api/billing/subscribe", async (req, res) => {
   }
 });
 
-// GET /api/billing/verify/:userId
-// Verifica se o token do usuário ainda é válido
 app.get("/api/billing/verify/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
@@ -278,12 +241,6 @@ app.get("/api/billing/verify/:userId", async (req, res) => {
       return res.json({ valid: false });
     }
 
-    // ─── VERIFICAÇÃO STRIPE REAL ───
-    // const subscription = await stripe.subscriptions.retrieve(record.token);
-    // const valid = subscription.status === 'active' || subscription.status === 'trialing';
-    // return res.json({ valid, status: subscription.status });
-    // ──────────────────────────────
-
     return res.json({ valid: true, token: record.token });
   } catch (error) {
     console.error("[Billing] Erro na verificação:", error);
@@ -291,16 +248,18 @@ app.get("/api/billing/verify/:userId", async (req, res) => {
   }
 });
 
-// POST /api/billing/cancel/:userId
 app.post("/api/billing/cancel/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
     if (dbTokens[userId]) {
       dbTokens[userId].active = false;
-      // Stripe: await stripe.subscriptions.cancel(dbTokens[userId].token);
     }
     return res.json({ success: true });
   } catch (error) {
     return res.status(500).json({ error: "Erro ao cancelar assinatura." });
   }
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor rodando na porta: ${PORT}`);
 });
