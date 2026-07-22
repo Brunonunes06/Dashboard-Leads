@@ -107,7 +107,7 @@
             <button class="menu-btn" onclick="openMobileSidebar()">
               <i data-lucide="menu"></i>
             </button>
-            <span class="topbar-title">Configurar IA</span>
+            <span class="topbar-title" data-i18n="nav.settings">Configurar IA</span>
           </div>
           <button class="btn btn-outline btn-icon" onclick="toggleTheme()">
             <i data-lucide="sun-moon"></i>
@@ -116,8 +116,8 @@
 
         <div class="page-shell" style="max-width: 900px">
           <div>
-            <h1 class="page-title">Configurar IA</h1>
-            <p style="margin-top: 6px; font-size: 13px; color: var(--muted)">
+            <h1 class="page-title" data-i18n="nav.settings">Configurar IA</h1>
+            <p style="margin-top: 6px; font-size: 13px; color: var(--muted)" data-i18n="settings.pageSubtitle">
               Personalize como a IA conversa, qualifica e transfere leads para sua equipe.
             </p>
           </div>
@@ -136,7 +136,7 @@
                     margin-right: 6px;
                   "
                 ></i
-                >Personalidade da IA
+                ><span data-i18n="settings.aiPersonality">Personalidade da IA</span>
               </h3>
             </div>
             <div class="card-body" style="display: flex; flex-direction: column; gap: 16px">
@@ -148,20 +148,20 @@
                 "
               >
                 <div>
-                  <label class="label">Nome da IA</label
+                  <label class="label" data-i18n="settings.aiNameLabel">Nome da IA</label
                   ><input class="input" id="aiName" value="Sofia" />
                 </div>
                 <div>
-                  <label class="label">Imobiliária</label
+                  <label class="label" data-i18n="settings.brandLabel">Imobiliária</label
                   ><input class="input" id="aiBrand" value="Premier Imóveis" />
                 </div>
               </div>
               <div>
-                <label class="label">Tom e instruções</label>
+                <label class="label" data-i18n="settings.toneLabel">Tom e instruções</label>
                 <textarea class="textarea" id="aiTone" rows="5">
 Você é a Sofia, atendente da Premier Imóveis. Fale como um humano: linguagem natural brasileira, frases curtas, sem jargão corporativo. Use no máximo 1 emoji por conversa. Faça uma pergunta por vez. Nunca invente preços ou disponibilidade — se não souber, diga que vai confirmar com o corretor.</textarea
                 >
-                <p style="font-size: 11px; color: var(--muted); margin-top: 6px">
+                <p style="font-size: 11px; color: var(--muted); margin-top: 6px" data-i18n="settings.toneHint">
                   A IA segue essas instruções em todas as conversas do WhatsApp.
                 </p>
               </div>
@@ -170,13 +170,13 @@ Você é a Sofia, atendente da Premier Imóveis. Fale como um humano: linguagem 
 
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title">Configuração do bot</h3>
+              <h3 class="card-title" data-i18n="settings.botConfig">Configuração do bot</h3>
             </div>
             <div class="card-body" style="display: flex; flex-direction: column; gap: 16px">
               <div class="settings-row" style="border: 1px solid var(--border); border-radius: 10px; padding: 14px">
                 <div>
-                  <p style="margin: 0; font-size: 14px; font-weight: 500">Bot ativo nas conversas</p>
-                  <p style="margin: 2px 0 0; font-size: 12px; color: var(--muted)">
+                  <p style="margin: 0; font-size: 14px; font-weight: 500" data-i18n="settings.botActiveTitle">Bot ativo nas conversas</p>
+                  <p style="margin: 2px 0 0; font-size: 12px; color: var(--muted)" data-i18n="settings.botActiveDesc">
                     Quando desativado, as telas usam apenas atendimento humano.
                   </p>
                 </div>
@@ -191,29 +191,29 @@ Você é a Sofia, atendente da Premier Imóveis. Fale como um humano: linguagem 
                 "
               >
                 <div>
-                  <label class="label">Nome do bot</label>
+                  <label class="label" data-i18n="settings.botNameLabel">Nome do bot</label>
                   <input class="input" id="botName" value="Express Bot" />
                 </div>
                 <div>
-                  <label class="label">Delay automático</label>
+                  <label class="label" data-i18n="settings.botDelayLabel">Delay automático</label>
                   <input class="input" id="botDelaySeconds" type="number" min="0" max="120" value="0" />
                 </div>
               </div>
 
               <div>
-                <label class="label">Mensagem inicial</label>
+                <label class="label" data-i18n="settings.botGreetingLabel">Mensagem inicial</label>
                 <textarea class="textarea" id="botGreeting" rows="4">Olá! Sou o Express Bot e posso te ajudar com imóveis, disponibilidade e agendamento.</textarea>
               </div>
 
               <div>
-                <label class="label">Mensagem de transferência</label>
+                <label class="label" data-i18n="settings.botHandoffLabel">Mensagem de transferência</label>
                 <textarea class="textarea" id="botHandoff" rows="4">Perfeito. Vou te conectar agora com um especialista humano para seguir com o atendimento.</textarea>
               </div>
 
               <div class="settings-row" style="border: 1px solid var(--border); border-radius: 10px; padding: 14px">
                 <div>
-                  <p style="margin: 0; font-size: 14px; font-weight: 500">Resposta automática</p>
-                  <p style="margin: 2px 0 0; font-size: 12px; color: var(--muted)">
+                  <p style="margin: 0; font-size: 14px; font-weight: 500" data-i18n="settings.autoReplyTitle">Resposta automática</p>
+                  <p style="margin: 2px 0 0; font-size: 12px; color: var(--muted)" data-i18n="settings.autoReplyDesc">
                     Controla se o bot responde sozinho antes da transferência.
                   </p>
                 </div>
@@ -224,13 +224,13 @@ Você é a Sofia, atendente da Premier Imóveis. Fale como um humano: linguagem 
 
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title">Perguntas de qualificação</h3>
+              <h3 class="card-title" data-i18n="settings.qualifyingQuestions">Perguntas de qualificação</h3>
               <button class="btn btn-outline btn-sm" onclick="addQuestion()">
-                <i data-lucide="plus" style="width: 14px; height: 14px"></i> Adicionar
+                <i data-lucide="plus" style="width: 14px; height: 14px"></i> <span data-i18n="common.add">Adicionar</span>
               </button>
             </div>
             <div class="card-body">
-              <p style="font-size: 11px; color: var(--muted); margin: 0 0 10px">
+              <p style="font-size: 11px; color: var(--muted); margin: 0 0 10px" data-i18n="settings.questionsHint">
                 A IA faz essas perguntas em ordem, uma por vez, esperando a resposta antes da
                 próxima.
               </p>
@@ -252,16 +252,16 @@ Você é a Sofia, atendente da Premier Imóveis. Fale como um humano: linguagem 
                     margin-right: 6px;
                   "
                 ></i
-                >Regras de transferência
+                ><span data-i18n="settings.transferRules">Regras de transferência</span>
               </h3>
             </div>
             <div class="card-body" style="display: flex; flex-direction: column; gap: 18px">
               <div class="settings-row" style="border: 1px solid var(--border); border-radius: 10px; padding: 14px">
                 <div>
-                  <p style="margin: 0; font-size: 14px; font-weight: 500">
+                  <p style="margin: 0; font-size: 14px; font-weight: 500" data-i18n="settings.autoTransferTitle">
                     Transferir automaticamente para um corretor
                   </p>
-                  <p style="margin: 2px 0 0; font-size: 12px; color: var(--muted)">
+                  <p style="margin: 2px 0 0; font-size: 12px; color: var(--muted)" data-i18n="settings.autoTransferDesc">
                     Quando o lead atingir o score mínimo, a IA conecta um humano.
                   </p>
                 </div>
@@ -280,7 +280,7 @@ Você é a Sofia, atendente da Premier Imóveis. Fale como um humano: linguagem 
                     margin-bottom: 10px;
                   "
                 >
-                  <label class="label" style="margin: 0">Score mínimo para transferência</label>
+                  <label class="label" style="margin: 0" data-i18n="settings.minScoreLabel">Score mínimo para transferência</label>
                   <span
                     id="scoreVal"
                     style="
@@ -310,14 +310,15 @@ Você é a Sofia, atendente da Premier Imóveis. Fale como um humano: linguagem 
           </div>
 
           <div class="action-row" style="justify-content: flex-end">
-            <button class="btn btn-outline">Cancelar</button>
-            <button class="btn btn-primary" onclick="saveSettings()">Salvar alterações</button>
+            <button class="btn btn-outline" data-i18n="common.cancel">Cancelar</button>
+            <button class="btn btn-primary" onclick="saveSettings()" data-i18n="common.save">Salvar alterações</button>
           </div>
         </div>
       </div>
     </div>
 
-    <script src="assets/common.js"></script>
+    <script src="assets/-i18n.js"></script>
+    <script src="assets/-common.js"></script>
     <script>
       let questions = JSON.parse(localStorage.getItem("aiQuestions") || "null") || [
         "Qual a faixa de investimento que você considera?",
@@ -351,9 +352,16 @@ Você é a Sofia, atendente da Premier Imóveis. Fale como um humano: linguagem 
         renderQuestions();
       }
 
+      function updateScoreHint(value) {
+        document.getElementById("scoreHint").textContent = window.t(
+          "settings.scoreHint",
+          "Leads abaixo de {score} continuam conversando com a IA ou são marcados como frios.",
+          { score: value },
+        );
+      }
+
       document.getElementById("scoreRange").addEventListener("input", (e) => {
-        document.getElementById("scoreHint").textContent =
-          `Leads abaixo de ${e.target.value} continuam conversando com a IA ou são marcados como frios.`;
+        updateScoreHint(e.target.value);
       });
 
       function saveSettings() {
@@ -369,13 +377,17 @@ Você é a Sofia, atendente da Premier Imóveis. Fale como um humano: linguagem 
         localStorage.setItem("botAutoReply", document.getElementById("botAutoReply").checked);
         localStorage.setItem("autoTransfer", document.getElementById("autoTransfer").checked);
         localStorage.setItem("minScore", document.getElementById("scoreRange").value);
-        toast("Configurações salvas", "A IA já está usando as novas regras.");
+        toast(window.t("settings.savedTitle", "Configurações salvas"), window.t("settings.savedDesc", "A IA já está usando as novas regras."));
       }
 
       ["aiName", "aiBrand", "aiTone", "botName", "botGreeting", "botHandoff"].forEach((k) => {
         const v = localStorage.getItem(k);
         if (v) document.getElementById(k).value = v;
       });
+
+      if (!localStorage.getItem("aiName")) {
+        document.getElementById("aiName").value = window.t("settings.aiNameDefault", "Sofia");
+      }
 
       const botEnabled = localStorage.getItem("botEnabled");
       if (botEnabled !== null) document.getElementById("botEnabled").checked = botEnabled === "true";
@@ -392,6 +404,7 @@ Você é a Sofia, atendente da Premier Imóveis. Fale como um humano: linguagem 
         document.getElementById("scoreRange").value = ms;
         document.getElementById("scoreVal").textContent = ms;
       }
+      updateScoreHint(document.getElementById("scoreRange").value);
 
       const at = localStorage.getItem("autoTransfer");
       if (at !== null) document.getElementById("autoTransfer").checked = at === "true";

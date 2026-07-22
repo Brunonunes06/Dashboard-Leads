@@ -628,7 +628,6 @@ button {
   .topbar {
     align-items: flex-start;
   }
-  .topbar-actions,
   .action-row,
   .filter-row {
     width: 100%;
@@ -741,4 +740,31 @@ html.light table thead tr {
 html.light .sheet-backdrop,
 html.light .sidebar-mobile .sb-back {
   background: rgba(15, 23, 42, 0.32);
+}
+
+/* ============ Google Translate widget ============ */
+body {
+  top: 0 !important;
+}
+.goog-te-banner-frame {
+  display: none !important;
+}
+#google_translate_element {
+  display: none !important;
+}
+.goog-te-gadget {
+  font-size: 0 !important;
+  color: transparent !important;
+}
+.goog-te-gadget .goog-te-combo {
+  font-size: 13px !important;
+  color: var(--fg) !important;
+  background: var(--card2) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+  padding: 6px 8px !important;
+  cursor: pointer;
+}
+.skiptranslate iframe {
+  display: none !important;
 }

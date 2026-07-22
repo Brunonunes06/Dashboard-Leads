@@ -20,7 +20,7 @@
       (function(){
         if (window.Chart) return;
         var s = document.createElement('script');
-        s.src = 'assets/vendor/chart-shim.js';
+        s.src = 'assets/vendor/-chart-shim.js';
         s.defer = true;
         document.head.appendChild(s);
       })();
@@ -41,7 +41,7 @@
             <button class="menu-btn" onclick="openMobileSidebar()">
               <i data-lucide="menu"></i>
             </button>
-            <span class="topbar-title">CRM Instagram</span>
+            <span class="topbar-title" data-i18n="nav.instagram">CRM Instagram</span>
           </div>
           <button class="btn btn-outline btn-icon" onclick="toggleTheme()">
             <i data-lucide="sun-moon"></i>
@@ -59,10 +59,10 @@
                 color: var(--muted);
               "
             >
-              <i data-lucide="camera" style="width: 14px; height: 14px"></i> CRM · Direct Messages
+              <i data-lucide="camera" style="width: 14px; height: 14px"></i> <span data-i18n="ig.directMessages">CRM · Direct Messages</span>
             </div>
-            <h1 class="page-title" style="margin-top: 4px">Leads do Instagram</h1>
-            <p style="font-size: 13px; color: var(--muted)">
+            <h1 class="page-title" style="margin-top: 4px" data-i18n="ig.pageTitle">Leads do Instagram</h1>
+            <p style="font-size: 13px; color: var(--muted)" data-i18n="ig.pageSubtitle">
               Acompanhe conversas qualificadas pelo robô Express em tempo real.
             </p>
           </div>
@@ -72,8 +72,8 @@
           <div class="card">
             <div class="card-header">
               <div>
-                <h3 class="card-title">Fluxo de Leads · 7 dias</h3>
-                <p style="font-size: 11px; color: var(--muted); margin: 2px 0 0">
+                <h3 class="card-title" data-i18n="ig.flowTitle">Fluxo de Leads · 7 dias</h3>
+                <p style="font-size: 11px; color: var(--muted); margin: 2px 0 0" data-i18n="ig.flowSubtitle">
                   Mensagens recebidas vs. leads qualificados
                 </p>
               </div>
@@ -100,15 +100,16 @@
                     class="input"
                     id="searchInput"
                     placeholder="Buscar por @senderId ou conteúdo…"
+                    data-i18n-placeholder="ig.searchPlaceholder"
                     style="padding-left: 34px"
                   />
                 </div>
                 <select class="select" id="statusFilter" style="width: min(260px, 100%)">
-                  <option value="todos">Todos os status</option>
-                  <option value="menu_inicial">Menu Inicial</option>
-                  <option value="interessado_painel">Interessado em Painel</option>
-                  <option value="aguardando_suporte">Aguardando Suporte Humano</option>
-                  <option value="finalizado">Finalizado</option>
+                  <option value="todos" data-i18n="ig.status.all">Todos os status</option>
+                  <option value="menu_inicial" data-i18n="ig.status.menuInicial">Menu Inicial</option>
+                  <option value="interessado_painel" data-i18n="ig.status.interessadoPainel">Interessado em Painel</option>
+                  <option value="aguardando_suporte" data-i18n="ig.status.aguardandoSuporte">Aguardando Suporte Humano</option>
+                  <option value="finalizado" data-i18n="ig.status.finalizado">Finalizado</option>
                 </select>
                 <div
                   id="counter"
@@ -132,9 +133,9 @@
                       "
                     >
                       <th style="padding: 12px 20px">Sender</th>
-                      <th style="padding: 12px 20px">Última mensagem</th>
+                      <th style="padding: 12px 20px" data-i18n="ig.table.lastMessage">Última mensagem</th>
                       <th style="padding: 12px 20px">Status</th>
-                      <th style="padding: 12px 20px; text-align: right">Último contato</th>
+                      <th style="padding: 12px 20px; text-align: right" data-i18n="ig.table.lastContact">Último contato</th>
                     </tr>
                   </thead>
                   <tbody id="igBody"></tbody>
@@ -174,25 +175,26 @@
         ></div>
         <footer style="border-top: 1px solid var(--border-soft); padding: 12px">
           <div style="display: flex; gap: 8px">
-            <input id="replyInput" class="input" placeholder="Responder como humano…" />
+            <input id="replyInput" class="input" placeholder="Responder como humano…" data-i18n-placeholder="chat.replyPlaceholder" />
             <button id="sendBtn" class="btn btn-primary">
               <i data-lucide="send" style="width: 16px; height: 16px"></i>
             </button>
           </div>
-          <p style="font-size: 10px; color: var(--muted); margin: 6px 0 0">
+          <p style="font-size: 10px; color: var(--muted); margin: 6px 0 0" data-i18n="ig.replyNote">
             Sua resposta substitui o robô Express nesta conversa.
           </p>
         </footer>
       </aside>
     </div>
 
-    <script src="assets/common.js"></script>
+    <script src="assets/-i18n.js"></script>
+    <script src="assets/-common.js"></script>
     <script>
       const STATUS_META = {
-        menu_inicial: { label: "Menu Inicial", cls: "status-novo" },
-        interessado_painel: { label: "Interessado em Painel", cls: "status-qualificado" },
-        aguardando_suporte: { label: "Aguardando Suporte Humano", cls: "status-qualificando" },
-        finalizado: { label: "Finalizado", cls: "status-transferido" },
+        menu_inicial: { label: window.t("ig.status.menuInicial", "Menu Inicial"), cls: "status-novo" },
+        interessado_painel: { label: window.t("ig.status.interessadoPainel", "Interessado em Painel"), cls: "status-qualificado" },
+        aguardando_suporte: { label: window.t("ig.status.aguardandoSuporte", "Aguardando Suporte Humano"), cls: "status-qualificando" },
+        finalizado: { label: window.t("ig.status.finalizado", "Finalizado"), cls: "status-transferido" },
       };
       const iso = (h) => new Date(Date.now() - h * 3600 * 1000).toISOString();
       const igLeads = [
@@ -221,7 +223,7 @@
           ],
         },
       ];
-      const days = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+      const days = window.weekdayLabels ? window.weekdayLabels() : ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
       const weeklyFlow = days.map((d, i) => ({
         day: d,
         recebidas: 12 + Math.round(Math.sin(i) * 6 + i * 3),
@@ -234,7 +236,7 @@
 
       function relTime(iso) {
         const d = (Date.now() - new Date(iso).getTime()) / 1000;
-        if (d < 60) return "agora";
+        if (d < 60) return window.t("common.now", "agora");
         if (d < 3600) return Math.floor(d / 60) + " min";
         if (d < 86400) return Math.floor(d / 3600) + "h";
         return Math.floor(d / 86400) + "d";
@@ -248,10 +250,10 @@
         const finalized = igLeads.filter((l) => l.status === "finalizado").length;
         const rate = igLeads.length ? Math.round((finalized / igLeads.length) * 100) : 0;
         const cards = [
-          { icon: "users", label: "Total de Leads", value: igLeads.length, color: "#34d399" },
-          { icon: "inbox", label: "Recebidos Hoje", value: today, color: "#22d3ee" },
-          { icon: "clock", label: "Aguardando Resposta", value: waiting, color: "#f59e0b" },
-          { icon: "trending-up", label: "Taxa de Conversão", value: rate + "%", color: "#a855f7" },
+          { icon: "users", label: window.t("ig.metric.total", "Total de Leads"), value: igLeads.length, color: "#34d399" },
+          { icon: "inbox", label: window.t("ig.metric.receivedToday", "Recebidos Hoje"), value: today, color: "#22d3ee" },
+          { icon: "clock", label: window.t("ig.metric.waiting", "Aguardando Resposta"), value: waiting, color: "#f59e0b" },
+          { icon: "trending-up", label: window.t("ig.metric.conversionRate", "Taxa de Conversão"), value: rate + "%", color: "#a855f7" },
         ];
         document.getElementById("metrics").innerHTML = cards
           .map(
@@ -280,10 +282,10 @@
           )
           .sort((a, b) => +new Date(b.lastContact) - +new Date(a.lastContact));
         document.getElementById("counter").textContent =
-          `${filtered.length} de ${igLeads.length} leads`;
+          `${filtered.length} ${window.t("common.of", "de")} ${igLeads.length} leads`;
         const body = document.getElementById("igBody");
         if (!filtered.length) {
-          body.innerHTML = `<tr><td colspan="4" style="padding:40px;text-align:center;color:var(--muted);font-size:13px">Nenhum lead encontrado.</td></tr>`;
+          body.innerHTML = `<tr><td colspan="4" style="padding:40px;text-align:center;color:var(--muted);font-size:13px">${window.t("ig.noLeadsFound", "Nenhum lead encontrado.")}</td></tr>`;
           return;
         }
         body.innerHTML = filtered
@@ -319,7 +321,7 @@
     <div class="grad-ig" style="width:40px;height:40px;border-radius:9999px;display:grid;place-items:center;font-size:13px;font-weight:500">${l.avatar}</div>
     <div style="flex:1">
       <p style="margin:0;font-family:'Space Grotesk';font-size:15px;font-weight:600">${escapeHtml(l.senderId)}</p>
-      <p style="margin:0;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px"><i data-lucide="camera" style="width:12px;height:12px"></i> Direct Message</p>
+      <p style="margin:0;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px"><i data-lucide="camera" style="width:12px;height:12px"></i> ${window.t("ig.directMessage", "Direct Message")}</p>
     </div>
     <span class="pill ${m.cls}">${m.label}</span>`;
         renderMessages();
@@ -339,7 +341,7 @@
         const meta = {
           lead: { name: "Lead", icon: "message-square-text", bg: "var(--card)" },
           bot: { name: "Express Bot", icon: "bot", bg: "rgba(16,185,129,.1)" },
-          human: { name: "Você", icon: "user", bg: "rgba(6,182,212,.1)" },
+          human: { name: window.t("common.you", "Você"), icon: "user", bg: "rgba(6,182,212,.1)" },
         };
         const wrap = document.getElementById("sheetMessages");
         wrap.innerHTML = l.messages
@@ -393,7 +395,7 @@
           labels: weeklyFlow.map((d) => d.day),
           datasets: [
             {
-              label: "Recebidas",
+              label: window.t("ig.chart.received", "Recebidas"),
               data: weeklyFlow.map((d) => d.recebidas),
               borderColor: "#06b6d4",
               backgroundColor: "rgba(6,182,212,.2)",
@@ -403,7 +405,7 @@
               pointRadius: 3,
             },
             {
-              label: "Qualificados",
+              label: window.t("chart.qualified", "Qualificados"),
               data: weeklyFlow.map((d) => d.qualificados),
               borderColor: "#10b981",
               backgroundColor: "rgba(16,185,129,.2)",

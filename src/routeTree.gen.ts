@@ -9,13 +9,55 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PlansRouteImport } from './routes/plans'
+import { Route as LeadsRouteImport } from './routes/leads'
+import { Route as InstagramRouteImport } from './routes/instagram'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as LeadsChatRouteImport } from './routes/leads/chat'
 import { Route as AdminChatRouteImport } from './routes/admin/chat'
 
-const LeadsChatRoute = LeadsChatRouteImport.update({
-  id: '/leads/chat',
-  path: '/leads/chat',
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlansRoute = PlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeadsRoute = LeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstagramRoute = InstagramRouteImport.update({
+  id: '/instagram',
+  path: '/instagram',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeadsChatRoute = LeadsChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => LeadsRoute,
 } as any)
 const AdminChatRoute = AdminChatRouteImport.update({
   id: '/admin/chat',
@@ -24,39 +66,143 @@ const AdminChatRoute = AdminChatRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
+  '/instagram': typeof InstagramRoute
+  '/leads': typeof LeadsRouteWithChildren
+  '/plans': typeof PlansRoute
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/admin/chat': typeof AdminChatRoute
   '/leads/chat': typeof LeadsChatRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
+  '/instagram': typeof InstagramRoute
+  '/leads': typeof LeadsRouteWithChildren
+  '/plans': typeof PlansRoute
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/admin/chat': typeof AdminChatRoute
   '/leads/chat': typeof LeadsChatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/instagram': typeof InstagramRoute
+  '/leads': typeof LeadsRouteWithChildren
+  '/plans': typeof PlansRoute
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/admin/chat': typeof AdminChatRoute
   '/leads/chat': typeof LeadsChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/admin/chat' | '/leads/chat'
+  fullPaths:
+    | '/'
+    | '/instagram'
+    | '/leads'
+    | '/plans'
+    | '/privacy'
+    | '/profile'
+    | '/settings'
+    | '/admin/chat'
+    | '/leads/chat'
   fileRoutesByTo: FileRoutesByTo
-  to: '/admin/chat' | '/leads/chat'
-  id: '__root__' | '/admin/chat' | '/leads/chat'
+  to:
+    | '/'
+    | '/instagram'
+    | '/leads'
+    | '/plans'
+    | '/privacy'
+    | '/profile'
+    | '/settings'
+    | '/admin/chat'
+    | '/leads/chat'
+  id:
+    | '__root__'
+    | '/'
+    | '/instagram'
+    | '/leads'
+    | '/plans'
+    | '/privacy'
+    | '/profile'
+    | '/settings'
+    | '/admin/chat'
+    | '/leads/chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
+  InstagramRoute: typeof InstagramRoute
+  LeadsRoute: typeof LeadsRouteWithChildren
+  PlansRoute: typeof PlansRoute
+  PrivacyRoute: typeof PrivacyRoute
+  ProfileRoute: typeof ProfileRoute
+  SettingsRoute: typeof SettingsRoute
   AdminChatRoute: typeof AdminChatRoute
-  LeadsChatRoute: typeof LeadsChatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plans': {
+      id: '/plans'
+      path: '/plans'
+      fullPath: '/plans'
+      preLoaderRoute: typeof PlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leads': {
+      id: '/leads'
+      path: '/leads'
+      fullPath: '/leads'
+      preLoaderRoute: typeof LeadsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/instagram': {
+      id: '/instagram'
+      path: '/instagram'
+      fullPath: '/instagram'
+      preLoaderRoute: typeof InstagramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/leads/chat': {
       id: '/leads/chat'
-      path: '/leads/chat'
+      path: '/chat'
       fullPath: '/leads/chat'
       preLoaderRoute: typeof LeadsChatRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof LeadsRoute
     }
     '/admin/chat': {
       id: '/admin/chat'
@@ -68,9 +214,25 @@ declare module '@tanstack/react-router' {
   }
 }
 
-const rootRouteChildren: RootRouteChildren = {
-  AdminChatRoute: AdminChatRoute,
+interface LeadsRouteChildren {
+  LeadsChatRoute: typeof LeadsChatRoute
+}
+
+const LeadsRouteChildren: LeadsRouteChildren = {
   LeadsChatRoute: LeadsChatRoute,
+}
+
+const LeadsRouteWithChildren = LeadsRoute._addFileChildren(LeadsRouteChildren)
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  InstagramRoute: InstagramRoute,
+  LeadsRoute: LeadsRouteWithChildren,
+  PlansRoute: PlansRoute,
+  PrivacyRoute: PrivacyRoute,
+  ProfileRoute: ProfileRoute,
+  SettingsRoute: SettingsRoute,
+  AdminChatRoute: AdminChatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

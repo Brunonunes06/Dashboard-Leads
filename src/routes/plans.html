@@ -30,6 +30,10 @@
       display: block;
     }
 
+    body.payment-modal-open {
+      overflow: hidden;
+    }
+
     .payment-backdrop {
       position: absolute;
       inset: 0;
@@ -44,7 +48,9 @@
       width: min(920px, calc(100vw - 24px));
       max-height: calc(100vh - 24px);
       transform: translate(-50%, -50%);
-      overflow: hidden;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
       display: grid;
       grid-template-columns: minmax(260px, 0.85fr) minmax(0, 1.15fr);
       background: var(--card2);
@@ -57,11 +63,12 @@
       padding: 22px;
       background: color-mix(in srgb, var(--card) 82%, var(--bg));
       border-right: 1px solid var(--border);
+      min-width: 0;
     }
 
     .payment-body {
       padding: 22px;
-      overflow-y: auto;
+      min-width: 0;
     }
 
     .payment-methods {
@@ -149,7 +156,10 @@
         border-bottom: 1px solid var(--border);
       }
 
-      .payment-methods,
+      .payment-methods {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
       .field-grid {
         grid-template-columns: 1fr;
       }
@@ -166,7 +176,7 @@
           <button class="menu-btn" onclick="openMobileSidebar()">
             <i data-lucide="menu"></i>
           </button>
-          <span class="topbar-title">Planos</span>
+          <span class="topbar-title" data-i18n="nav.plans">Planos</span>
         </div>
         <button class="btn btn-outline btn-icon" onclick="toggleTheme()" title="Alternar tema">
           <i data-lucide="sun-moon"></i>
@@ -176,8 +186,8 @@
       <main class="page-shell">
         <div class="page-header">
           <div>
-            <h1 class="page-title">Escolha seu plano</h1>
-            <p style="margin: 8px 0 0; font-size: 13px; color: var(--muted)">
+            <h1 class="page-title" data-i18n="plans.title">Escolha seu plano</h1>
+            <p style="margin: 8px 0 0; font-size: 13px; color: var(--muted)" data-i18n="plans.subtitle">
               Comece com periodo gratis e mantenha sua operacao de leads ativa.
             </p>
           </div>
@@ -188,18 +198,18 @@
           <section class="card" style="padding: 22px;">
             <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
               <div>
-                <p style="margin: 0; font-size: 13px; color: var(--muted)">Plano Free</p>
-                <h2 style="font-size: 28px; margin-top: 6px">Plano Semanal </h2>
+                <p style="margin: 0; font-size: 13px; color: var(--muted)" data-i18n="plans.free">Plano Free</p>
+                <h2 style="font-size: 28px; margin-top: 6px" data-i18n="plans.weekly.title">Plano Semanal </h2>
               </div>
-              <span class="pill status-transferido">Plano Free</span>
+              <span class="pill status-transferido" data-i18n="plans.free">Plano Free</span>
             </div>
 
             <div style="margin-top: 22px">
-              <p style="margin: 0; font-size: 13px; color: var(--muted)">Primeira Semana</p>
-              <p style="font-family: 'Space Grotesk', sans-serif; font-size: 38px; font-weight: 700; margin: 4px 0 0">
-                (Gratuito)
+              <p style="margin: 0; font-size: 13px; color: var(--muted)" data-i18n="plans.weekly.priceNote">Primeira Semana</p>
+              <p style="font-family: 'Space Grotesk', sans-serif; font-size: 38px; font-weight: 700; margin: 4px 0 0" data-i18n="plans.weekly.price">
+                Gratuito
               </p>
-              <p style="margin: 8px 0 0; font-size: 13px; color: var(--muted)">
+              <p style="margin: 8px 0 0; font-size: 13px; color: var(--muted)" data-i18n="plans.weekly.description">
                 Experimente todos os principais recursos da plataforma durante 7 dias, sem qualquer compromisso Conheça
                 nossa tecnologia, explore as funcionalidades e descubra como ela pode transformar sua rotina antes de
                 decidir assinar.
@@ -209,23 +219,23 @@
             <div style="display: grid; gap: 10px; margin-top: 22px; font-size: 13px">
               <div style="display: flex; gap: 8px; align-items: center">
                 <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                <span>Acesso completo por 7 dias</span>
+                <span data-i18n="plans.weekly.feature1">Acesso completo por 7 dias</span>
               </div>
               <div style="display: flex; gap: 8px; align-items: center">
                 <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                <span>Sem cobrança durante o período de teste</span>
+                <span data-i18n="plans.weekly.feature2">Sem cobrança durante o período de teste</span>
               </div>
               <div style="display: flex; gap: 8px; align-items: center">
                 <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                <span> Sem compromisso de permanência</span>
+                <span data-i18n="plans.weekly.feature3"> Sem compromisso de permanência</span>
               </div>
               <div style="display: flex; gap: 8px; align-items: center">
                 <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                <span> Ideal para conhecer a plataforma</span>
+                <span data-i18n="plans.weekly.feature4"> Ideal para conhecer a plataforma</span>
               </div>
             </div>
 
-            <button class="btn btn-primary" style="width: 100%; margin-top: 24px" onclick="selectPlan('semanal')">
+            <button class="btn btn-primary" style="width: 100%; margin-top: 24px" onclick="selectPlan('semanal')" data-i18n="plans.weekly.subscribe">
               Assinar Semanal
             </button>
           </section>
@@ -234,18 +244,18 @@
           <section class="card" style="padding: 22px">
             <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
               <div>
-                <p style="margin: 0; font-size: 13px; color: var(--muted)">Plano mensal</p>
-                <h2 style="font-size: 28px; margin-top: 6px">Mensalidade</h2>
+                <p style="margin: 0; font-size: 13px; color: var(--muted)" data-i18n="plans.monthly.badge">Plano mensal</p>
+                <h2 style="font-size: 28px; margin-top: 6px" data-i18n="plans.monthly.title">Mensalidade</h2>
               </div>
-              <span class="pill status-qualificado">MENSAL</span>
+              <span class="pill status-qualificado" data-i18n="plans.monthly.pillLabel">MENSAL</span>
             </div>
 
             <div style="margin-top: 22px">
-              <p style="margin: 0; font-size: 13px; color: var(--muted)">Primeira Parcelas</p>
+              <p style="margin: 0; font-size: 13px; color: var(--muted)" data-i18n="plans.monthly.priceNote">Primeira Parcelas</p>
               <p style="font-family: 'Space Grotesk', sans-serif; font-size: 38px; font-weight: 700; margin: 4px 0 0">
                 R$ 299,99
               </p>
-              <p style="margin: 8px 0 0; font-size: 13px; color: var(--muted)">
+              <p style="margin: 8px 0 0; font-size: 13px; color: var(--muted)" data-i18n="plans.monthly.description">
                 Ideal para quem busca flexibilidade e acesso contínuo aos recursos da plataforma. Aproveite atualizações
                 constantes, suporte dedicado e todos os benefícios da assinatura sem precisar assumir um compromisso
                 anual.
@@ -255,27 +265,27 @@
             <div style="display: grid; gap: 10px; margin-top: 22px; font-size: 13px">
               <div style="display: flex; gap: 8px; align-items: center">
                 <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                <span>Acesso ilimitado a todos os recursos</span>
+                <span data-i18n="plans.monthly.feature1">Acesso ilimitado a todos os recursos</span>
               </div>
               <div style="display: flex; gap: 8px; align-items: center">
                 <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                <span>Atualizações constantes da plataforma</span>
+                <span data-i18n="plans.monthly.feature2">Atualizações constantes da plataforma</span>
               </div>
               <div style="display: flex; gap: 8px; align-items: center">
                 <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                <span>Suporte prioritário</span>
+                <span data-i18n="plans.monthly.feature3">Suporte prioritário</span>
               </div>
               <div style="display: flex; gap: 8px; align-items: center">
                 <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                <span>Cobrança mensal recorrente</span>
+                <span data-i18n="plans.monthly.feature4">Cobrança mensal recorrente</span>
               </div>
               <div style="display: flex; gap: 8px; align-items: center">
                 <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                <span>Cancele quando desejar</span>
+                <span data-i18n="plans.monthly.feature5">Cancele quando desejar</span>
               </div>
             </div>
 
-            <button class="btn btn-primary" style="width: 100%; margin-top: 24px" onclick="selectPlan('mensal')">
+            <button class="btn btn-primary" style="width: 100%; margin-top: 24px" onclick="selectPlan('mensal')" data-i18n="plans.monthly.subscribe">
               Assinar Plano Mensal
             </button>
           </section>
@@ -284,18 +294,18 @@
           <section class="card" style="padding: 22px; ">
             <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
               <div>
-                <p style="margin: 0; font-size: 13px; color: var(--muted)">Plano anual</p>
-                <h2 style="font-size: 28px; margin-top: 6px">Anual</h2>
+                <p style="margin: 0; font-size: 13px; color: var(--muted)" data-i18n="plans.annual.badge">Plano anual</p>
+                <h2 style="font-size: 28px; margin-top: 6px" data-i18n="plans.annual.title">Anual</h2>
               </div>
-              <span class="pill status-transferido">ANUAL</span>
+              <span class="pill status-transferido" data-i18n="plans.annual.pillLabel">ANUAL</span>
             </div>
 
             <div style="margin-top: 22px">
-              <p style="margin: 0; font-size: 13px; color: var(--muted)">Primeira Parcelas</p>
+              <p style="margin: 0; font-size: 13px; color: var(--muted)" data-i18n="plans.annual.priceNote">Primeira Parcelas</p>
               <p style="font-family: 'Space Grotesk', sans-serif; font-size: 38px; font-weight: 700; margin: 4px 0 0">
                 R$ 1.600,00
               </p>
-              <p style="margin: 8px 0 0; font-size: 13px; color: var(--muted)">
+              <p style="margin: 8px 0 0; font-size: 13px; color: var(--muted)" data-i18n="plans.annual.description">
                 A opção mais vantajosa para quem pretende utilizar a plataforma a longo prazo. Economize
                 significativamente em relação ao plano mensal e tenha acesso contínuo a todos os recursos durante todo o
                 ano.
@@ -305,27 +315,27 @@
             <div style="display: grid; gap: 10px; margin-top: 22px; font-size: 13px">
               <div style="display: flex; gap: 8px; align-items: center">
                 <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                <span>Melhor custo-benefício</span>
+                <span data-i18n="plans.annual.feature1">Melhor custo-benefício</span>
               </div>
               <div style="display: flex; gap: 8px; align-items: center">
                 <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                <span> Economia nas renovações anuais</span>
+                <span data-i18n="plans.annual.feature2"> Economia nas renovações anuais</span>
               </div>
               <div style="display: flex; gap: 8px; align-items: center">
                 <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                <span>Acesso completo durante 12 meses</span>
+                <span data-i18n="plans.annual.feature3">Acesso completo durante 12 meses</span>
               </div>
               <div style="display: flex; gap: 8px; align-items: center">
                 <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                <span>Prioridade em novos recursos</span>
+                <span data-i18n="plans.annual.feature4">Prioridade em novos recursos</span>
               </div>
               <div style="display: flex; gap: 8px; align-items: center">
                 <i data-lucide="check" style="width: 16px; height: 16px; color: var(--primary)"></i>
-                <span> Suporte prioritário</span>
+                <span data-i18n="plans.annual.feature5"> Suporte prioritário</span>
               </div>
             </div>
 
-            <button class="btn btn-primary" style="width: 100%; margin-top: 24px" onclick="selectPlan('anual')">
+            <button class="btn btn-primary" style="width: 100%; margin-top: 24px" onclick="selectPlan('anual')" data-i18n="plans.annual.subscribe">
               Assinar anual
             </button>
           </section>
@@ -335,15 +345,15 @@
           <div class="card-body"
             style="display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap">
             <div>
-              <p style="margin: 0; font-size: 14px; font-weight: 600">👑 Dica de marketing </p>
-              <p style="margin: 4px 0 0; font-size: 12px; color: var(--muted)">
+              <p style="margin: 0; font-size: 14px; font-weight: 600" data-i18n="plans.marketingTip.title">👑 Dica de marketing </p>
+              <p style="margin: 4px 0 0; font-size: 12px; color: var(--muted)" data-i18n="plans.marketingTip.body">
                 Em vez de destacar apenas "Plano Mensal" e "Plano Anual", da para usar nomes mais fortes, como:
                 🚀 Start (Teste Gratuito)
                 ⭐ Pro (Mensal)
                 👑 Elite (Anual)
               </p>
             </div>
-            <a class="btn btn-outline" href="profile.html">Ver perfil</a>
+            <a class="btn btn-outline" href="profile.html" data-i18n="plans.viewProfile">Ver perfil</a>
           </div>
         </section>
       </main>
@@ -365,14 +375,14 @@
 
         <div style="display: grid; gap: 12px; margin-top: 22px">
           <div class="card" style="padding: 14px">
-            <p style="margin: 0; font-size: 12px; color: var(--muted)">Primeira Parcelas</p>
+            <p style="margin: 0; font-size: 12px; color: var(--muted)" data-i18n="plans.monthly.priceNote">Primeira Parcelas</p>
             <p id="paymentFirstPrice"
               style="font-family: 'Space Grotesk'; font-size: 28px; font-weight: 700; margin: 4px 0 0">
               R$ 0
             </p>
           </div>
           <div class="card" style="padding: 14px">
-            <p style="margin: 0; font-size: 12px; color: var(--muted)">Depois</p>
+            <p style="margin: 0; font-size: 12px; color: var(--muted)" data-i18n="plans.afterLabel">Depois</p>
             <p id="paymentNextPrice" style="font-size: 14px; font-weight: 600; margin: 4px 0 0">R$ 0</p>
           </div>
         </div>
@@ -381,61 +391,61 @@
       <div class="payment-body">
         <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
           <div>
-            <p style="margin: 0; font-size: 13px; color: var(--muted)">Forma de pagamento</p>
-            <h3 style="font-size: 20px; margin-top: 4px">Como deseja pagar?</h3>
+            <p style="margin: 0; font-size: 13px; color: var(--muted)" data-i18n="plans.paymentMethod">Forma de pagamento</p>
+            <h3 style="font-size: 20px; margin-top: 4px" data-i18n="plans.howToPay">Como deseja pagar?</h3>
           </div>
         </div>
 
         <div class="payment-methods" role="tablist">
           <button class="payment-method active" type="button" data-method="pix" onclick="setPaymentMethod('pix')">
             <i data-lucide="qr-code"></i>
-            <span>Pix</span>
+            <span data-i18n="plans.pix">Pix</span>
           </button>
           <button class="payment-method" type="button" data-method="card" onclick="setPaymentMethod('card')">
             <i data-lucide="credit-card"></i>
-            <span>Cartao</span>
+            <span data-i18n="plans.card">Cartao</span>
           </button>
           <button class="payment-method" type="button" data-method="boleto" onclick="setPaymentMethod('boleto')">
             <i data-lucide="barcode"></i>
-            <span>Boleto</span>
+            <span data-i18n="plans.boleto">Boleto</span>
           </button>
           <button class="payment-method" type="button" data-method="transfer" onclick="setPaymentMethod('transfer')">
             <i data-lucide="landmark"></i>
-            <span>Transfer.</span>
+            <span data-i18n="plans.transfer">Transfer.</span>
           </button>
         </div>
 
         <form id="paymentForm" onsubmit="confirmPayment(event)">
           <div class="payment-form active" data-form="pix">
-            <p style="margin: 0; font-size: 13px; color: var(--muted)">
+            <p style="margin: 0; font-size: 13px; color: var(--muted)" data-i18n="plans.pixInstructions">
               Use o codigo Pix copia e cola abaixo. O plano fica reservado apos confirmar.
             </p>
             <div class="pix-qr-card">
               <img id="pixQrCode" src="" alt="QR Code Pix" />
-              <p style="margin: 0; font-size: 12px; color: var(--muted); text-align: center">
+              <p style="margin: 0; font-size: 12px; color: var(--muted); text-align: center" data-i18n="plans.scanQr">
                 Escaneie o QR Code pelo app do seu banco.
               </p>
               <p id="pixStatus" style="margin: 0; font-size: 11px; color: var(--muted); text-align: center"></p>
             </div>
             <div class="copy-box">
               <span id="pixCode">PIX-TEAMWOLF-PLANO</span>
-              <button class="btn btn-outline btn-sm" type="button" onclick="copyPixCode()">Copiar</button>
+              <button class="btn btn-outline btn-sm" type="button" onclick="copyPixCode()" data-i18n="common.copy">Copiar</button>
             </div>
           </div>
 
           <div class="payment-form" data-form="card">
             <div>
-              <label class="label" for="cardName">Nome impresso no cartao</label>
-              <input class="input" id="cardName" autocomplete="cc-name" placeholder="Nome completo" />
+              <label class="label" for="cardName" data-i18n="plans.cardNameLabel">Nome impresso no cartao</label>
+              <input class="input" id="cardName" autocomplete="cc-name" placeholder="Nome completo" data-i18n-placeholder="profile.nameLabel" />
             </div>
             <div>
-              <label class="label" for="cardNumber">Numero do cartao</label>
+              <label class="label" for="cardNumber" data-i18n="plans.cardNumberLabel">Numero do cartao</label>
               <input class="input" id="cardNumber" inputmode="numeric" autocomplete="cc-number" maxlength="19"
                 placeholder="0000 0000 0000 0000" />
             </div>
             <div class="field-grid">
               <div>
-                <label class="label" for="cardExpiry">Validade</label>
+                <label class="label" for="cardExpiry" data-i18n="plans.cardExpiryLabel">Validade</label>
                 <input class="input" id="cardExpiry" inputmode="numeric" autocomplete="cc-exp" maxlength="5"
                   placeholder="MM/AA" />
               </div>
@@ -449,31 +459,31 @@
 
           <div class="payment-form" data-form="boleto">
             <div>
-              <label class="label" for="payerName">Nome do pagador</label>
-              <input class="input" id="payerName" placeholder="Nome completo" />
+              <label class="label" for="payerName" data-i18n="plans.payerNameLabel">Nome do pagador</label>
+              <input class="input" id="payerName" placeholder="Nome completo" data-i18n-placeholder="profile.nameLabel" />
             </div>
             <div>
-              <label class="label" for="payerDocument">CPF ou CNPJ</label>
-              <input class="input" id="payerDocument" inputmode="numeric" placeholder="Somente numeros" />
+              <label class="label" for="payerDocument" data-i18n="plans.documentLabel">CPF ou CNPJ</label>
+              <input class="input" id="payerDocument" inputmode="numeric" placeholder="Somente numeros" data-i18n-placeholder="plans.numbersOnlyPlaceholder" />
             </div>
-            <p style="margin: 0; font-size: 12px; color: var(--muted)">O boleto simulado sera gerado apos a confirmacao.
+            <p style="margin: 0; font-size: 12px; color: var(--muted)" data-i18n="plans.boletoNote">O boleto simulado sera gerado apos a confirmacao.
             </p>
           </div>
 
           <div class="payment-form" data-form="transfer">
-            <p style="margin: 0; font-size: 13px; color: var(--muted)">Dados para transferencia:</p>
-            <div class="copy-box">
+            <p style="margin: 0; font-size: 13px; color: var(--muted)" data-i18n="plans.transferDataLabel">Dados para transferencia:</p>
+            <div class="copy-box" data-i18n="plans.transferBankInfo">
               Banco: 000 | Agencia: 0001 | Conta: 12345-6 | TEAM WOLF
             </div>
             <div>
-              <label class="label" for="transferReceipt">Codigo ou identificacao do comprovante</label>
-              <input class="input" id="transferReceipt" placeholder="Ex: comprovante 123" />
+              <label class="label" for="transferReceipt" data-i18n="plans.receiptCodeLabel">Codigo ou identificacao do comprovante</label>
+              <input class="input" id="transferReceipt" placeholder="Ex: comprovante 123" data-i18n-placeholder="plans.receiptPlaceholder" />
             </div>
           </div>
 
           <div style="display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 20px">
-            <button class="btn btn-outline" type="button" onclick="closePaymentModal()">Cancelar</button>
-            <button class="btn btn-primary" type="submit">Confirmar assinatura</button>
+            <button class="btn btn-outline" type="button" onclick="closePaymentModal()" data-i18n="common.cancel">Cancelar</button>
+            <button class="btn btn-primary" type="submit" data-i18n="plans.confirmSubscription">Confirmar assinatura</button>
           </div>
         </form>
       </div>
@@ -518,31 +528,32 @@
     window.renderPlanTags = renderPlanTags;
   </script>
 
-  <script src="assets/common.js"></script>
+  <script src="assets/-i18n.js"></script>
+  <script src="assets/-common.js"></script>
   <script>
     const planDetails = {
       mensal: {
-        name: "Plano mensal",
+        name: window.t("plans.monthly.title", "Mensalidade"),
         key: "mensal",
-        trial: "1 semana gratis",
-        firstPrice: "R$ 300,00",
-        nextPrice: "R$ 150 por mês nas prôximas Parcelass",
+        trial: window.t("plans.monthly.trial", "1 semana gratis"),
+        firstPrice: window.t("plans.monthly.firstPriceModal", "R$ 300,00"),
+        nextPrice: window.t("plans.monthly.nextPriceModal", "R$ 150 por mês nas próximas parcelas"),
         pixCode: "00020126360014br.gov.bcb.pix0114+55449973681295204000053039865406300.005802BR5924BRUNO PERANDRE NUNES DOS6009Sao Paulo62240520daqr339692014860677563049CDA",
       },
       anual: {
-        name: "Plano anual",
+        name: window.t("plans.annual.title", "Anual"),
         key: "anual",
-        trial: "1 mês gratis",
+        trial: window.t("plans.annual.trial", "1 mês gratis"),
         firstPrice: "R$ 1.600,00",
-        nextPrice: "R$ 900 por ano nas prôximas renovações",
+        nextPrice: window.t("plans.annual.nextPriceModal", "R$ 900 por ano nas próximas renovações"),
         pixCode: "00020126580014BR.GOV.BCB.PIX0136TEAMWOLF-ANUAL-1600005204000053039865802BR5925TEAM WOLF6009SAO PAULO62070503***6304EFGH",
       },
       semanal: {
-        name: "Plano semanal",
+        name: window.t("plans.weekly.title", "Plano Semanal"),
         key: "semanal",
-        trial: "1 semana gratis",
-        firstPrice: "GRATUITO",
-        nextPrice: "Escolha plano pagar para ter melhor experiencia",
+        trial: window.t("plans.weekly.trial", "1 semana gratis"),
+        firstPrice: window.t("plans.weekly.price", "Gratuito").toUpperCase(),
+        nextPrice: window.t("plans.weekly.upgradeHint", "Escolha plano pagar para ter melhor experiencia"),
         pixCode: "00020126360014br.gov.bcb.pix0114+55449973681295204000053039865406300.005802BR5924BRUNO PERANDRE NUNES DOS6009Sao Paulo62240520daqr339692014860677563049CDA",
       },
     };
@@ -553,17 +564,18 @@
     function selectPlan(plan) {
       selectedPlan = planDetails[plan];
       localStorage.setItem("selectedPlan", plan);
-      document.getElementById("paymentTitle").textContent = `Assinar ${selectedPlan.name}`;
-      document.getElementById("paymentSubtitle").textContent = "Confira os valores e escolha a forma de pagamento.";
+      document.getElementById("paymentTitle").textContent = `${window.t("plans.subscribe", "Assinar")} ${selectedPlan.name}`;
+      document.getElementById("paymentSubtitle").textContent = window.t("plans.reviewValues", "Confira os valores e escolha a forma de pagamento.");
       document.getElementById("paymentTrial").textContent = selectedPlan.trial;
       document.getElementById("paymentFirstPrice").textContent = selectedPlan.firstPrice;
       document.getElementById("paymentNextPrice").textContent = selectedPlan.nextPrice;
       document.getElementById("pixCode").textContent = selectedPlan.pixCode;
       document.getElementById("pixQrCode").src = getQrCodeUrl(selectedPlan.pixCode);
-      document.getElementById("pixStatus").textContent = "Gerando Pix no Mercado Pago...";
+      document.getElementById("pixStatus").textContent = window.t("plans.generatingPixMp", "Gerando Pix no Mercado Pago...");
       setPaymentMethod("pix");
       document.getElementById("paymentModal").classList.add("open");
       document.getElementById("paymentModal").setAttribute("aria-hidden", "false");
+      document.body.classList.add("payment-modal-open");
       createMercadoPagoPix(selectedPlan);
       if (window.lucide) lucide.createIcons();
     }
@@ -596,10 +608,12 @@
           document.getElementById("pixQrCode").src = getQrCodeUrl(data.qr_code);
         }
 
-        document.getElementById("pixStatus").textContent = "Pix gerado pelo Mercado Pago.";
+        document.getElementById("pixStatus").textContent = window.t("plans.pixGeneratedMp", "Pix gerado pelo Mercado Pago.");
       } catch (error) {
-        document.getElementById("pixStatus").textContent =
-          "Usando QR temporario. Configure MERCADO_PAGO_ACCESS_TOKEN para gerar pelo Mercado Pago.";
+        document.getElementById("pixStatus").textContent = window.t(
+          "plans.pixFallback",
+          "Usando QR temporario. Configure MERCADO_PAGO_ACCESS_TOKEN para gerar pelo Mercado Pago.",
+        );
         console.warn("[Mercado Pago] Pix fallback:", error);
       }
     }
@@ -607,6 +621,7 @@
     function closePaymentModal() {
       document.getElementById("paymentModal").classList.remove("open");
       document.getElementById("paymentModal").setAttribute("aria-hidden", "true");
+      document.body.classList.remove("payment-modal-open");
     }
 
     function setPaymentMethod(method) {
@@ -630,7 +645,7 @@
         const cardExpiry = document.getElementById("cardExpiry").value.trim();
         const cardCvv = onlyNumbers(document.getElementById("cardCvv").value);
         if (!cardName || cardNumber.length < 13 || !/^\d{2}\/\d{2}$/.test(cardExpiry) || cardCvv.length < 3) {
-          return "Preencha os dados do cartao corretamente.";
+          return window.t("plans.validation.card", "Preencha os dados do cartao corretamente.");
         }
       }
 
@@ -638,13 +653,13 @@
         const payerName = document.getElementById("payerName").value.trim();
         const payerDocument = onlyNumbers(document.getElementById("payerDocument").value);
         if (!payerName || payerDocument.length < 11) {
-          return "Informe nome e CPF/CNPJ para gerar o boleto.";
+          return window.t("plans.validation.boleto", "Informe nome e CPF/CNPJ para gerar o boleto.");
         }
       }
 
       if (selectedPaymentMethod === "transfer") {
         const transferReceipt = document.getElementById("transferReceipt").value.trim();
-        if (!transferReceipt) return "Informe uma identificacao do comprovante.";
+        if (!transferReceipt) return window.t("plans.validation.transfer", "Informe uma identificacao do comprovante.");
       }
 
       return "";
@@ -654,7 +669,7 @@
       event.preventDefault();
       const error = validatePayment();
       if (error) {
-        if (typeof toast === "function") toast("Revise o pagamento", error);
+        if (typeof toast === "function") toast(window.t("plans.reviewPayment", "Revise o pagamento"), error);
         return;
       }
 
@@ -672,14 +687,20 @@
       closePaymentModal();
 
       const methodLabel = {
-        pix: "Pix",
-        card: "cartao",
-        boleto: "boleto",
-        transfer: "transferencia",
+        pix: window.t("plans.pix", "Pix"),
+        card: window.t("plans.card", "Cartao").toLowerCase(),
+        boleto: window.t("plans.boleto", "Boleto").toLowerCase(),
+        transfer: window.t("plans.transfer", "Transferência").toLowerCase(),
       }[selectedPaymentMethod];
 
       if (typeof toast === "function") {
-        toast("Assinatura registrada", `${selectedPlan.name} selecionado com pagamento via ${methodLabel}.`);
+        toast(
+          window.t("plans.subscriptionRegistered", "Assinatura registrada"),
+          window.t("plans.subscriptionRegisteredDesc", "{plan} selecionado com pagamento via {method}.", {
+            plan: selectedPlan.name,
+            method: methodLabel,
+          }),
+        );
       }
     }
 
@@ -687,8 +708,8 @@
       const code = document.getElementById("pixCode").textContent;
       navigator.clipboard
         .writeText(code)
-        .then(() => toast("Codigo Pix copiado"))
-        .catch(() => toast("Copie manualmente", code));
+        .then(() => toast(window.t("plans.pixCodeCopied", "Codigo Pix copiado")))
+        .catch(() => toast(window.t("plans.copyManually", "Copie manualmente"), code));
     }
 
     if (window.lucide) lucide.createIcons();

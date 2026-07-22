@@ -1,7 +1,14 @@
 // ============================================================
-// PASSO 2: Hook central de autenticação + verificação de acesso
+// Hook central de autenticacao. A identidade (email/id) vem sempre da sessao
+// real do Supabase (getSession/onAuthStateChange) — nunca de um campo
+// persistido no localStorage. O role e recalculado a cada render a partir do
+// e-mail real via isAdminEmail, entao nao ha um "role" forjavel guardado em
+// disco: quem decide isso e sempre a mesma checagem usada nas rotas admin.
 // ============================================================
 import { useEffect, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
+
+import { supabase } from "@/lib/supabase";
 import { isAdminEmail } from "@/lib/permissions";
 
 export type UserRole = "admin" | "client" | "unauthenticated";
@@ -12,82 +19,97 @@ export interface AuthUser {
   name: string;
   avatarUrl?: string;
   role: UserRole;
-  billingToken?: string; // token do cartão (Stripe PaymentMethod ID)
-  billingActive: boolean;
-  billingPlan?: string | null;
+}
+
+interface ProfileOverride {
+  name?: string;
+  avatarUrl?: string;
+}
+
+interface PendingUser {
+  email: string;
+  name: string;
+  avatarUrl?: string;
+}
+
+function profileOverrideKey(email: string) {
+  return `crm_profile_overrides:${email.trim().toLowerCase()}`;
+}
+
+function readProfileOverride(email: string | null): ProfileOverride | null {
+  if (!email || typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(profileOverrideKey(email));
+    return raw ? (JSON.parse(raw) as ProfileOverride) : null;
+  } catch {
+    return null;
+  }
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  // Preenchimento otimista pro nome/foto aparecerem na hora, entre o login
+  // com o Google e a sessao do Supabase (signInWithIdToken) ficar pronta.
+  // Nunca usado para decidir role — isso sempre vem do email via isAdminEmail.
+  const [pendingUser, setPendingUser] = useState<PendingUser | null>(null);
+  const [override, setOverride] = useState<ProfileOverride | null>(null);
 
   useEffect(() => {
-    // Substitua isso pela sua lógica de autenticação (Supabase, Google OAuth, etc.)
-    const stored = localStorage.getItem("crm_user");
-    if (stored) {
-      const parsed = JSON.parse(stored) as AuthUser;
-      parsed.role = isAdminEmail(parsed.email) ? "admin" : "client";
-      setUser(parsed);
-    }
-    setLoading(false);
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, next) => {
+      setSession(next);
+      if (next) setPendingUser(null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Listen to profile updates coming from legacy client scripts (common.js)
+  const email = session?.user?.email ?? pendingUser?.email ?? null;
+
   useEffect(() => {
-    function onProfileUpdated(e: Event) {
-      try {
-        const detail = (e as CustomEvent).detail as Partial<AuthUser> | null;
-        if (!detail || !detail.email) return;
-        const role: UserRole = isAdminEmail(detail.email) ? "admin" : "client";
-        const updated: AuthUser = {
-          id: (detail as any).id || detail.email || "",
-          email: detail.email || "",
-          name: detail.name || "",
-          avatarUrl: (detail as any).avatarUrl || (detail as any).photo || "",
-          role,
-          billingToken: (detail as any).billingToken || undefined,
-          billingActive: Boolean((detail as any).billingActive || (detail as any).billingPlan),
-          billingPlan: (detail as any).billingPlan || null,
-        };
-        setUser(updated);
-      } catch (err) {
-        // ignore
+    setOverride(readProfileOverride(email));
+  }, [email]);
+
+  const metadata = (session?.user?.user_metadata ?? {}) as { name?: string; avatar_url?: string };
+
+  const user: AuthUser | null = email
+    ? {
+        id: session?.user?.id ?? email,
+        email,
+        name: override?.name ?? pendingUser?.name ?? metadata.name ?? email,
+        avatarUrl: override?.avatarUrl ?? pendingUser?.avatarUrl ?? metadata.avatar_url,
+        role: isAdminEmail(email) ? "admin" : "client",
       }
-    }
+    : null;
 
-    window.addEventListener("crm_user_profile_updated", onProfileUpdated as EventListener);
-    return () => window.removeEventListener("crm_user_profile_updated", onProfileUpdated as EventListener);
-  }, []);
-
-  function login(userData: Omit<AuthUser, "role">) {
-    const role: UserRole = isAdminEmail(userData.email) ? "admin" : "client";
-    const full: AuthUser = { ...userData, role };
-    localStorage.setItem("crm_user", JSON.stringify(full));
-    setUser(full);
+  function login(userData: { id: string; email: string; name: string; avatarUrl?: string }) {
+    setPendingUser({ email: userData.email, name: userData.name, avatarUrl: userData.avatarUrl });
   }
 
   function logout() {
-    localStorage.removeItem("crm_user");
-    setUser(null);
+    setPendingUser(null);
+    setOverride(null);
   }
 
-  function updateBilling(token: string) {
-    if (!user) return;
-    const updated = { ...user, billingToken: token, billingActive: true };
-    localStorage.setItem("crm_user", JSON.stringify(updated));
-    setUser(updated);
+  function updateProfile(partial: { name?: string; avatarUrl?: string }) {
+    if (!email) return;
+    setOverride((prev) => {
+      const merged = { ...prev, ...partial };
+      try {
+        localStorage.setItem(profileOverrideKey(email), JSON.stringify(merged));
+      } catch {
+        // ignore quota/storage errors — override fica só na memória desta sessão
+      }
+      return merged;
+    });
   }
 
-  // Dev helper: set auth user from console during development
-  try {
-    (window as any).__setAuthUser = (u: AuthUser | null) => {
-      setUser(u);
-      if (u) localStorage.setItem("crm_user", JSON.stringify(u));
-      else localStorage.removeItem("crm_user");
-    };
-  } catch (e) {
-    // noop in non-browser environments
-  }
-
-  return { user, loading, login, logout, updateBilling };
+  return { user, loading, login, logout, updateProfile };
 }

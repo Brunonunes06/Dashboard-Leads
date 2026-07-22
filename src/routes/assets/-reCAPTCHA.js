@@ -1,13 +1,6 @@
 const {RecaptchaEnterpriseServiceClient} = require('@google-cloud/recaptcha-enterprise');
 
-/**
-  * Crie uma avaliação para analisar o risco de uma ação da interface.
-  *
-  * projectID: O ID do seu projeto do Google Cloud.
-  * recaptchaSiteKey: A chave reCAPTCHA associada ao site/app
-  * token: O token gerado obtido do cliente.
-  * recaptchaAction: Nome da ação correspondente ao token.
-  */
+
 async function createAssessment({
   // O que fazer: substitua o token e as variáveis de ação reCAPTCHA antes de executar a amostra.
   projectID = "PROJT-ID",

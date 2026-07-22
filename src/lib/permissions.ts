@@ -1,9 +1,13 @@
-// ============================================================
-// PASSO 1: Configure aqui os 3 emails com acesso total ao SaaS
-// ============================================================
-export const ADMIN_EMAILS: string[] = ["myhpc3301@gmail.com", "bruno.nunes.santos06@escola.pr.gov.br"];
+const ADMIN_EMAILS_FALLBACK = "myhpc3301@gmail.com";
+
+export const ADMIN_EMAILS: string[] = (
+  (import.meta.env.VITE_ADMIN_EMAILS as string | undefined) || ADMIN_EMAILS_FALLBACK
+)
+  .split(",")
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
 
 export function isAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false;
-  return ADMIN_EMAILS.map((e) => e.toLowerCase()).includes(email.toLowerCase());
+  return ADMIN_EMAILS.includes(email.trim().toLowerCase());
 }

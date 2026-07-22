@@ -20,12 +20,72 @@ const MERCADO_PAGO_PLANS = {
   },
 };
 
-const dbLeads = {};
-const dbTokens = {};
+// Restringe CORS a origens conhecidas quando CORS_ORIGIN estiver configurado
+// no .env (lista separada por vírgula). Sem essa variável, mantém aberto por
+// padrão para não quebrar deploys existentes (ex: túneis ngrok) — mas isso
+// deve ser configurado em produção.
+const allowedOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
 
-app.use(cors());
+if (allowedOrigins.length === 0) {
+  console.warn(
+    "[CORS] CORS_ORIGIN não configurado no .env — aceitando requisições de qualquer origem. " +
+      "Defina CORS_ORIGIN=https://seu-dominio.com em produção.",
+  );
+}
+
+app.use(
+  cors(
+    allowedOrigins.length > 0
+      ? {
+          origin(origin, callback) {
+            if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+            return callback(new Error("Origem não permitida por CORS."));
+          },
+        }
+      : undefined,
+  ),
+);
 app.use(express.json());
 app.set("trust proxy", true);
+
+// Rate limit simples em memoria (sem dependencia externa) pra endpoints caros
+// ou sensiveis a abuso (gerar Pix, checar/gravar conta por IP, chamar a
+// OpenAI). Nao substitui um rate limiter distribuido de verdade em producao
+// com varias instancias, mas fecha a porta de "gastar sua cota so batendo no
+// endpoint em loop" sem precisar adicionar uma dependencia nova.
+const rateLimitHits = new Map();
+function rateLimit({ windowMs, max }) {
+  return (req, res, next) => {
+    const key = `${req.path}:${getClientIp(req)}`;
+    const now = Date.now();
+    const entry = rateLimitHits.get(key);
+
+    if (!entry || now - entry.start > windowMs) {
+      rateLimitHits.set(key, { start: now, count: 1 });
+      return next();
+    }
+
+    if (entry.count >= max) {
+      return res.status(429).json({ error: "Muitas requisições. Tente novamente em instantes." });
+    }
+
+    entry.count += 1;
+    return next();
+  };
+}
+// Limpeza periódica pra não deixar o Map crescer pra sempre.
+setInterval(
+  () => {
+    const now = Date.now();
+    for (const [key, entry] of rateLimitHits) {
+      if (now - entry.start > 10 * 60 * 1000) rateLimitHits.delete(key);
+    }
+  },
+  5 * 60 * 1000,
+).unref();
 
 app.use((req, res, next) => {
   res.setHeader("ngrok-skip-browser-warning", "true");
@@ -49,32 +109,6 @@ app.get("/", (req, res) => {
       <p style="color: #94a3b8;">Pronto para receber dados.</p>
     </div>
   `);
-});
-
-app.get("/api/leads", (req, res) => {
-  return res.json(Object.values(dbLeads));
-});
-
-app.post("/api/webhook", (req, res) => {
-  try {
-    const { id, status, ultimaMensagem } = req.body;
-
-    if (!id) {
-      return res.status(400).json({ error: "O campo 'id' é obrigatório." });
-    }
-
-    dbLeads[id] = {
-      id: id,
-      status: status || "Novo Lead",
-      ultimaMensagem: ultimaMensagem || "Nenhum histórico registrado.",
-    };
-
-    console.log(`[CRM] Lead processado - ID: ${id}`);
-    return res.status(200).json({ success: true, message: "Lead processado com sucesso." });
-  } catch (error) {
-    console.error("Erro ao processar webhook:", error);
-    return res.status(500).json({ error: "Erro interno no servidor." });
-  }
 });
 
 app.get("/favicon.ico", (req, res) => res.status(204).end());
@@ -116,7 +150,37 @@ function normalizeEmail(email) {
     .toLowerCase();
 }
 
-app.post("/api/auth/ip-account", (req, res) => {
+function isPrivateOrLocalIp(ip) {
+  if (!ip || ip === "unknown") return true;
+  if (ip === "127.0.0.1" || ip === "::1") return true;
+  if (/^10\./.test(ip)) return true;
+  if (/^192\.168\./.test(ip)) return true;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(ip)) return true;
+  return false;
+}
+
+// Usa a API publica do proxycheck.io (sem chave, limite baixo) para detectar VPN/proxy.
+// Em caso de falha ou indisponibilidade do servico, nao bloqueia o login (fail-open).
+async function isVpnOrProxyIp(ip) {
+  if (isPrivateOrLocalIp(ip)) return false;
+
+  try {
+    const apiKey = process.env.PROXYCHECK_API_KEY;
+    const keyParam = apiKey ? `&key=${encodeURIComponent(apiKey)}` : "";
+    const url = `https://proxycheck.io/v2/${encodeURIComponent(ip)}?vpn=1&asn=0${keyParam}`;
+    const response = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    if (!response.ok) return false;
+
+    const data = await response.json();
+    const info = data && data[ip];
+    return Boolean(info && info.proxy === "yes");
+  } catch (error) {
+    console.error("[Auth] Erro ao consultar proxycheck.io:", error.message);
+    return false;
+  }
+}
+
+app.post("/api/auth/ip-account", rateLimit({ windowMs: 60_000, max: 10 }), async (req, res) => {
   try {
     const email = normalizeEmail(req.body.email);
     const name = String(req.body.name || "").trim();
@@ -126,6 +190,14 @@ app.post("/api/auth/ip-account", (req, res) => {
     }
 
     const ip = getClientIp(req);
+
+    if (await isVpnOrProxyIp(ip)) {
+      return res.status(403).json({
+        error: "Desligue a VPN para acessar o site.",
+        code: "VPN_DETECTED",
+      });
+    }
+
     const store = readUserIpStore();
     const existing = store.ips[ip];
 
@@ -151,7 +223,7 @@ app.post("/api/auth/ip-account", (req, res) => {
   }
 });
 
-app.post("/api/payments/pix", async (req, res) => {
+app.post("/api/payments/pix", rateLimit({ windowMs: 60_000, max: 10 }), async (req, res) => {
   try {
     const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
     const plan = MERCADO_PAGO_PLANS[req.body.plan];
@@ -204,59 +276,6 @@ app.post("/api/payments/pix", async (req, res) => {
   } catch (error) {
     console.error("[Mercado Pago] Erro ao criar Pix:", error);
     return res.status(500).json({ error: "Erro interno ao criar Pix." });
-  }
-});
-
-app.post("/api/billing/subscribe", async (req, res) => {
-  try {
-    const { paymentMethodId, userId, email } = req.body;
-
-    if (!paymentMethodId || !userId) {
-      return res.status(400).json({ error: "paymentMethodId e userId são obrigatórios." });
-    }
-
-    const token = `sub_mock_${userId}_${Date.now()}`;
-
-    dbTokens[userId] = {
-      token,
-      paymentMethodId,
-      active: true,
-      createdAt: new Date().toISOString(),
-    };
-
-    console.log(`[Billing] Assinatura criada para userId: ${userId}`);
-    return res.status(200).json({ success: true, token });
-  } catch (error) {
-    console.error("[Billing] Erro:", error);
-    return res.status(500).json({ error: "Erro ao processar pagamento." });
-  }
-});
-
-app.get("/api/billing/verify/:userId", async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const record = dbTokens[userId];
-
-    if (!record || !record.active) {
-      return res.json({ valid: false });
-    }
-
-    return res.json({ valid: true, token: record.token });
-  } catch (error) {
-    console.error("[Billing] Erro na verificação:", error);
-    return res.status(500).json({ error: "Erro ao verificar assinatura." });
-  }
-});
-
-app.post("/api/billing/cancel/:userId", async (req, res) => {
-  try {
-    const { userId } = req.params;
-    if (dbTokens[userId]) {
-      dbTokens[userId].active = false;
-    }
-    return res.json({ success: true });
-  } catch (error) {
-    return res.status(500).json({ error: "Erro ao cancelar assinatura." });
   }
 });
 

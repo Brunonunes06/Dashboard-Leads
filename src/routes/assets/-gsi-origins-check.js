@@ -1,4 +1,3 @@
-// Simple client-side check to detect likely missing authorized origin for Google Identity Client ID.
 (function () {
   const CLIENT_ID_PLACEHOLDER = document.querySelector('[data-client_id]')?.getAttribute('data-client_id') || '';
   const recommendedOrigins = [
@@ -13,7 +12,7 @@
     if (!container) return;
     container.style.display = 'block';
     container.innerHTML = html;
-    // basic styles
+
     container.style.position = 'relative';
     container.style.padding = '12px 16px';
     container.style.background = 'linear-gradient(90deg,#fef3c7,#fee2e2)';
@@ -25,12 +24,11 @@
 
   const origin = window.location.origin;
   if (!CLIENT_ID_PLACEHOLDER) {
-    // nothing to check
+    
     return;
   }
 
-  // show notice when current origin is not a recommended origin
-  if (!recommendedOrigins.includes(origin)) {
+   if (!recommendedOrigins.includes(origin)) {
     const googleConsole = 'https://console.cloud.google.com/apis/credentials';
     const docsPath = (function(){
       // try to guess relative docs path

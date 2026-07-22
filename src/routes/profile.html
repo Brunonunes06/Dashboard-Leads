@@ -30,7 +30,7 @@
             <button class="menu-btn" onclick="openMobileSidebar()">
               <i data-lucide="menu"></i>
             </button>
-            <span class="topbar-title">Perfil</span>
+            <span class="topbar-title" data-i18n="nav.profile">Perfil</span>
           </div>
           <button class="btn btn-outline btn-icon" onclick="toggleTheme()">
             <i data-lucide="sun-moon"></i>
@@ -39,8 +39,8 @@
 
         <div class="page-shell" style="max-width: 900px">
           <div>
-            <h1 class="page-title">Perfil</h1>
-            <p style="margin-top: 6px; font-size: 13px; color: var(--muted)">
+            <h1 class="page-title" data-i18n="nav.profile">Perfil</h1>
+            <p style="margin-top: 6px; font-size: 13px; color: var(--muted)" data-i18n="profile.subtitle">
               Seus dados, aparência e integrações da conta.
             </p>
           </div>
@@ -58,7 +58,7 @@
                     margin-right: 6px;
                   "
                 ></i
-                >Dados pessoais
+                ><span data-i18n="profile.personalData">Dados pessoais</span>
               </h3>
             </div>
             <div class="card-body" style="display: flex; flex-direction: column; gap: 18px">
@@ -119,27 +119,27 @@
                 "
               >
                 <div>
-                  <label class="label">Nome completo</label
+                  <label class="label" data-i18n="profile.nameLabel">Nome completo</label
                   ><input class="input" id="name" placeholder="Fulado Siclano" />
                 </div>
 
                 <div>
-                  <label class="label">E-mail</label
+                  <label class="label" data-i18n="profile.emailLabel">E-mail</label
                   ><input class="input" id="email" type="email" placeholder="bomdia@gmail.com.br" />
                 </div>
 
                 <div style="grid-column: 1/-1">
-                  <label class="label">Telefone WhatsApp</label
+                  <label class="label" data-i18n="profile.phoneLabel">Telefone WhatsApp</label
                   ><input class="input" id="phone" placeholder="+55 11 99876-5432" />
                 </div>
 
                 <div id="paidTagsContainer" style="grid-column: 1/-1; display:none;">
-                  <label class="label">Tags liberadas (após pagamento)</label>
+                  <label class="label" data-i18n="profile.paidTagsLabel">Tags liberadas (após pagamento)</label>
                   <div id="paidTags" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
                 </div>
 
                 <div style="grid-column: 1/-1; display:flex;gap:8px;align-items:center">
-                  <button class="btn btn-ghost btn-sm" id="devListCmdsBtn" type="button">Listar comandos dev</button>
+                  <button class="btn btn-ghost btn-sm" id="devListCmdsBtn" type="button" data-i18n="profile.listDevCommands">Listar comandos dev</button>
                 </div>
               </div>
             </div>
@@ -147,12 +147,12 @@
 
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title">Aparência</h3>
+              <h3 class="card-title" data-i18n="profile.appearance">Aparência</h3>
             </div>
             <div class="card-body settings-row">
               <div>
-                <p style="margin: 0; font-size: 14px; font-weight: 500">Tema</p>
-                <p style="margin: 2px 0 0; font-size: 12px; color: var(--muted)">
+                <p style="margin: 0; font-size: 14px; font-weight: 500" data-i18n="profile.themeLabel">Tema</p>
+                <p style="margin: 2px 0 0; font-size: 12px; color: var(--muted)" data-i18n="profile.themeDesc">
                   Claro, escuro ou sistema.
                 </p>
               </div>
@@ -171,7 +171,7 @@
                   onclick="handleThemeSelection('light')"
                   style="border-radius: 9999px"
                 >
-                  <i data-lucide="sun" style="width: 14px; height: 14px"></i> Claro
+                  <i data-lucide="sun" style="width: 14px; height: 14px"></i> <span data-i18n="theme.light">Claro</span>
                 </button>
                 <button
                   id="themeDark"
@@ -179,7 +179,7 @@
                   onclick="handleThemeSelection('dark')"
                   style="border-radius: 9999px"
                 >
-                  <i data-lucide="moon" style="width: 14px; height: 14px"></i> Escuro
+                  <i data-lucide="moon" style="width: 14px; height: 14px"></i> <span data-i18n="theme.dark">Escuro</span>
                 </button>
                 <button
                   id="themeSystem"
@@ -187,7 +187,7 @@
                   onclick="handleThemeSelection('system')"
                   style="border-radius: 9999px"
                 >
-                  <i data-lucide="monitor" style="width: 14px; height: 14px"></i> Sistema
+                  <i data-lucide="monitor" style="width: 14px; height: 14px"></i> <span data-i18n="theme.system">Sistema</span>
                 </button>
               </div>
             </div>
@@ -206,7 +206,7 @@
                     margin-right: 6px;
                   "
                 ></i
-                >Integrações
+                ><span data-i18n="profile.integrations">Integrações</span>
               </h3>
             </div>
             <div
@@ -231,8 +231,8 @@
               >
                 ×
               </button>
-              <h3 style="margin:0 0 8px;font-size:18px">Compartilhar convite</h3>
-              <p style="margin:0 0 18px;color:var(--muted)">
+              <h3 style="margin:0 0 8px;font-size:18px" data-i18n="profile.sharePanelTitle">Compartilhar convite</h3>
+              <p style="margin:0 0 18px;color:var(--muted)" data-i18n="profile.sharePanelDesc">
                 Escolha uma plataforma para convidar alguém ao site.
               </p>
               <div
@@ -247,7 +247,7 @@
                 <button class="btn btn-outline" type="button" onclick="sharePlatform('x')">
                   X
                 </button>
-                <button class="btn btn-outline" type="button" onclick="sharePlatform('email')">
+                <button class="btn btn-outline" type="button" onclick="sharePlatform('email')" data-i18n="profile.emailLabel">
                   E-mail
                 </button>
                 <button class="btn btn-outline" type="button" onclick="sharePlatform('linkedin')">
@@ -258,10 +258,10 @@
                 </button>
               </div>
               <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
-                <button class="btn btn-outline btn-sm" type="button" onclick="copyInviteLink()">
+                <button class="btn btn-outline btn-sm" type="button" onclick="copyInviteLink()" data-i18n="profile.copyLink">
                   Copiar link
                 </button>
-                <button class="btn btn-primary btn-sm" type="button" onclick="closeSharePanel()">
+                <button class="btn btn-primary btn-sm" type="button" onclick="closeSharePanel()" data-i18n="lead.close">
                   Fechar
                 </button>
               </div>
@@ -269,14 +269,15 @@
           </div>
 
           <div class="action-row" style="justify-content: flex-end">
-            <button class="btn btn-outline">Cancelar</button>
-            <button class="btn btn-primary" onclick="saveProfile()">Salvar alterações</button>
+            <button class="btn btn-outline" data-i18n="common.cancel">Cancelar</button>
+            <button class="btn btn-primary" onclick="saveProfile()" data-i18n="common.save">Salvar alterações</button>
           </div>
         </div>
       </div>
     </div>
 
-    <script src="assets/common.js"></script>
+    <script src="assets/-i18n.js"></script>
+    <script src="assets/-common.js"></script>
     <script>
       // Função de segurança para manter compatibilidade caso haja alguma chamada antiga para 'renderUser'
       function renderUser() {
@@ -292,7 +293,7 @@
           const greetingEl = document.getElementById("greeting");
           const displayNameEl = document.getElementById("displayName");
 
-          if (greetingEl) greetingEl.innerText = `Bem-vindo, ${savedName} 👋`;
+          if (greetingEl) greetingEl.innerText = `${window.t("greeting.welcome", "Bem-vindo")}, ${savedName} 👋`;
           if (displayNameEl) displayNameEl.textContent = savedName;
 
           if (typeof window.syncUserProfile === "function") {
@@ -336,7 +337,7 @@
       const emailI = document.getElementById("email");
       const phoneI = document.getElementById("phone");
 
-      if (nameI) nameI.value = localStorage.getItem("userName") || "Usuário";
+      if (nameI) nameI.value = localStorage.getItem("userName") || window.t("profile.defaultUser", "Usuário");
       if (emailI) emailI.value = localStorage.getItem("userEmail") || "BomDia@premier.com.br";
       if (phoneI) phoneI.value = localStorage.getItem("userPhone") || "+99 99 99999-9999";
 
@@ -351,7 +352,7 @@
           return;
         }
         if (!nameI) return;
-        const n = nameI.value || "Usuário";
+        const n = nameI.value || window.t("profile.defaultUser", "Usuário");
 
         const avatarEl = document.getElementById("avatar");
         const displayNameEl = document.getElementById("displayName");
@@ -384,7 +385,7 @@
           if (typeof refresh === "function") refresh();
           if (typeof checkUserLogin === "function") checkUserLogin();
           if (typeof toast === "function") {
-            toast("Perfil importado do Google com sucesso!", profile.email);
+            toast(window.t("profile.googleImportSuccess", "Perfil importado do Google com sucesso!"), profile.email);
           }
           if (typeof renderPaidTags === "function") renderPaidTags();
           return;
@@ -467,7 +468,7 @@
           window.updateUserRoleBadge(emailI ? emailI.value : "");
         }
         if (typeof toast === "function") {
-          toast("Perfil atualizado com sucesso!");
+          toast(window.t("profile.savedSuccess", "Perfil atualizado com sucesso!"));
         }
         if (typeof renderPaidTags === "function") renderPaidTags();
       }
@@ -508,27 +509,32 @@
       const integrations = [
         {
           icon: "mail",
-          title: "Conta Google",
-          desc: "Login único e sincronização.",
+          title: window.t("profile.integration.googleTitle", "Conta Google"),
+          desc: window.t("profile.integration.googleDesc", "Login único e sincronização."),
           status: "pending",
-          action: "Conectar",
+          action: window.t("profile.action.connect", "Conectar"),
         },
         {
           icon: "message-circle",
-          title: "WhatsApp Business",
-          desc: "Automação de mensagens.",
+          title: window.t("profile.integration.whatsappTitle", "WhatsApp Business"),
+          desc: window.t("profile.integration.whatsappDesc", "Automação de mensagens."),
           status: "pending",
-          action: "Conectar",
+          action: window.t("profile.action.connect", "Conectar"),
         },
         {
           icon: "user-plus",
-          title: "Convidar alguém",
-          desc: "Compartilhe o site com outra pessoa.",
+          title: window.t("profile.integration.inviteTitle", "Convidar alguém"),
+          desc: window.t("profile.integration.inviteDesc", "Compartilhe o site com outra pessoa."),
           status: "active",
-          action: "Convidar",
+          action: window.t("profile.action.invite", "Convidar"),
           actionFn: "shareInvite",
         },
-        { icon: "phone", title: "Telefonia", desc: "Integração de chamadas.", status: "soon" },
+        {
+          icon: "phone",
+          title: window.t("profile.integration.telephonyTitle", "Telefonia"),
+          desc: window.t("profile.integration.telephonyDesc", "Integração de chamadas."),
+          status: "soon",
+        },
       ];
 
       const integrationsEl = document.getElementById("integrations");
@@ -548,11 +554,11 @@
       </div>
       ${
         it.status === "soon"
-          ? `<span style="font-size:12px;color:var(--muted)">Em breve</span>`
+          ? `<span style="font-size:12px;color:var(--muted)">${window.t("profile.comingSoon", "Em breve")}</span>`
           : `<button class="btn btn-outline btn-sm" onclick="${
               it.actionFn
                 ? `${it.actionFn}()`
-                : `toast('Integração em curso','${it.title} solicitada.')`
+                : `toast('${window.t("profile.integrationInProgress", "Integração em curso")}','${window.t("profile.integrationRequested", "{title} solicitada.", { title: it.title })}')`
             }">${it.action}</button>`
       }
     </div>`,
@@ -568,8 +574,8 @@
       // Share / invite helper
       function getInviteData() {
         return {
-          title: document.title || "Convite para o site",
-          text: "Junte-se a mim no site Resposta para gerenciar leads e conversas.",
+          title: document.title || window.t("profile.shareDefaultTitle", "Convite para o site"),
+          text: window.t("profile.shareText", "Junte-se a mim no site Resposta para gerenciar leads e conversas."),
           url: new URL("/index.html", window.location.origin).href,
         };
       }
@@ -588,17 +594,17 @@
         const { url } = getInviteData();
         navigator.clipboard
           .writeText(url)
-          .then(() => toast("Link copiado", "URL de convite copiada para a área de transferência."))
-          .catch(() => toast("Erro ao copiar", "Não foi possível copiar o link."));
+          .then(() => toast(window.t("profile.linkCopied", "Link copiado"), window.t("profile.linkCopiedDesc", "URL de convite copiada para a área de transferência.")))
+          .catch(() => toast(window.t("common.copyError", "Erro ao copiar"), window.t("profile.copyErrorDesc", "Não foi possível copiar o link.")));
       }
 
       function shareNative() {
         if (!navigator.share) {
-          toast("Compartilhamento não suportado", "Seu navegador não suporta o recurso de compartilhamento nativo.");
+          toast(window.t("profile.shareUnsupported", "Compartilhamento não suportado"), window.t("profile.shareUnsupportedDesc", "Seu navegador não suporta o recurso de compartilhamento nativo."));
           return;
         }
         const data = getInviteData();
-        navigator.share(data).catch((err) => toast("Erro ao compartilhar", err.message || "Tente novamente."));
+        navigator.share(data).catch((err) => toast(window.t("profile.shareError", "Erro ao compartilhar"), err.message || "Tente novamente."));
       }
 
       function sharePlatform(platform) {
@@ -687,7 +693,7 @@
             });
           }
           if (typeof toast === "function") {
-            toast("Foto atualizada", "Avatar carregado com sucesso.");
+            toast(window.t("profile.photoUpdated", "Foto atualizada"), window.t("profile.photoUpdatedDesc", "Avatar carregado com sucesso."));
           }
           if (avatarUploadInput) {
             avatarUploadInput.value = "";

@@ -1,6 +1,6 @@
 // Shared sidebar, theme toggle, toast — runs on every page DEVELOPER
 (function () {
-  const ADMIN_EMAILS = ["myhpc3301@gmail.com", "bruno.nunes.santos06@escola.pr.gov.br"];
+  const ADMIN_EMAILS = ["process.env.emailAD"];
   const ADMIN_ONLY_PAGES = ["settings.html"];
 
   function isAdminEmail(email) {
@@ -47,30 +47,34 @@
   applyTheme(savedTheme);
 
   // ----- Sidebar injection -----
-  const navItems = [
-    { href: "index.html", icon: "layout-dashboard", label: "Dashboard" },
-    { href: "leads.html", icon: "messages-square", label: "Conversas WhatsApp" },
-    { href: "plans.html", icon: "credit-card", label: "Planos",},
-    { href: "instagram.html", icon: "camera", label: "CRM Instagram", adminOnly: true },
-    { href: "settings.html", icon: "settings-2", label: "Configurar IA", adminOnly: true },
-    { href: "profile.html", icon: "user-circle", label: "Perfil" },
-  ];
+  function getNavItems() {
+    const t = window.t || ((key, fallback) => fallback || key);
+    return [
+      { href: "index.html", icon: "layout-dashboard", label: t("nav.dashboard", "Dashboard") },
+      { href: "leads.html", icon: "messages-square", label: t("nav.chat", "Conversas WhatsApp") },
+      { href: "plans.html", icon: "credit-card", label: t("nav.plans", "Planos") },
+      { href: "instagram.html", icon: "camera", label: t("nav.instagram", "CRM Instagram"), adminOnly: true },
+      { href: "settings.html", icon: "settings-2", label: t("nav.settings", "Configurar IA"), adminOnly: true },
+      { href: "profile.html", icon: "user-circle", label: t("nav.profile", "Perfil") },
+    ];
+  }
   const current = location.pathname.split("/").pop() || "index.html";
 
   function getVisibleNavItems() {
     const admin = window.isAdminUser();
-    return navItems.filter((item) => admin || !item.adminOnly);
+    return getNavItems().filter((item) => admin || !item.adminOnly);
   }
 
   function sidebarHTML() {
     const visibleItems = getVisibleNavItems();
+    const t = window.t || ((key, fallback) => fallback || key);
     return `
     <div class="sidebar-brand">
           <img src="./img/logo.jpg" alt="Logo da Marca" class="brand-mark">
       <div class="brand-text"><strong>TEAM WOLF</strong><span>SaaS de leads</span></div>
     </div>
     <nav class="nav">
-      <p class="nav-section">Plataforma</p>
+      <p class="nav-section">${t("nav.platform", "Plataforma")}</p>
       ${visibleItems.map((n) => `<a href="${n.href}" class="${current === n.href ? "active" : ""}"><i data-lucide="${n.icon}"></i>${n.label}</a>`).join("")}
     </nav>`;
   }
@@ -123,8 +127,80 @@
       document.body.appendChild(t);
     }
 
+    injectGoogleTranslate();
+
     if (window.lucide) lucide.createIcons();
   });
+
+  // ----- Google Translate (sem botao visivel, dispara sozinho pelo idioma do
+  // dispositivo do cliente) -----
+  // Cobre qualquer idioma fora do dicionario manual (pt/en/es, ja tratado por
+  // window.t/-i18n.js). Se o navegador do cliente estiver em outro idioma, o
+  // Google Translate traduz a pagina inteira automaticamente via cookie
+  // "googtrans", sem exigir clique em nenhum seletor.
+  const CUSTOM_DICTIONARY_LOCALES = ["pt", "en", "es"];
+
+  function detectDeviceLanguage() {
+    const candidates = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
+    for (let i = 0; i < candidates.length; i++) {
+      const lang = String(candidates[i] || "").slice(0, 2).toLowerCase();
+      if (lang) return lang;
+    }
+    return "pt";
+  }
+
+  function getGoogTransCookie() {
+    const match = document.cookie.match(/(?:^|;\s*)googtrans=([^;]*)/);
+    return match ? decodeURIComponent(match[1]) : "";
+  }
+
+  function setGoogTransCookie(targetLang) {
+    const value = `/pt/${targetLang}`;
+    document.cookie = `googtrans=${value}; path=/`;
+    // O widget tambem consulta o cookie no dominio raiz em alguns navegadores.
+    const host = location.hostname;
+    if (host && host.indexOf(".") !== -1) {
+      document.cookie = `googtrans=${value}; path=/; domain=.${host}`;
+    }
+  }
+
+  function injectGoogleTranslate() {
+    if (document.getElementById("google_translate_element")) return;
+
+    const deviceLang = detectDeviceLanguage();
+    const alreadyHandled = CUSTOM_DICTIONARY_LOCALES.indexOf(deviceLang) !== -1;
+    const existingCookie = getGoogTransCookie();
+
+    if (!alreadyHandled && !existingCookie) {
+      setGoogTransCookie(deviceLang);
+    } else if (alreadyHandled && existingCookie) {
+      // Idioma agora coberto pelo dicionario manual: nao deixa o Google
+      // sobrepor uma traducao antiga.
+      document.cookie = "googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+    }
+
+    // Container escondido: precisa existir no DOM para o widget inicializar,
+    // mas nao aparece como botao/seletor visivel em nenhuma pagina.
+    const container = document.createElement("div");
+    container.id = "google_translate_element";
+    container.className = "notranslate";
+    container.style.display = "none";
+    document.body.appendChild(container);
+
+    window.googleTranslateElementInit = function () {
+      new google.translate.TranslateElement(
+        { pageLanguage: "pt", autoDisplay: false, layout: google.translate.TranslateElement.InlineLayout.SIMPLE },
+        "google_translate_element",
+      );
+    };
+
+    if (!document.getElementById("google-translate-script")) {
+      const script = document.createElement("script");
+      script.id = "google-translate-script";
+      script.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+      document.body.appendChild(script);
+    }
+  }
 
   window.openMobileSidebar = function () {
     document.getElementById("mobileSidebar").classList.add("open");
@@ -139,7 +215,9 @@
     if (!root) return;
     const el = document.createElement("div");
     el.className = "toast";
-    el.innerHTML = `<strong>${title}</strong>${desc ? `<span>${desc}</span>` : ""}`;
+    // Escapa sempre: title/desc frequentemente incluem dados vindos do
+    // usuario final (ex: nome do lead no WhatsApp), que nao sao confiaveis.
+    el.innerHTML = `<strong>${window.escapeHtml(title)}</strong>${desc ? `<span>${window.escapeHtml(desc)}</span>` : ""}`;
     root.appendChild(el);
     setTimeout(() => {
       el.style.opacity = "0";
@@ -342,7 +420,8 @@
   };
 
   window.getUserRoleLabel = function (email) {
-    return isAdminEmail(email) ? "Administrador" : "Cliente";
+    const t = window.t || ((key, fallback) => fallback || key);
+    return isAdminEmail(email) ? t("profile.roleAdmin", "Administrador") : t("profile.roleClient", "Cliente");
   };
 
   window.updateUserRoleBadge = function (email) {
@@ -357,7 +436,7 @@
       ...window.getStoredUserProfile(),
       ...(profile || {}),
     };
-    const name = user.name || "Usuario";
+    const name = user.name || "";
     const email = user.email || "";
     const photo = String(user.photo || "");
 
@@ -504,14 +583,21 @@
       .toLowerCase();
     if (!email) throw new Error("E-mail da conta e obrigatorio.");
 
-    const response = await fetch(`${window.getApiBaseUrl()}/api/auth/ip-account`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: profile.name || "",
-        email,
-      }),
-    });
+    let response;
+    try {
+      response = await fetch(`${window.getApiBaseUrl()}/api/auth/ip-account`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: profile.name || "",
+          email,
+        }),
+      });
+    } catch (networkError) {
+      const error = new Error("Nao foi possivel contatar o servidor de validacao de IP.");
+      error.code = "IP_CHECK_UNAVAILABLE";
+      throw error;
+    }
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
@@ -539,10 +625,14 @@
       ...profile,
       ...(persisted || {}),
     };
-    // Chamada ao servidor para limitar contas por IP pode falhar quando o servidor
-    // local não está ativo — comentada para evitar erros no console durante desenvolvimento.
-    // await window.registerUserAccountForIp(profile);
-    // Se quiser validar no servidor, descomente a linha acima.
+    try {
+      await window.registerUserAccountForIp(profile);
+    } catch (ipError) {
+      if (ipError && (ipError.code === "IP_ACCOUNT_LIMIT_REACHED" || ipError.code === "VPN_DETECTED")) {
+        throw ipError;
+      }
+      console.warn("[Auth] Validacao de limite por IP indisponivel, login liberado:", ipError);
+    }
     window.saveUserProfile(mergedProfile);
     if (typeof window.checkUserLogin === "function") window.checkUserLogin();
     if (typeof window.updateGreeting === "function") window.updateGreeting();

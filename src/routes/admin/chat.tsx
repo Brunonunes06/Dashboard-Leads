@@ -2,14 +2,11 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { isAdminEmail } from "@/lib/permissions";
 import { useLeads } from "@/hooks/useLeads";
 import { ChatWindow } from "@/components/ChatWindow";
 
 import type { LeadWithMeta } from "@/hooks/useLeads";
-
-const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS ?? "myhpc3301@gmail.com, bruno.nunes.santos06@escola.pr.gov.br")
-  .split(",")
-  .map((e: string) => e.trim().toLowerCase());
 
 export const Route = createFileRoute("/admin/chat")({
   beforeLoad: async () => {
@@ -17,7 +14,7 @@ export const Route = createFileRoute("/admin/chat")({
       data: { session },
     } = await supabase.auth.getSession();
     if (!session) throw redirect({ to: "/" });
-    if (!ADMIN_EMAILS.includes((session.user.email ?? "").toLowerCase())) {
+    if (!isAdminEmail(session.user.email)) {
       throw redirect({ to: "/" });
     }
     return { adminId: session.user.id, adminName: "CEO" };
@@ -79,7 +76,6 @@ function AdminChatPage() {
                 key={lead.id}
                 onClick={() => setSelected(lead)}
                 style={{
-                  width: "100%",
                   display: "flex",
                   alignItems: "center",
                   gap: 10,

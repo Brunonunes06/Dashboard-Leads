@@ -1,11 +1,12 @@
 // Shared mock data
 window.APP_DATA = (function () {
+  const t = window.t || ((key, fallback) => fallback || key);
   const STATUS_LABEL = {
-    novo: "Novo",
-    qualificando: "Qualificando",
-    qualificado: "Qualificado",
-    transferido: "Transferido",
-    descartado: "Descartado",
+    novo: t("lead.new", "Novo"),
+    qualificando: t("chat.filters.qualifying", "Qualificando"),
+    qualificado: t("lead.qualified", "Qualificado"),
+    transferido: t("lead.transferredStatus", "Transferido"),
+    descartado: t("lead.discarded", "Descartado"),
   };
 
   const leads = [

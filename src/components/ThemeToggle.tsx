@@ -1,5 +1,6 @@
 import { Monitor, Moon, Sun } from "lucide-react";
 
+import { cn } from "@/lib/utils";
 import { useTheme } from "./ThemeProvider";
 const options = [
   { value: "light", icon: Sun, label: "Claro" },

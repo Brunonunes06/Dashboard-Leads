@@ -17,7 +17,17 @@ dist-ssr
 .tanstack/**
 .nitro
 *.local
-
+.gitignore
+.prettierignore
+.prettierrc
+bun.lock
+bunfig.toml
+components.json
+eslint.config.mjs
+package-lock.json
+package.json
+tsconfig.json
+vite.config.ts
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars

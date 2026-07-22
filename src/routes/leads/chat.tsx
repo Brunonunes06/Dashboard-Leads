@@ -1,15 +1,14 @@
 // src/routes/admin/chat.tsx
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Search } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { isAdminEmail } from "@/lib/permissions";
 import { useLeads } from "@/hooks/useLeads";
 import { ChatWindow } from "@/components/ChatWindow";
+import { useTranslation } from "@/lib/i18n";
 
 import type { LeadWithMeta } from "@/hooks/useLeads";
-
-const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS ?? "myhpc3301@gmail.com, bruno.nunes.santos06@escola.pr.gov.br")
-  .split(",")
-  .map((e: string) => e.trim().toLowerCase());
 
 export const Route = createFileRoute("/leads/chat")({
   beforeLoad: async () => {
@@ -17,7 +16,7 @@ export const Route = createFileRoute("/leads/chat")({
       data: { session },
     } = await supabase.auth.getSession();
     if (!session) throw redirect({ to: "/" });
-    if (!ADMIN_EMAILS.includes((session.user.email ?? "").toLowerCase())) {
+    if (!isAdminEmail(session.user.email)) {
       throw redirect({ to: "/" });
     }
     return { adminId: session.user.id, adminName: "CEO" };
@@ -26,9 +25,29 @@ export const Route = createFileRoute("/leads/chat")({
 });
 
 function AdminChatPage() {
+  const { t } = useTranslation();
   const { adminId, adminName } = Route.useRouteContext();
-  const { leads, isLoading } = useLeads();
+  const { leads, isLoading, refetch } = useLeads();
   const [selected, setSelected] = useState<LeadWithMeta | null>(null);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("todos");
+
+  const STATUS_FILTERS: { key: string; label: string }[] = [
+    { key: "todos", label: t("chat.filters.all") },
+    { key: "novo", label: t("chat.filters.new") },
+    { key: "qualificando", label: t("chat.filters.qualifying") },
+    { key: "qualificado", label: t("chat.filters.qualified") },
+    { key: "transferido", label: t("chat.filters.transferred") },
+  ];
+
+  const filteredLeads = useMemo(() => {
+    const q = query.toLowerCase().trim();
+    return leads.filter((l) => {
+      if (statusFilter !== "todos" && l.status !== statusFilter) return false;
+      if (q && !`${l.name} ${l.phone}`.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [leads, query, statusFilter]);
 
   const timeAgo = (iso: string | null) => {
     if (!iso) return "";
@@ -60,26 +79,74 @@ function AdminChatPage() {
           background: "#0e0e10",
         }}
       >
-        <div style={{ padding: "14px 16px", borderBottom: "1px solid #1e1e22" }}>
-          <span style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>Mensagens</span>
+        <div
+          style={{
+            padding: "14px 16px",
+            borderBottom: "1px solid #1e1e22",
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+          }}
+        >
+          <span style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>{t("lead.messages")}</span>
+          <div style={{ position: "relative" }}>
+            <Search
+              size={14}
+              color="#555"
+              style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }}
+            />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t("chat.searchPlaceholder")}
+              style={{
+                width: "100%",
+                background: "#18181c",
+                border: "1px solid #1e1e22",
+                borderRadius: 8,
+                padding: "8px 10px 8px 30px",
+                fontSize: 13,
+                color: "#fff",
+                outline: "none",
+              }}
+            />
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {STATUS_FILTERS.map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setStatusFilter(f.key)}
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: 9999,
+                  fontSize: 11,
+                  border: "1px solid #1e1e22",
+                  cursor: "pointer",
+                  background: statusFilter === f.key ? "rgba(16,185,129,.15)" : "transparent",
+                  color: statusFilter === f.key ? "#34d399" : "#777",
+                }}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none" }}>
           {isLoading ? (
             <p style={{ padding: 20, fontSize: 13, color: "#555", textAlign: "center" }}>
-              Carregando…
+              {t("common.loading")}
             </p>
-          ) : leads.length === 0 ? (
+          ) : filteredLeads.length === 0 ? (
             <p style={{ padding: 20, fontSize: 13, color: "#555", textAlign: "center" }}>
-              Nenhum lead ainda.
+              {leads.length ? t("common.noLeadsFiltered") : t("common.noLeadsYet")}
             </p>
           ) : (
-            leads.map((lead) => (
+            filteredLeads.map((lead) => (
               <button
                 key={lead.id}
                 onClick={() => setSelected(lead)}
                 style={{
-                  width: "100%",
                   display: "flex",
                   alignItems: "center",
                   gap: 10,
@@ -201,6 +268,10 @@ function AdminChatPage() {
           currentUserId={adminId}
           currentUserName={adminName}
           currentRole="admin"
+          onTransferred={async () => {
+            await refetch();
+            setSelected((prev) => (prev ? { ...prev, status: "transferido" } : prev));
+          }}
         />
       ) : (
         <div
@@ -223,7 +294,7 @@ function AdminChatPage() {
           >
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
-          <p style={{ fontSize: 13, color: "#444" }}>Selecione uma conversa</p>
+          <p style={{ fontSize: 13, color: "#444" }}>{t("common.selectConversation")}</p>
         </div>
       )}
     </div>
