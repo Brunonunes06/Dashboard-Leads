@@ -1,7 +1,5 @@
-const ADMIN_EMAILS_FALLBACK = "myhpc3301@gmail.com";
-
 export const ADMIN_EMAILS: string[] = (
-  (import.meta.env.VITE_ADMIN_EMAILS as string | undefined) || ADMIN_EMAILS_FALLBACK
+  (import.meta.env.VITE_ADMIN_EMAILS as string | undefined) || ""
 )
   .split(",")
   .map((e) => e.trim().toLowerCase())

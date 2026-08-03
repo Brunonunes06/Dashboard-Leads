@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 
+import { checkRateLimit } from "../rate-limit.server";
 import { verifySupabaseAccessToken } from "../verify-supabase-token.server";
 
 // LGPD Art. 18, VI — direito à eliminação dos dados. Registra o pedido em vez
@@ -11,6 +13,11 @@ import { verifySupabaseAccessToken } from "../verify-supabase-token.server";
 export const requestAccountDeletion = createServerFn({ method: "POST" })
   .validator(z.object({ accessToken: z.string() }))
   .handler(async ({ data }): Promise<{ success: boolean; error?: string }> => {
+    const rateLimit = checkRateLimit(getRequest(), "lgpd.delete", { windowMs: 60_000, max: 5 });
+    if (!rateLimit.allowed) {
+      return { success: false, error: rateLimit.message };
+    }
+
     const user = await verifySupabaseAccessToken(data.accessToken);
     if (!user) {
       return { success: false, error: "Sessão inválida ou expirada. Faça login novamente." };

@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 
+import { checkRateLimit } from "../rate-limit.server";
 import { verifySupabaseAccessToken } from "../verify-supabase-token.server";
 
 const messageSchema = z.object({
@@ -15,6 +17,11 @@ const ALLOWED_MODELS = new Set(["gpt-5.4-mini", "gpt-5-search-api"]);
 export const generateAiReply = createServerFn({ method: "POST" })
   .validator(z.object({ model: z.string().optional(), input: z.array(messageSchema), accessToken: z.string() }))
   .handler(async ({ data }): Promise<{ text: string; error: string | null }> => {
+    const rateLimit = checkRateLimit(getRequest(), "ai-reply.generate", { windowMs: 60_000, max: 20 });
+    if (!rateLimit.allowed) {
+      return { text: "", error: rateLimit.message };
+    }
+
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return { text: "", error: "Configure OPENAI_API_KEY no .env do servidor." };

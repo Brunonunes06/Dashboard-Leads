@@ -61,10 +61,10 @@ interface IgLead {
 }
 
 const STATUS_META: Record<IgStatus, { label: string; color: string }> = {
-  menu_inicial: { label: "Menu Inicial", color: "#22d3ee" },
-  interessado_painel: { label: "Interessado em Painel", color: "#34d399" },
-  aguardando_suporte: { label: "Aguardando Suporte Humano", color: "#fbbf24" },
-  finalizado: { label: "Finalizado", color: "#c084fc" },
+  menu_inicial: { label: "Menu Inicial", color: "var(--muted-foreground)" },
+  interessado_painel: { label: "Interessado em Painel", color: "var(--primary)" },
+  aguardando_suporte: { label: "Aguardando Suporte Humano", color: "var(--chart-2)" },
+  finalizado: { label: "Finalizado", color: "var(--chart-5)" },
 };
 
 const MOCK_LEADS: IgLead[] = [
@@ -100,6 +100,22 @@ const WEEKLY_FLOW = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map((day,
   qualificados: 4 + Math.round(Math.cos(i) * 3 + i * 1.5),
 }));
 
+function WeeklyFlowTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-md border bg-popover px-3 py-2 text-xs shadow-md">
+      <p className="mb-1 font-medium capitalize text-popover-foreground">{label}</p>
+      {payload.map((entry: any) => (
+        <div key={entry.dataKey} className="flex items-center gap-1.5 text-popover-foreground">
+          <span className="h-2 w-2 rounded-sm" style={{ background: entry.color }} />
+          <span className="text-muted-foreground">{entry.name}:</span>
+          <span className="font-semibold">{entry.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const STATUS_FILTERS: { value: "todos" | IgStatus; label: string }[] = [
   { value: "todos", label: "Todos os status" },
   { value: "menu_inicial", label: "Menu Inicial" },
@@ -132,15 +148,38 @@ function InstagramCrmPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [reply, setReply] = useState("");
 
+  // Mesmo problema do dashboard (src/routes/index.tsx): o ResponsiveContainer
+  // do Recharts as vezes nao remede sozinho quando a janela e redimensionada
+  // (ex: virar pra largura mobile) ou quando a aba volta a ficar visivel — o
+  // grafico renderiza em branco ate algo forcar um remount.
+  const [chartEpoch, setChartEpoch] = useState(0);
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") setChartEpoch((n) => n + 1);
+    };
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+    const onResize = () => {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => setChartEpoch((n) => n + 1), 150);
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("resize", onResize);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("resize", onResize);
+      if (resizeTimer) clearTimeout(resizeTimer);
+    };
+  }, []);
+
   const metrics = useMemo(() => {
     const waiting = leads.filter((l) => l.status === "aguardando_suporte").length;
     const finalized = leads.filter((l) => l.status === "finalizado").length;
     const rate = leads.length ? Math.round((finalized / leads.length) * 100) : 0;
     return [
-      { icon: Users, label: "Total de Leads", value: leads.length, color: "#34d399" },
-      { icon: Inbox, label: "Recebidos Hoje", value: leads.length, color: "#22d3ee" },
-      { icon: Clock, label: "Aguardando Resposta", value: waiting, color: "#f59e0b" },
-      { icon: TrendingUp, label: "Taxa de Conversão", value: `${rate}%`, color: "#a855f7" },
+      { icon: Users, label: "Total de Leads", value: leads.length, color: "var(--primary)" },
+      { icon: Inbox, label: "Recebidos Hoje", value: leads.length, color: "var(--chart-2)" },
+      { icon: Clock, label: "Aguardando Resposta", value: waiting, color: "var(--chart-3)" },
+      { icon: TrendingUp, label: "Taxa de Conversão", value: `${rate}%`, color: "var(--chart-5)" },
     ];
   }, [leads]);
 
@@ -224,14 +263,28 @@ function InstagramCrmPage() {
           <p className="text-[11px] text-muted-foreground">Mensagens recebidas vs. leads qualificados</p>
         </CardHeader>
         <CardContent className="h-[240px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer key={chartEpoch} width="100%" height="100%">
             <LineChart data={WEEKLY_FLOW}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="day" tickLine={false} axisLine={false} fontSize={12} />
               <YAxis tickLine={false} axisLine={false} fontSize={12} width={24} />
-              <Tooltip />
-              <Line type="monotone" dataKey="recebidas" stroke="#06b6d4" strokeWidth={2} dot={{ r: 3 }} />
-              <Line type="monotone" dataKey="qualificados" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
+              <Tooltip cursor={{ stroke: "var(--muted)" }} content={<WeeklyFlowTooltip />} />
+              <Line
+                type="monotone"
+                dataKey="recebidas"
+                name="Recebidas"
+                stroke="var(--chart-2)"
+                strokeWidth={2}
+                dot={{ r: 3 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="qualificados"
+                name="Qualificados"
+                stroke="var(--primary)"
+                strokeWidth={2}
+                dot={{ r: 3 }}
+              />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
@@ -295,7 +348,7 @@ function InstagramCrmPage() {
                     >
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-fuchsia-500 to-orange-400 text-[11px] font-medium text-white">
+                          <div className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-pink-500/30 to-purple-500/30 text-[11px] font-medium text-white">
                             {l.avatar}
                           </div>
                           <div>
@@ -313,7 +366,10 @@ function InstagramCrmPage() {
                       <td className="px-5 py-3">
                         <span
                           className="rounded-full px-2.5 py-0.5 text-xs font-medium"
-                          style={{ background: `${meta.color}22`, color: meta.color }}
+                          style={{
+                            background: `color-mix(in srgb, ${meta.color} 15%, transparent)`,
+                            color: meta.color,
+                          }}
                         >
                           {meta.label}
                         </span>
@@ -335,7 +391,7 @@ function InstagramCrmPage() {
           {openLead && (
             <>
               <SheetHeader className="flex-row items-center gap-3 space-y-0 border-b p-4 text-left">
-                <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-fuchsia-500 to-orange-400 text-[13px] font-medium text-white">
+                <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-pink-500/30 to-purple-500/30 text-[13px] font-medium text-white">
                   {openLead.avatar}
                 </div>
                 <div className="min-w-0 flex-1">

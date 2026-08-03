@@ -1,7 +1,8 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, Mail, MessageCircle, Phone, ShieldAlert, ShieldCheck, User, UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import type { Session } from "@supabase/supabase-js";
 
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   AlertDialog,
@@ -31,15 +33,15 @@ export const Route = createFileRoute("/profile")({
 });
 
 const INTEGRATIONS = [
-  { icon: Mail, title: "Conta Google", desc: "Login único e sincronização.", status: "pending" as const },
+  { icon: Mail, title: "Conta Google", desc: "Login único e sincronização.", kind: "google" as const },
   {
     icon: MessageCircle,
     title: "WhatsApp Business",
     desc: "Automação de mensagens.",
-    status: "pending" as const,
+    kind: "pending" as const,
   },
-  { icon: UserPlus, title: "Convidar alguém", desc: "Compartilhe o site com outra pessoa.", status: "invite" as const },
-  { icon: Phone, title: "Telefonia", desc: "Integração de chamadas.", status: "soon" as const },
+  { icon: UserPlus, title: "Convidar alguém", desc: "Compartilhe o site com outra pessoa.", kind: "invite" as const },
+  { icon: Phone, title: "Telefonia", desc: "Integração de chamadas.", kind: "soon" as const },
 ];
 
 function getInitials(name: string) {
@@ -53,6 +55,12 @@ function getInitials(name: string) {
       .toUpperCase() || "U"
   );
 }
+
+const PLAN_TAG_LABELS: Record<string, string> = {
+  semanal: "Plano Semanal (Grátis)",
+  mensal: "Plano Mensal",
+  anual: "Plano Anual",
+};
 
 function getInviteUrl() {
   return new URL("/", window.location.origin).href;
@@ -88,6 +96,7 @@ function sharePlatform(platform: string) {
 
 function ProfilePage() {
   const { user, updateProfile } = useAuth();
+  const [session, setSession] = useState<Session | null>(null);
   const [name, setName] = useState(user?.name ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
   const [phone, setPhone] = useState("");
@@ -95,7 +104,60 @@ function ProfilePage() {
   const [sharePanelOpen, setSharePanelOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteRequested, setDeleteRequested] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [activePlan, setActivePlan] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+  }, []);
+
+  // Provider do login (sempre Google hoje — é o único método de login do
+  // app) — usado pra decidir se a integração "Conta Google" mostra
+  // "Conectado" ou "Conectar".
+  const googleLinked = Boolean(
+    session?.user?.app_metadata?.provider === "google" ||
+      session?.user?.identities?.some((identity) => identity.provider === "google"),
+  );
+
+  // Carrega nome/telefone/foto salvos no banco (tabela public.profiles) pra
+  // sobreviver a trocar de navegador/dispositivo — antes só existia no
+  // localStorage deste navegador (e o telefone nem era salvo em lugar
+  // nenhum).
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    // "as any": profiles ainda não está nos tipos gerados do Supabase
+    // (tabela nova, criada em supabase/006_profiles.sql).
+    (supabase as any)
+      .from("profiles")
+      .select("name, email, phone, avatar_url")
+      .eq("user_id", session.user.id)
+      .maybeSingle()
+      .then(({ data }: { data: { name: string | null; email: string | null; phone: string | null; avatar_url: string | null } | null }) => {
+        if (!data) return;
+        if (data.name) setName(data.name);
+        if (data.email) setEmail(data.email);
+        if (data.phone) setPhone(data.phone);
+        if (data.avatar_url) setAvatarUrl(data.avatar_url);
+      });
+  }, [session?.user?.id]);
+
+  // Mostra a tag do plano ativo assim que uma assinatura vira 'active' —
+  // pra pagas isso só acontece via webhook (backend/payments-routes.js), pra
+  // o Plano Semanal acontece na hora em src/routes/plans.tsx.
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    // "as any": subscriptions ainda não está nos tipos gerados do Supabase.
+    (supabase as any)
+      .from("subscriptions")
+      .select("plan")
+      .eq("user_id", session.user.id)
+      .eq("status", "active")
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }: { data: { plan: string } | null }) => setActivePlan(data?.plan ?? null));
+  }, [session?.user?.id]);
 
   async function handleRequestDeletion() {
     const {
@@ -131,8 +193,32 @@ function ProfilePage() {
     event.target.value = "";
   }
 
-  function handleSave() {
+  async function handleSave() {
     updateProfile({ name, avatarUrl });
+
+    if (!session?.user?.id) {
+      toast.error("Sessão expirada", { description: "Faça login novamente para salvar no servidor." });
+      return;
+    }
+
+    setSavingProfile(true);
+    // "as any": profiles ainda não está nos tipos gerados do Supabase.
+    const { error } = await (supabase as any).from("profiles").upsert({
+      user_id: session.user.id,
+      email: email || session.user.email || "",
+      name,
+      phone,
+      avatar_url: avatarUrl,
+      google_connected: googleLinked,
+      updated_at: new Date().toISOString(),
+    });
+    setSavingProfile(false);
+
+    if (error) {
+      toast.error("Erro ao salvar no servidor", { description: error.message });
+      return;
+    }
+
     toast.success("Perfil atualizado com sucesso!");
   }
 
@@ -163,7 +249,7 @@ function ProfilePage() {
             <div className="relative">
               <Avatar className="h-20 w-20 text-2xl font-bold">
                 <AvatarImage src={avatarUrl} alt={name} />
-                <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground">
+                <AvatarFallback className="bg-gradient-to-br from-primary to-chart-2 text-primary-foreground">
                   {getInitials(name || "Usuário")}
                 </AvatarFallback>
               </Avatar>
@@ -185,7 +271,14 @@ function ProfilePage() {
             </div>
             <div>
               <p className="text-sm font-medium">{name || "Usuário"}</p>
-              <p className="text-xs text-muted-foreground">{user?.role === "admin" ? "Admin" : "Cliente"}</p>
+              <div className="mt-1 flex items-center gap-1.5">
+                <p className="text-xs text-muted-foreground">{user?.role === "admin" ? "Admin" : "Cliente"}</p>
+                {activePlan && (
+                  <Badge variant="secondary" className="text-[10px]">
+                    {PLAN_TAG_LABELS[activePlan] ?? activePlan}
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
 
@@ -251,12 +344,16 @@ function ProfilePage() {
                   <p className="text-xs text-muted-foreground">{it.desc}</p>
                 </div>
               </div>
-              {it.status === "soon" ? (
+              {it.kind === "soon" ? (
                 <span className="text-xs text-muted-foreground">Em breve</span>
-              ) : it.status === "invite" ? (
+              ) : it.kind === "invite" ? (
                 <Button variant="outline" size="sm" onClick={() => setSharePanelOpen(true)}>
                   Convidar
                 </Button>
+              ) : it.kind === "google" && googleLinked ? (
+                <span className="flex items-center gap-1.5 text-xs font-medium text-primary">
+                  <ShieldCheck className="h-3.5 w-3.5" /> Conectado
+                </span>
               ) : (
                 <Button
                   variant="outline"
@@ -301,7 +398,9 @@ function ProfilePage() {
 
       <div className="flex justify-end gap-2">
         <Button variant="outline">Cancelar</Button>
-        <Button onClick={handleSave}>Salvar alterações</Button>
+        <Button onClick={handleSave} disabled={savingProfile}>
+          {savingProfile ? "Salvando..." : "Salvar alterações"}
+        </Button>
       </div>
 
       <AlertDialog open={deleteDialogOpen}>

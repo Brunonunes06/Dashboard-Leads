@@ -32,6 +32,9 @@ vite.config.ts
 .wrangler/
 .dev.vars
 
+# ngrok — backend/ngrok.yml contém um authtoken real, nunca deve ir pro git
+backend/ngrok.yml
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

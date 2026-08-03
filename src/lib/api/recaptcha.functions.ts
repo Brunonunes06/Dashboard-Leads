@@ -2,16 +2,23 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 
+import { checkRateLimit } from "../rate-limit.server";
+
 // Limiar recomendado pelo Google para reCAPTCHA v3: score >= 0.5 = provavelmente humano.
 const SCORE_THRESHOLD = 0.5;
 
 export type RecaptchaResult =
   | { allowed: true; score: number }
-  | { allowed: false; code: "RECAPTCHA_FAILED"; message: string };
+  | { allowed: false; code: "RECAPTCHA_FAILED" | "RATE_LIMITED"; message: string };
 
 export const verifyRecaptcha = createServerFn({ method: "POST" })
   .validator(z.object({ token: z.string().min(1) }))
   .handler(async ({ data }): Promise<RecaptchaResult> => {
+    const rateLimit = checkRateLimit(getRequest(), "recaptcha.verify", { windowMs: 60_000, max: 20 });
+    if (!rateLimit.allowed) {
+      return { allowed: false, code: "RATE_LIMITED", message: rateLimit.message };
+    }
+
     const secretKey = process.env.RECAPTCHA_SECRET_KEY;
     if (!secretKey) {
       console.warn("[reCAPTCHA] RECAPTCHA_SECRET_KEY nao configurada — verificacao desativada (fail-open).");

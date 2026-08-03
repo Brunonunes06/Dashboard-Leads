@@ -6,7 +6,9 @@ import { supabase } from "@/lib/supabase";
 import { generateAiReply } from "@/lib/api/ai-reply.functions";
 import { buildAIReplyInput, getAISettings, splitHandoff } from "@/lib/ai-reply-client";
 import { useTranslation } from "@/lib/i18n";
+import { StatusBadge } from "@/components/StatusBadge";
 import type { LeadWithMeta } from "@/hooks/useLeads";
+import type { LeadStatus } from "@/data/mockLeads";
 
 interface ChatWindowProps {
   lead: LeadWithMeta;
@@ -185,7 +187,8 @@ export function ChatWindow({
       style={{
         display: "flex",
         flexDirection: "column",
-        height: "100%",
+        flex: "1 1 auto",
+        minHeight: 0,
         background: "transparent",
         fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       }}
@@ -209,13 +212,13 @@ export function ChatWindow({
             width: 40,
             height: 40,
             borderRadius: "50%",
-            background: "linear-gradient(135deg, #10b981, #06b6d4)",
+            background: "var(--gradient-primary)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             fontSize: 13,
             fontWeight: 700,
-            color: "#041b12",
+            color: "var(--primary-foreground)",
             textTransform: "uppercase",
             flexShrink: 0,
             border: "1px solid rgba(16,185,129,.25)",
@@ -229,11 +232,25 @@ export function ChatWindow({
         </button>
 
         <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-          <span style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>{lead.name}</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+            <span
+              style={{
+                fontSize: 15,
+                fontWeight: 600,
+                color: "var(--foreground)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {lead.name}
+            </span>
+            <StatusBadge status={lead.status as LeadStatus} />
+          </span>
           <span
             style={{
               fontSize: 12,
-              color: isTyping ? "#5865f2" : isOnline ? "#5ad17a" : "#8a8a8a",
+              color: isTyping ? "#5865f2" : isOnline ? "var(--primary)" : "var(--muted-foreground)",
               marginTop: 2,
             }}
           >
@@ -253,8 +270,8 @@ export function ChatWindow({
             padding: "8px 14px",
             borderRadius: 9999,
             border: "1px solid rgba(16,185,129,.3)",
-            background: lead.status === "transferido" ? "transparent" : "linear-gradient(135deg, #10b981, #06b6d4)",
-            color: lead.status === "transferido" ? "#5ad17a" : "#041b12",
+            background: lead.status === "transferido" ? "transparent" : "var(--gradient-primary)",
+            color: lead.status === "transferido" ? "var(--primary)" : "var(--primary-foreground)",
             fontSize: 13,
             fontWeight: 600,
             cursor: lead.status === "transferido" ? "default" : "pointer",
@@ -285,8 +302,8 @@ export function ChatWindow({
             style={{
               width: "min(420px, 100%)",
               borderRadius: 20,
-              border: "1px solid #1e1e22",
-              background: "#0f1115",
+              border: "1px solid var(--border)",
+              background: "var(--card)",
               boxShadow: "0 24px 80px rgba(0,0,0,.45)",
               padding: 20,
             }}
@@ -297,12 +314,12 @@ export function ChatWindow({
                   width: 64,
                   height: 64,
                   borderRadius: "50%",
-                  background: "#2d2d32",
+                  background: "var(--secondary)",
                   display: "grid",
                   placeItems: "center",
                   fontSize: 20,
                   fontWeight: 700,
-                  color: "#fff",
+                  color: "var(--foreground)",
                   textTransform: "uppercase",
                   flexShrink: 0,
                 }}
@@ -310,26 +327,10 @@ export function ChatWindow({
                 {getLeadInitials(lead.name)}
               </div>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: "#fff" }}>{lead.name}</div>
-                <div style={{ fontSize: 13, color: "#94a3b8", marginTop: 4 }}>{lead.phone}</div>
-                <div
-                  style={{
-                    display: "inline-flex",
-                    marginTop: 10,
-                    alignItems: "center",
-                    gap: 6,
-                    borderRadius: 9999,
-                    border: "1px solid rgba(16,185,129,.25)",
-                    color: "#34d399",
-                    background: "rgba(16,185,129,.08)",
-                    padding: "4px 10px",
-                    fontSize: 11,
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: ".06em",
-                  }}
-                >
-                  {lead.status}
+                <div style={{ fontSize: 20, fontWeight: 700, color: "var(--foreground)" }}>{lead.name}</div>
+                <div style={{ fontSize: 13, color: "var(--muted-foreground)", marginTop: 4 }}>{lead.phone}</div>
+                <div style={{ marginTop: 10 }}>
+                  <StatusBadge status={lead.status as LeadStatus} />
                 </div>
               </div>
               <button
@@ -339,9 +340,9 @@ export function ChatWindow({
                   width: 34,
                   height: 34,
                   borderRadius: 9999,
-                  border: "1px solid #1f2937",
-                  background: "#111827",
-                  color: "#fff",
+                  border: "1px solid var(--border)",
+                  background: "var(--secondary)",
+                  color: "var(--foreground)",
                   cursor: "pointer",
                 }}
                 aria-label={t("lead.close")}
@@ -358,39 +359,39 @@ export function ChatWindow({
                 gap: 12,
               }}
             >
-              <div style={{ border: "1px solid #1e1e22", borderRadius: 14, padding: 14 }}>
-                <div style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase" }}>
+              <div style={{ border: "1px solid var(--border)", borderRadius: 14, padding: 14 }}>
+                <div style={{ fontSize: 11, color: "var(--muted-foreground)", textTransform: "uppercase" }}>
                   {t("lead.score")}
                 </div>
-                <div style={{ fontSize: 28, fontWeight: 800, color: "#34d399", marginTop: 6 }}>
+                <div style={{ fontSize: 28, fontWeight: 800, color: "var(--primary)", marginTop: 6 }}>
                   {lead.score}
                 </div>
               </div>
-              <div style={{ border: "1px solid #1e1e22", borderRadius: 14, padding: 14 }}>
-                <div style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase" }}>
+              <div style={{ border: "1px solid var(--border)", borderRadius: 14, padding: 14 }}>
+                <div style={{ fontSize: 11, color: "var(--muted-foreground)", textTransform: "uppercase" }}>
                   {t("lead.lastActivity")}
                 </div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginTop: 6 }}>
+                <div style={{ fontSize: 20, fontWeight: 700, color: "var(--foreground)", marginTop: 6 }}>
                   {formatLastActivity(lead.last_message_at)}
                 </div>
               </div>
             </div>
 
-            <div style={{ marginTop: 14, border: "1px solid #1e1e22", borderRadius: 14, padding: 14 }}>
-              <div style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase" }}>
+            <div style={{ marginTop: 14, border: "1px solid var(--border)", borderRadius: 14, padding: 14 }}>
+              <div style={{ fontSize: 11, color: "var(--muted-foreground)", textTransform: "uppercase" }}>
                 {t("lead.info")}
               </div>
-              <div style={{ marginTop: 10, display: "grid", gap: 10, color: "#e5e7eb", fontSize: 14 }}>
+              <div style={{ marginTop: 10, display: "grid", gap: 10, color: "var(--foreground)", fontSize: 14 }}>
                 <div>
-                  <span style={{ color: "#94a3b8" }}>{t("lead.phone")}: </span>
+                  <span style={{ color: "var(--muted-foreground)" }}>{t("lead.phone")}: </span>
                   {lead.phone}
                 </div>
                 <div>
-                  <span style={{ color: "#94a3b8" }}>{t("lead.messages")}: </span>
+                  <span style={{ color: "var(--muted-foreground)" }}>{t("lead.messages")}: </span>
                   {messages.length}
                 </div>
                 <div>
-                  <span style={{ color: "#94a3b8" }}>{t("lead.origin")}: </span>
+                  <span style={{ color: "var(--muted-foreground)" }}>{t("lead.origin")}: </span>
                   {lead.last_message ?? t("common.activeConversation")}
                 </div>
               </div>
@@ -403,8 +404,8 @@ export function ChatWindow({
                 style={{
                   borderRadius: 12,
                   border: "none",
-                  background: "#10b981",
-                  color: "#041b12",
+                  background: "var(--primary)",
+                  color: "var(--primary-foreground)",
                   fontWeight: 700,
                   padding: "10px 14px",
                   cursor: "pointer",
@@ -432,11 +433,11 @@ export function ChatWindow({
       >
         {isLoading ? (
           <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flex: 1 }}>
-            <p style={{ fontSize: 13, color: "#94a3b8" }}>{t("common.loading")}</p>
+            <p style={{ fontSize: 13, color: "var(--muted-foreground)" }}>{t("common.loading")}</p>
           </div>
         ) : messages.length === 0 ? (
           <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center" }}>
-            <p style={{ fontSize: 13, color: "#94a3b8", textAlign: "center" }}>
+            <p style={{ fontSize: 13, color: "var(--muted-foreground)", textAlign: "center" }}>
               {t("common.noMessagesYet")}
               <br />
               {t("common.startConversation")}
@@ -456,7 +457,7 @@ export function ChatWindow({
                       textAlign: "center",
                       margin: "18px auto 14px",
                       fontSize: 11,
-                      color: "#94a3b8",
+                      color: "var(--muted-foreground)",
                       width: "fit-content",
                       padding: "6px 10px",
                       borderRadius: 9999,
@@ -479,7 +480,7 @@ export function ChatWindow({
                   }}
                 >
                   {!isOwn && (
-                    <span style={{ fontSize: 12, color: "#888", marginLeft: 8, marginBottom: 2 }}>
+                    <span style={{ fontSize: 12, color: "var(--muted-foreground)", marginLeft: 8, marginBottom: 2 }}>
                       {group.senderName}
                     </span>
                   )}
@@ -586,7 +587,7 @@ export function ChatWindow({
               border: "none",
               outline: "none",
               fontSize: 14.5,
-              color: "#fff",
+              color: "var(--foreground)",
               caretColor: "#5865f2",
             }}
           />
@@ -608,7 +609,7 @@ export function ChatWindow({
               opacity: isSuggesting ? 0.5 : 1,
             }}
           >
-            <Sparkles size={15} color="#c084fc" />
+            <Sparkles size={15} color="var(--chart-5)" />
           </button>
           <button
             onClick={handleSend}
@@ -619,8 +620,8 @@ export function ChatWindow({
               height: 40,
               borderRadius: "50%",
               background: draft.trim()
-                ? "linear-gradient(135deg, #10b981, #06b6d4)"
-                : "#2d2d32",
+                ? "var(--gradient-primary)"
+                : "var(--secondary)",
               border: "none",
               cursor: draft.trim() ? "pointer" : "default",
               display: "flex",
@@ -630,7 +631,7 @@ export function ChatWindow({
               flexShrink: 0,
             }}
           >
-            <Send size={16} color="#fff" />
+            <Send size={16} color="var(--foreground)" />
           </button>
         </div>
       </div>

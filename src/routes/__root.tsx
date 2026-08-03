@@ -114,7 +114,11 @@ function RootShell({ children }: { children: ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body>
+      {/* suppressHydrationWarning: algumas extensões de navegador (ex: antivírus com
+          "proteção web") injetam atributos no <body> antes do React hidratar
+          (bis_skin_checked, bis_register etc.) — isso não é um bug do app, é o padrão
+          recomendado pelo React pra esse cenário especifico. */}
+      <body suppressHydrationWarning>
         {children}
         <Scripts />
       </body>

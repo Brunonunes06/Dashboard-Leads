@@ -13,11 +13,10 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PlansRouteImport } from './routes/plans'
-import { Route as LeadsRouteImport } from './routes/leads'
 import { Route as InstagramRouteImport } from './routes/instagram'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LeadsIndexRouteImport } from './routes/leads/index'
 import { Route as LeadsChatRouteImport } from './routes/leads/chat'
-import { Route as AdminChatRouteImport } from './routes/admin/chat'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -39,11 +38,6 @@ const PlansRoute = PlansRouteImport.update({
   path: '/plans',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LeadsRoute = LeadsRouteImport.update({
-  id: '/leads',
-  path: '/leads',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const InstagramRoute = InstagramRouteImport.update({
   id: '/instagram',
   path: '/instagram',
@@ -54,96 +48,90 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LeadsChatRoute = LeadsChatRouteImport.update({
-  id: '/chat',
-  path: '/chat',
-  getParentRoute: () => LeadsRoute,
+const LeadsIndexRoute = LeadsIndexRouteImport.update({
+  id: '/leads/',
+  path: '/leads/',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AdminChatRoute = AdminChatRouteImport.update({
-  id: '/admin/chat',
-  path: '/admin/chat',
+const LeadsChatRoute = LeadsChatRouteImport.update({
+  id: '/leads/chat',
+  path: '/leads/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/instagram': typeof InstagramRoute
-  '/leads': typeof LeadsRouteWithChildren
   '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
-  '/admin/chat': typeof AdminChatRoute
   '/leads/chat': typeof LeadsChatRoute
+  '/leads/': typeof LeadsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/instagram': typeof InstagramRoute
-  '/leads': typeof LeadsRouteWithChildren
   '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
-  '/admin/chat': typeof AdminChatRoute
   '/leads/chat': typeof LeadsChatRoute
+  '/leads': typeof LeadsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/instagram': typeof InstagramRoute
-  '/leads': typeof LeadsRouteWithChildren
   '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
-  '/admin/chat': typeof AdminChatRoute
   '/leads/chat': typeof LeadsChatRoute
+  '/leads/': typeof LeadsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/instagram'
-    | '/leads'
     | '/plans'
     | '/privacy'
     | '/profile'
     | '/settings'
-    | '/admin/chat'
     | '/leads/chat'
+    | '/leads/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/instagram'
-    | '/leads'
     | '/plans'
     | '/privacy'
     | '/profile'
     | '/settings'
-    | '/admin/chat'
     | '/leads/chat'
+    | '/leads'
   id:
     | '__root__'
     | '/'
     | '/instagram'
-    | '/leads'
     | '/plans'
     | '/privacy'
     | '/profile'
     | '/settings'
-    | '/admin/chat'
     | '/leads/chat'
+    | '/leads/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   InstagramRoute: typeof InstagramRoute
-  LeadsRoute: typeof LeadsRouteWithChildren
   PlansRoute: typeof PlansRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
-  AdminChatRoute: typeof AdminChatRoute
+  LeadsChatRoute: typeof LeadsChatRoute
+  LeadsIndexRoute: typeof LeadsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -176,13 +164,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlansRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/leads': {
-      id: '/leads'
-      path: '/leads'
-      fullPath: '/leads'
-      preLoaderRoute: typeof LeadsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/instagram': {
       id: '/instagram'
       path: '/instagram'
@@ -197,42 +178,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/leads/': {
+      id: '/leads/'
+      path: '/leads'
+      fullPath: '/leads/'
+      preLoaderRoute: typeof LeadsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/leads/chat': {
       id: '/leads/chat'
-      path: '/chat'
+      path: '/leads/chat'
       fullPath: '/leads/chat'
       preLoaderRoute: typeof LeadsChatRouteImport
-      parentRoute: typeof LeadsRoute
-    }
-    '/admin/chat': {
-      id: '/admin/chat'
-      path: '/admin/chat'
-      fullPath: '/admin/chat'
-      preLoaderRoute: typeof AdminChatRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
-interface LeadsRouteChildren {
-  LeadsChatRoute: typeof LeadsChatRoute
-}
-
-const LeadsRouteChildren: LeadsRouteChildren = {
-  LeadsChatRoute: LeadsChatRoute,
-}
-
-const LeadsRouteWithChildren = LeadsRoute._addFileChildren(LeadsRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   InstagramRoute: InstagramRoute,
-  LeadsRoute: LeadsRouteWithChildren,
   PlansRoute: PlansRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
-  AdminChatRoute: AdminChatRoute,
+  LeadsChatRoute: LeadsChatRoute,
+  LeadsIndexRoute: LeadsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

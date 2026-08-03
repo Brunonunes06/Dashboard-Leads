@@ -115,7 +115,7 @@ function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6 p-6">
+    <div className="mx-auto flex max-w-[900px] flex-col gap-6 p-6">
       <div>
         <h1 className="text-2xl font-semibold">Configurar IA</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
@@ -184,12 +184,12 @@ function SettingsPage() {
 
           <div className="flex flex-col gap-1.5">
             <Label>Mensagem inicial</Label>
-            <Textarea rows={3} value={botGreeting} onChange={(e) => setBotGreeting(e.target.value)} />
+            <Textarea rows={4} value={botGreeting} onChange={(e) => setBotGreeting(e.target.value)} />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <Label>Mensagem de transferência</Label>
-            <Textarea rows={3} value={botHandoff} onChange={(e) => setBotHandoff(e.target.value)} />
+            <Textarea rows={4} value={botHandoff} onChange={(e) => setBotHandoff(e.target.value)} />
           </div>
 
           <div className="flex items-center justify-between rounded-lg border p-3.5">

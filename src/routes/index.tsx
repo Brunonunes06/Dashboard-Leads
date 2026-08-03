@@ -60,6 +60,21 @@ function decodeGoogleCredential(token: string): GoogleProfile {
   return JSON.parse(json) as GoogleProfile;
 }
 
+function SourcesTooltip({ active, payload, total }: any) {
+  if (!active || !payload?.length) return null;
+  const entry = payload[0];
+  const percent = Math.round((entry.value / total) * 100);
+  return (
+    <div className="rounded-md border bg-popover px-3 py-2 text-xs shadow-md">
+      <div className="flex items-center gap-1.5 text-popover-foreground">
+        <span className="h-2 w-2 rounded-sm" style={{ background: entry.payload.color }} />
+        <span className="text-muted-foreground">{entry.name}:</span>
+        <span className="font-semibold">{percent}%</span>
+      </div>
+    </div>
+  );
+}
+
 function WeeklyChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
@@ -89,10 +104,10 @@ function getPeriodGreeting(t: (key: string) => string) {
 // demonstracao visual identica ao design original, ate existir uma coluna
 // real de origem para substituir por dado de verdade.
 const DEMO_SOURCES = [
-  { name: "Instagram Ads", value: 10, color: "#34d399" },
-  { name: "Google Ads", value: 20, color: "#22d3ee" },
-  { name: "Facebook Ads", value: 50, color: "#fbbf24" },
-  { name: "Site/Orgânico", value: 80, color: "#c084fc" },
+  { name: "Instagram Ads", value: 10, color: "var(--primary)" },
+  { name: "Google Ads", value: 20, color: "var(--chart-2)" },
+  { name: "Facebook Ads", value: 50, color: "var(--chart-3)" },
+  { name: "Site/Orgânico", value: 80, color: "var(--chart-5)" },
 ];
 
 // Usado so quando ainda nao existe nenhum lead real (conta nova) — assim o
@@ -125,6 +140,16 @@ function DashboardPage() {
   const { leads, isLoading } = useLeads();
   const [session, setSession] = useState<Session | null>(null);
   const [blockReason, setBlockReason] = useState<{ code: string; message: string } | null>(null);
+  const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
+
+  function toggleSeries(dataKey: string) {
+    setHiddenSeries((prev) => {
+      const next = new Set(prev);
+      if (next.has(dataKey)) next.delete(dataKey);
+      else next.add(dataKey);
+      return next;
+    });
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -132,6 +157,33 @@ function DashboardPage() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, next) => setSession(next));
     return () => subscription.unsubscribe();
+  }, []);
+
+  // O ResponsiveContainer do Recharts mede o tamanho via ResizeObserver e nao
+  // reage sozinho quando a aba volta do segundo plano (troca de app, tela
+  // bloqueada) ou quando a janela e redimensionada (ex: virar pra largura
+  // mobile) — a medida fica presa no valor antigo e o grafico renderiza
+  // espremido/em branco. Forcamos um remount (via key) nesses dois casos,
+  // para ele reme dir do zero.
+  const [chartEpoch, setChartEpoch] = useState(0);
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        setChartEpoch((n) => n + 1);
+      }
+    };
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+    const onResize = () => {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => setChartEpoch((n) => n + 1), 150);
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("resize", onResize);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("resize", onResize);
+      if (resizeTimer) clearTimeout(resizeTimer);
+    };
   }, []);
 
   async function handleGoogleSuccess(response: CredentialResponse) {
@@ -151,12 +203,10 @@ function DashboardPage() {
         }
       }
 
-      const ipCheck = await registerAccountForIp({ data: { email: profile.email, name: profile.name } }).catch(
-        (err) => {
-          console.warn("[Auth] Validacao de IP/VPN indisponivel, login liberado:", err);
-          return { allowed: true as const };
-        },
-      );
+      const ipCheck = await registerAccountForIp({ data: { idToken: response.credential } }).catch((err) => {
+        console.warn("[Auth] Validacao de IP/VPN indisponivel, login liberado:", err);
+        return { allowed: true as const };
+      });
 
       if (!ipCheck.allowed) {
         setBlockReason({ code: ipCheck.code, message: ipCheck.message });
@@ -196,16 +246,24 @@ function DashboardPage() {
 
   const displayName = user?.name ?? session?.user?.email ?? null;
 
-  const weeklyData = useMemo(() => {
-    if (leads.length === 0) return getDemoWeeklyData(locale);
+  // Realtime dispara fetchLeads (nova referencia de `leads`) a cada mensagem
+  // nova, mesmo quando isso nao muda created_at/status de nenhum lead. Sem
+  // essa assinatura, o BarChart recebia um array novo a cada mensagem e
+  // reanimava do zero — e a combinacao Recharts 2.15 + React 19 as vezes
+  // trava nesse re-mount no meio da animacao (barras somem).
+  const leadsSignature = useMemo(
+    () => leads.map((l) => `${l.id}:${l.created_at}:${l.status}`).join(","),
+    [leads],
+  );
 
+  const weeklyData = useMemo(() => {
     const days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - (6 - i));
       d.setHours(0, 0, 0, 0);
       return d;
     });
-    return days.map((day) => {
+    const real = days.map((day) => {
       const next = new Date(day);
       next.setDate(next.getDate() + 1);
       const dayLeads = leads.filter((l) => {
@@ -221,7 +279,16 @@ function DashboardPage() {
         qualificados,
       };
     });
-  }, [leads, locale]);
+
+    // Se nenhum lead caiu nos últimos 7 dias (conta nova ou leads mais
+    // antigos que a janela do gráfico), os buckets reais ficam todos zerados
+    // — e como o Recharts não desenha barra nenhuma para altura 0, o gráfico
+    // parece quebrado (eixo aparece, barras não). Nesse caso mostramos o
+    // demo em vez de um gráfico real vazio.
+    const hasActivityThisWeek = real.some((d) => d.leads > 0 || d.qualificados > 0);
+    return hasActivityThisWeek ? real : getDemoWeeklyData(locale);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leadsSignature, locale]);
 
   const metrics = useMemo(() => {
     const today0 = new Date();
@@ -233,12 +300,13 @@ function DashboardPage() {
     const taxaQualificacao = leads.length ? Math.round((qualificados / leads.length) * 100) : 0;
     const transferidos = leads.filter((l) => l.status === "transferido").length;
     return [
-      { label: t("dashboard.metric.leadsToday"), value: leadsHoje, icon: Users, color: "#22d3ee" },
-      { label: t("dashboard.metric.avgResponse"), value: "3,2s", icon: Clock, color: "#10b981" },
-      { label: t("dashboard.metric.qualRate"), value: `${taxaQualificacao}%`, icon: Target, color: "#f59e0b" },
-      { label: t("dashboard.metric.transferred"), value: transferidos, icon: TrendingUp, color: "#a855f7" },
+      { label: t("dashboard.metric.leadsToday"), value: leadsHoje, icon: Users, color: "var(--chart-2)" },
+      { label: t("dashboard.metric.avgResponse"), value: "3,2s", icon: Clock, color: "var(--primary)" },
+      { label: t("dashboard.metric.qualRate"), value: `${taxaQualificacao}%`, icon: Target, color: "var(--chart-3)" },
+      { label: t("dashboard.metric.transferred"), value: transferidos, icon: TrendingUp, color: "var(--chart-5)" },
     ];
-  }, [leads, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leadsSignature, t]);
 
   const sourcesTotal = DEMO_SOURCES.reduce((sum, s) => sum + s.value, 0);
 
@@ -267,7 +335,7 @@ function DashboardPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {displayName ? (
             <Button variant="outline" size="sm" onClick={handleLogout}>
               {t("common.logout")}
@@ -316,31 +384,51 @@ function DashboardPage() {
             <CardTitle className="text-sm">{t("dashboard.chartTitle")}</CardTitle>
           </CardHeader>
           <CardContent className="h-[220px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer
+              key={`${chartEpoch}-${leadsSignature}`}
+              width="100%"
+              height="100%"
+              minWidth={0}
+              minHeight={0}
+              debounce={100}
+            >
               <BarChart data={weeklyData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} />
                 <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={12} width={24} />
-                <Tooltip cursor={{ fill: "hsl(var(--muted))" }} content={<WeeklyChartTooltip />} />
+                <Tooltip cursor={{ fill: "var(--muted)" }} content={<WeeklyChartTooltip />} />
                 <Legend
                   iconType="square"
                   iconSize={9}
-                  wrapperStyle={{ fontSize: 12 }}
-                  formatter={(value) => <span className="text-muted-foreground">{value}</span>}
+                  wrapperStyle={{ fontSize: 12, cursor: "pointer" }}
+                  onClick={(entry: any) => entry?.dataKey && toggleSeries(String(entry.dataKey))}
+                  formatter={(value, entry: any) => {
+                    const isHidden = entry?.dataKey && hiddenSeries.has(String(entry.dataKey));
+                    return (
+                      <span
+                        className="text-muted-foreground"
+                        style={{ opacity: isHidden ? 0.4 : 1, textDecoration: isHidden ? "line-through" : "none" }}
+                      >
+                        {value}
+                      </span>
+                    );
+                  }}
                 />
                 <Bar
                   dataKey="leads"
                   name={t("chart.leads")}
                   radius={[4, 4, 0, 0]}
-                  fill="#06b6d4"
+                  fill="var(--chart-2)"
                   isAnimationActive={false}
+                  hide={hiddenSeries.has("leads")}
                 />
                 <Bar
                   dataKey="qualificados"
                   name={t("chart.qualified")}
                   radius={[4, 4, 0, 0]}
-                  fill="#10b981"
+                  fill="var(--primary)"
                   isAnimationActive={false}
+                  hide={hiddenSeries.has("qualificados")}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -351,9 +439,9 @@ function DashboardPage() {
           <CardHeader>
             <CardTitle className="text-sm">{t("dashboard.sourcesTitle")}</CardTitle>
           </CardHeader>
-          <CardContent className="flex h-[220px] items-center gap-4">
+          <CardContent className="flex flex-col items-center gap-4 sm:h-[220px] sm:flex-row">
             <div className="h-[160px] w-[160px] shrink-0">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer key={chartEpoch} width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={DEMO_SOURCES}
@@ -367,11 +455,11 @@ function DashboardPage() {
                       <Cell key={entry.name} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip content={<SourcesTooltip total={sourcesTotal} />} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex flex-1 flex-col gap-2">
+            <div className="flex w-full flex-1 flex-col gap-2 sm:w-auto">
               {DEMO_SOURCES.map((s) => (
                 <div key={s.name} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
