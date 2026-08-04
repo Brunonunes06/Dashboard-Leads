@@ -11,10 +11,10 @@ Este guia mostra passos mínimos para corrigir erros como "The given origin is n
 
 - Na lista de credenciais, clique no Client ID (ex.: web client) exibido por `data-client_id` no HTML.
 - Em **Authorized JavaScript origins** adicione as origens usadas em desenvolvimento/testes, por exemplo:
-  - `http://localhost:3000`
-  - `http://127.0.0.1:3000`
-  - `http://localhost:5173` (vite)
+  - `http://localhost:3001` (porta fixa do Vite neste projeto, ver `vite.config.ts`)
+  - `http://127.0.0.1:3001`
   - `https://<seu-subdominio>.ngrok.io` (se usar ngrok)
+  - o domínio real de produção, quando existir
 
 - Não inclua paths — somente scheme + host + optional :port.
 

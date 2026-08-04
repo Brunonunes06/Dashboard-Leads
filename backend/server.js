@@ -1,101 +1,81 @@
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
 const path = require("path");
+require("dotenv").config();
+const aiRoutes = require("./server-ai-routes");
+const recaptchaRoutes = require("./recaptcha-routes");
+const lgpdRoutes = require("./lgpd-routes");
+const emailRoutes = require("./email-routes");
+const paymentsRoutes = require("./payments-routes");
+const { securityHeaders } = require("./security-headers");
+const { checkRateLimit, getClientIp } = require("./rate-limit");
+const { getServiceClient } = require("./supabase-admin");
+const { verifyGoogleIdToken } = require("./verify-google-token");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const USER_IP_STORE_FILE = path.join(__dirname, "data", "user-ip-accounts.json");
+const PUBLIC_DIR = path.join(__dirname, "../public");
 
-const MERCADO_PAGO_PLANS = {
-  mensal: {
-    description: "Plano mensal TEAM WOLF",
-    transaction_amount: 300,
-  },
-  anual: {
-    description: "Plano anual TEAM WOLF",
-    transaction_amount: 1600,
-  },
-};
+// Restringe CORS a origens conhecidas quando CORS_ORIGIN estiver configurado
+// no .env (lista separada por vírgula). Sem essa variável, mantém aberto por
+// padrão para não quebrar deploys existentes (ex: túneis ngrok) — mas isso
+// deve ser configurado em produção.
+const allowedOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
 
-const dbLeads = {};
+if (allowedOrigins.length === 0) {
+  console.warn(
+    "[CORS] CORS_ORIGIN não configurado no .env — aceitando requisições de qualquer origem. " +
+      "Defina CORS_ORIGIN=https://seu-dominio.com em produção.",
+  );
+}
 
-app.use(cors());
+app.use(
+  cors(
+    allowedOrigins.length > 0
+      ? {
+          origin(origin, callback) {
+            if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+            return callback(new Error("Origem não permitida por CORS."));
+          },
+        }
+      : undefined,
+  ),
+);
 app.use(express.json());
 app.set("trust proxy", true);
+app.use(securityHeaders);
 
 app.use((req, res, next) => {
   res.setHeader("ngrok-skip-browser-warning", "true");
   next();
 });
 
-app.get("/", (req, res) => {
-  return res.status(200).send(`
-    <div style="font-family: sans-serif; text-align: center; margin-top: 50px; background: #0f172a; color: #f8fafc; padding: 40px; min-height: 100vh;">
-      <h1 style="color: #10B981;">🚀 Servidor de CRM Ativo!</h1>
-      <p style="color: #94a3b8;">Pronto para receber dados.</p>
-    </div>
-  `);
+app.use(aiRoutes);
+app.use(recaptchaRoutes);
+app.use(lgpdRoutes);
+app.use(emailRoutes);
+app.use(paymentsRoutes);
+
+// Config pública injetada em toda página estática via <script src="/config.js">.
+// Só valores seguros pro navegador — nunca chaves de serviço/segredos aqui.
+app.get("/config.js", (req, res) => {
+  const adminEmails = (process.env.ADMIN_EMAILS || process.env.VITE_ADMIN_EMAILS || "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+
+  res.type("application/javascript");
+  res.send(`window.__APP_CONFIG__ = ${JSON.stringify({
+    supabaseUrl: process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "",
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "",
+    googleClientId: process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || "",
+    recaptchaSiteKey: process.env.RECAPTCHA_SITE_KEY || process.env.VITE_RECAPTCHA_SITE_KEY || "",
+    adminEmails,
+  })};`);
 });
-
-app.get("/api/leads", (req, res) => {
-  return res.json(Object.values(dbLeads));
-});
-
-app.post("/api/webhook", (req, res) => {
-  try {
-    const { id, status, ultimaMensagem } = req.body;
-
-    if (!id) {
-      return res.status(400).json({ error: "O campo 'id' é obrigatório." });
-    }
-
-    dbLeads[id] = {
-      id: id,
-      status: status || "Novo Lead",
-      ultimaMensagem: ultimaMensagem || "Nenhum histórico registrado.",
-    };
-
-    console.log(`[CRM] Lead processado - ID: ${id}`);
-    return res.status(200).json({ success: true, message: "Lead processado com sucesso." });
-  } catch (error) {
-    console.error("Erro ao processar webhook:", error);
-    return res.status(500).json({ error: "Erro interno no servidor." });
-  }
-});
-
-app.get("/favicon.ico", (req, res) => res.status(204).end());
-
-function ensureStoreDir() {
-  fs.mkdirSync(path.dirname(USER_IP_STORE_FILE), { recursive: true });
-}
-
-function readUserIpStore() {
-  try {
-    ensureStoreDir();
-    if (!fs.existsSync(USER_IP_STORE_FILE)) return { ips: {} };
-    return JSON.parse(fs.readFileSync(USER_IP_STORE_FILE, "utf8"));
-  } catch (error) {
-    console.error("[Auth] Erro ao ler limitador de IP:", error);
-    return { ips: {} };
-  }
-}
-
-function writeUserIpStore(store) {
-  ensureStoreDir();
-  fs.writeFileSync(USER_IP_STORE_FILE, JSON.stringify(store, null, 2));
-}
-
-function getClientIp(req) {
-  const forwardedFor = req.headers["x-forwarded-for"];
-  const rawIp = Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor || req.ip || "";
-  return (
-    String(rawIp)
-      .split(",")[0]
-      .trim()
-      .replace(/^::ffff:/, "") || "unknown"
-  );
-}
 
 function normalizeEmail(email) {
   return String(email || "")
@@ -103,18 +83,85 @@ function normalizeEmail(email) {
     .toLowerCase();
 }
 
-app.post("/api/auth/ip-account", (req, res) => {
-  try {
-    const email = normalizeEmail(req.body.email);
-    const name = String(req.body.name || "").trim();
+function isPrivateOrLocalIp(ip) {
+  if (!ip || ip === "unknown") return true;
+  if (ip === "127.0.0.1" || ip === "::1") return true;
+  if (/^10\./.test(ip)) return true;
+  if (/^192\.168\./.test(ip)) return true;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(ip)) return true;
+  return false;
+}
 
-    if (!email) {
-      return res.status(400).json({ error: "E-mail da conta e obrigatorio." });
+// Usa a API publica do proxycheck.io (sem chave, limite baixo) para detectar VPN/proxy.
+// Em caso de falha ou indisponibilidade do servico, nao bloqueia o login (fail-open).
+async function isVpnOrProxyIp(ip) {
+  if (isPrivateOrLocalIp(ip)) return false;
+
+  try {
+    const apiKey = process.env.PROXYCHECK_API_KEY;
+    const keyParam = apiKey ? `&key=${encodeURIComponent(apiKey)}` : "";
+    const url = `https://proxycheck.io/v2/${encodeURIComponent(ip)}?vpn=1&asn=0${keyParam}`;
+    const response = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    if (!response.ok) return false;
+
+    const data = await response.json();
+    const info = data && data[ip];
+    return Boolean(info && info.proxy === "yes");
+  } catch (error) {
+    console.error("[Auth] Erro ao consultar proxycheck.io:", error.message);
+    return false;
+  }
+}
+
+// Limite de "uma conta por IP" — usa a tabela real do Supabase
+// (ip_account_guard, supabase/002_ip_account_guard.sql) em vez de um arquivo
+// JSON local, pra sobreviver a redeploys e não divergir do que o resto do
+// app (src/lib/ip-guard.server.ts) considera "bloqueado". Se a service role
+// key não estiver configurada, falha aberto (não bloqueia ninguém) e loga o
+// motivo — nunca deixa o site inacessível por falta de config opcional.
+app.post("/api/auth/ip-account", async (req, res) => {
+  try {
+    const ip = getClientIp(req);
+    const rateLimit = checkRateLimit(ip, "ip-account", { windowMs: 60_000, max: 10 });
+    if (!rateLimit.allowed) {
+      return res.status(429).json({ error: rateLimit.message });
     }
 
-    const ip = getClientIp(req);
-    const store = readUserIpStore();
-    const existing = store.ips[ip];
+    const verified = await verifyGoogleIdToken(req.body.idToken);
+    if (!verified) {
+      return res.status(401).json({
+        error: "Não foi possível verificar sua conta Google. Tente fazer login novamente.",
+        code: "INVALID_CREDENTIAL",
+      });
+    }
+    const email = normalizeEmail(verified.email);
+    const name = verified.name;
+
+    if (await isVpnOrProxyIp(ip)) {
+      return res.status(403).json({
+        error: "Desligue a VPN para acessar o site.",
+        code: "VPN_DETECTED",
+      });
+    }
+
+    const supabase = getServiceClient();
+    if (!supabase) {
+      console.error(
+        "[Auth] SUPABASE_SERVICE_ROLE_KEY nao configurada — limite de conta por IP desativado (fail-open).",
+      );
+      return res.status(200).json({ success: true });
+    }
+
+    const { data: existing, error: readError } = await supabase
+      .from("ip_account_guard")
+      .select("email, name, created_at")
+      .eq("ip", ip)
+      .maybeSingle();
+
+    if (readError) {
+      console.error("[Auth] Erro ao ler limitador de IP:", readError.message);
+      return res.status(200).json({ success: true });
+    }
 
     if (existing && existing.email !== email) {
       return res.status(409).json({
@@ -123,14 +170,18 @@ app.post("/api/auth/ip-account", (req, res) => {
       });
     }
 
-    store.ips[ip] = {
+    const { error: writeError } = await supabase.from("ip_account_guard").upsert({
+      ip,
       email,
-      name: name || (existing && existing.name) || "",
-      createdAt: existing ? existing.createdAt : new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+      name: name || existing?.name || "",
+      created_at: existing?.created_at ?? new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
 
-    writeUserIpStore(store);
+    if (writeError) {
+      console.error("[Auth] Erro ao gravar limitador de IP:", writeError.message);
+    }
+
     return res.status(200).json({ success: true });
   } catch (error) {
     console.error("[Auth] Erro no limitador de IP:", error);
@@ -138,169 +189,13 @@ app.post("/api/auth/ip-account", (req, res) => {
   }
 });
 
-app.post("/api/payments/pix", async (req, res) => {
-  try {
-    const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
-    const plan = MERCADO_PAGO_PLANS[req.body.plan];
-    const payerEmail = normalizeEmail(req.body.email) || "cliente@teamwolf.local";
+// Serve as páginas estáticas em public/ (index.html, plans.html, leads/chat.html
+// etc.) — depois das rotas de API acima, pra /api/* e /config.js sempre
+// ganharem de um arquivo estático com o mesmo nome.
+app.use(express.static(PUBLIC_DIR));
 
-    if (!plan) {
-      return res.status(400).json({ error: "Plano invalido." });
-    }
-
-    if (!accessToken) {
-      return res.status(500).json({
-        error: "Configure MERCADO_PAGO_ACCESS_TOKEN no servidor.",
-        code: "MERCADO_PAGO_TOKEN_MISSING",
-      });
-    }
-
-    const response = await fetch("https://api.mercadopago.com/v1/payments", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-        "X-Idempotency-Key": `${req.body.plan}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-      },
-      body: JSON.stringify({
-        transaction_amount: plan.transaction_amount,
-        description: plan.description,
-        payment_method_id: "pix",
-        payer: {
-          email: payerEmail,
-        },
-      }),
-    });
-
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      return res.status(response.status).json({
-        error: data.message || "Erro ao criar pagamento Pix no Mercado Pago.",
-        details: data,
-      });
-    }
-
-    return res.json({
-      id: data.id,
-      status: data.status,
-      qr_code: data.point_of_interaction?.transaction_data?.qr_code,
-      qr_code_base64: data.point_of_interaction?.transaction_data?.qr_code_base64,
-      ticket_url: data.point_of_interaction?.transaction_data?.ticket_url,
-    });
-  } catch (error) {
-    console.error("[Mercado Pago] Erro ao criar Pix:", error);
-    return res.status(500).json({ error: "Erro interno ao criar Pix." });
-  }
-});
+app.get("/favicon.ico", (req, res) => res.status(204).end());
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta: ${PORT}`);
-});
-
-// ============================================================
-// PASSO 7: Adicione estas rotas ao seu server.js existente
-// ============================================================
-// Cole este código DENTRO do seu server.js, antes do app.listen()
-// ============================================================
-
-// ⚠️ Instale o Stripe no servidor:
-// npm install stripe
-// ou: bun add stripe
-
-// const Stripe = require('stripe');
-// const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-
-// Banco de tokens em memória (use seu banco real / Supabase aqui)
-const dbTokens = {};
-
-// POST /api/billing/subscribe
-// Recebe o paymentMethodId do frontend e cria a assinatura
-app.post("/api/billing/subscribe", async (req, res) => {
-  try {
-    const { paymentMethodId, userId, email } = req.body;
-
-    if (!paymentMethodId || !userId) {
-      return res.status(400).json({ error: "paymentMethodId e userId são obrigatórios." });
-    }
-
-    // ─── INTEGRAÇÃO STRIPE REAL (descomente após configurar) ───
-    // // 1. Criar ou buscar customer no Stripe
-    // const customers = await stripe.customers.list({ email, limit: 1 });
-    // let customer = customers.data[0];
-    // if (!customer) {
-    //   customer = await stripe.customers.create({ email, metadata: { userId } });
-    // }
-    //
-    // // 2. Anexar o cartão ao customer
-    // await stripe.paymentMethods.attach(paymentMethodId, { customer: customer.id });
-    // await stripe.customers.update(customer.id, {
-    //   invoice_settings: { default_payment_method: paymentMethodId },
-    // });
-    //
-    // // 3. Criar a assinatura
-    // const subscription = await stripe.subscriptions.create({
-    //   customer: customer.id,
-    //   items: [{ price: process.env.STRIPE_PRICE_ID }], // ID do plano no Stripe
-    //   expand: ['latest_invoice.payment_intent'],
-    // });
-    //
-    // // 4. Salvar token no banco
-    // const token = subscription.id;
-    // ─────────────────────────────────────────────────────────
-
-    // MOCK para desenvolvimento (remova em produção):
-    const token = `sub_mock_${userId}_${Date.now()}`;
-
-    dbTokens[userId] = {
-      token,
-      paymentMethodId,
-      active: true,
-      createdAt: new Date().toISOString(),
-    };
-
-    console.log(`[Billing] Assinatura criada para userId: ${userId}`);
-    return res.status(200).json({ success: true, token });
-  } catch (error) {
-    console.error("[Billing] Erro:", error);
-    return res.status(500).json({ error: "Erro ao processar pagamento." });
-  }
-});
-
-// GET /api/billing/verify/:userId
-// Verifica se o token do usuário ainda é válido
-app.get("/api/billing/verify/:userId", async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const record = dbTokens[userId];
-
-    if (!record || !record.active) {
-      return res.json({ valid: false });
-    }
-
-    // ─── VERIFICAÇÃO STRIPE REAL ───
-    // const subscription = await stripe.subscriptions.retrieve(record.token);
-    // const valid = subscription.status === 'active' || subscription.status === 'trialing';
-    // return res.json({ valid, status: subscription.status });
-    // ──────────────────────────────
-
-    return res.json({ valid: true, token: record.token });
-  } catch (error) {
-    console.error("[Billing] Erro na verificação:", error);
-    return res.status(500).json({ error: "Erro ao verificar assinatura." });
-  }
-});
-
-// POST /api/billing/cancel/:userId
-app.post("/api/billing/cancel/:userId", async (req, res) => {
-  try {
-    const { userId } = req.params;
-    if (dbTokens[userId]) {
-      dbTokens[userId].active = false;
-      // Stripe: await stripe.subscriptions.cancel(dbTokens[userId].token);
-    }
-    return res.json({ success: true });
-  } catch (error) {
-    return res.status(500).json({ error: "Erro ao cancelar assinatura." });
-  }
 });

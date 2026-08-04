@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Planos · TEAM WOLF</title>
+    <script>
+      (function () {
+        var t = localStorage.getItem("resposta-theme") || "dark";
+        var r = t === "system" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : t;
+        document.documentElement.classList.add(r);
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/assets/css/theme.css" />
+    <link rel="stylesheet" href="/assets/css/components.css" />
+  </head>
+  <body>
+    <script src="/assets/vendor/supabase.js"></script>
+    <script src="/config.js"></script>
+    <script src="/assets/vendor/lucide.min.js"></script>
+    <script src="/assets/js/theme.js"></script>
+    <script src="/assets/js/i18n.js"></script>
+    <script src="/assets/js/supabase-client.js"></script>
+    <script src="/assets/js/auth.js"></script>
+    <script src="/assets/js/status-badge.js"></script>
+    <script src="/assets/js/nav.js"></script>
+    <script src="/assets/js/cookie-consent.js"></script>
+    <script src="/assets/js/google-translate.js"></script>
+    <script src="/assets/js/route-guard.js"></script>
+    <script src="/assets/js/toast.js"></script>
+
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-logo"><i data-lucide="zap"></i></div>
+          <div class="sidebar-brand">
+            <strong>TEAM WOLF</strong>
+            <span>SaaS de leads</span>
+          </div>
+        </div>
+        <div class="sidebar-group-label" data-i18n="nav.platform"></div>
+        <nav class="sidebar-nav" id="sidebar-nav"></nav>
+        <div class="sidebar-footer hidden" id="sidebar-footer">
+          <div class="sidebar-footer-card">
+            <i data-lucide="sparkles"></i>
+            <div><strong>IA ativa 24/7</strong><span>Respondendo em ~3s</span></div>
+          </div>
+        </div>
+      </aside>
+      <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+      <div class="main-area">
+        <header class="topbar">
+          <button class="btn btn-ghost btn-icon" id="sidebar-toggle" aria-label="Toggle Sidebar">
+            <i data-lucide="panel-left"></i>
+          </button>
+          <div id="google_translate_element" class="hidden notranslate"></div>
+          <div class="topbar-spacer">
+            <span id="auth-area"></span>
+            <button class="btn btn-ghost btn-icon" id="theme-toggle" aria-label="Alternar tema">
+              <i data-lucide="sun-moon"></i>
+            </button>
+          </div>
+        </header>
+
+        <main class="page" id="page-content" hidden>
+          <div>
+            <h1 id="plans-title"></h1>
+            <p id="plans-subtitle" class="text-muted" style="margin-top: 0.4rem; font-size: 0.875rem"></p>
+          </div>
+
+          <div id="plans-grid" class="plans-grid"></div>
+        </main>
+      </div>
+    </div>
+
+    <div class="overlay" id="pix-dialog" hidden>
+      <div class="dialog">
+        <h2 id="pix-dialog-title"></h2>
+        <p id="pix-dialog-desc"></p>
+
+        <p id="pix-loading" hidden style="padding: 2rem 0; text-align: center; font-size: 0.875rem" class="text-muted"></p>
+
+        <div id="pix-qr" hidden style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem; margin-top: 0.5rem">
+          <img id="pix-qr-img" alt="QR Code Pix" style="height: 14rem; width: 14rem; border-radius: var(--radius-lg); background: white; padding: 0.5rem" />
+          <p id="pix-scan-hint" class="text-muted" style="font-size: 0.75rem"></p>
+          <button type="button" class="btn btn-outline btn-sm" id="pix-copy-btn">
+            <i data-lucide="copy" style="width: 0.85rem; height: 0.85rem"></i>
+            <span data-i18n="plans.copyPixCode"></span>
+          </button>
+        </div>
+
+        <p id="pix-error" hidden style="border: 1px dashed var(--border); border-radius: var(--radius-lg); padding: 1rem; font-size: 0.875rem" class="text-muted"></p>
+
+        <div style="margin-top: 1rem; text-align: right">
+          <button type="button" class="btn btn-outline btn-sm" id="pix-dialog-close">Fechar</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/assets/js/shell.js"></script>
+    <script src="/assets/js/pages/plans.js"></script>
+  </body>
+</html>

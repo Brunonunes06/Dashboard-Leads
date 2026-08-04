@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Configurar IA · TEAM WOLF</title>
+    <script>
+      (function () {
+        var t = localStorage.getItem("resposta-theme") || "dark";
+        var r = t === "system" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : t;
+        document.documentElement.classList.add(r);
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/assets/css/theme.css" />
+    <link rel="stylesheet" href="/assets/css/components.css" />
+  </head>
+  <body>
+    <script src="/assets/vendor/supabase.js"></script>
+    <script src="/config.js"></script>
+    <script src="/assets/vendor/lucide.min.js"></script>
+    <script src="/assets/js/theme.js"></script>
+    <script src="/assets/js/i18n.js"></script>
+    <script src="/assets/js/supabase-client.js"></script>
+    <script src="/assets/js/auth.js"></script>
+    <script src="/assets/js/status-badge.js"></script>
+    <script src="/assets/js/nav.js"></script>
+    <script src="/assets/js/cookie-consent.js"></script>
+    <script src="/assets/js/google-translate.js"></script>
+    <script src="/assets/js/route-guard.js"></script>
+    <script src="/assets/js/toast.js"></script>
+
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-logo"><i data-lucide="zap"></i></div>
+          <div class="sidebar-brand">
+            <strong>TEAM WOLF</strong>
+            <span>SaaS de leads</span>
+          </div>
+        </div>
+        <div class="sidebar-group-label" data-i18n="nav.platform"></div>
+        <nav class="sidebar-nav" id="sidebar-nav"></nav>
+        <div class="sidebar-footer hidden" id="sidebar-footer">
+          <div class="sidebar-footer-card">
+            <i data-lucide="sparkles"></i>
+            <div><strong>IA ativa 24/7</strong><span>Respondendo em ~3s</span></div>
+          </div>
+        </div>
+      </aside>
+      <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+      <div class="main-area">
+        <header class="topbar">
+          <button class="btn btn-ghost btn-icon" id="sidebar-toggle" aria-label="Toggle Sidebar">
+            <i data-lucide="panel-left"></i>
+          </button>
+          <div id="google_translate_element" class="hidden notranslate"></div>
+          <div class="topbar-spacer">
+            <span id="auth-area"></span>
+            <button class="btn btn-ghost btn-icon" id="theme-toggle" aria-label="Alternar tema">
+              <i data-lucide="sun-moon"></i>
+            </button>
+          </div>
+        </header>
+
+        <main class="page" id="page-content" hidden style="max-width: 900px; margin: 0 auto; width: 100%">
+          <div>
+            <h1>Configurar IA</h1>
+            <p class="text-muted" style="margin-top: 0.4rem; font-size: 0.875rem">
+              Personalize como a IA conversa, qualifica e transfere leads para sua equipe.
+            </p>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title flex-row gap-2"><i data-lucide="bot" style="width: 1rem; height: 1rem; color: var(--primary)"></i> Personalidade da IA</div>
+            </div>
+            <div class="card-body" style="display: flex; flex-direction: column; gap: 1rem">
+              <div style="display: grid; gap: 1rem; grid-template-columns: 1fr 1fr">
+                <div class="field">
+                  <label>Nome da IA</label>
+                  <input class="input" id="ai-name" />
+                </div>
+                <div class="field">
+                  <label>Imobiliária</label>
+                  <input class="input" id="ai-brand" />
+                </div>
+              </div>
+              <div class="field">
+                <label>Tom e instruções</label>
+                <textarea class="textarea" id="ai-tone" rows="5"></textarea>
+                <p class="text-muted" style="font-size: 0.7rem">A IA segue essas instruções em todas as conversas do WhatsApp.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 1.5rem">
+            <div class="card-header"><div class="card-title">Configuração do bot</div></div>
+            <div class="card-body" style="display: flex; flex-direction: column; gap: 1rem">
+              <div class="flex-row" style="justify-content: space-between; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 0.85rem">
+                <div>
+                  <p style="font-size: 0.875rem; font-weight: 500">Bot ativo nas conversas</p>
+                  <p class="text-muted" style="margin-top: 0.15rem; font-size: 0.75rem">Quando desativado, as telas usam apenas atendimento humano.</p>
+                </div>
+                <label class="switch"><input type="checkbox" id="bot-enabled" /><span class="switch-track"></span></label>
+              </div>
+
+              <div style="display: grid; gap: 1rem; grid-template-columns: 1fr 1fr">
+                <div class="field">
+                  <label>Nome do bot</label>
+                  <input class="input" id="bot-name" />
+                </div>
+                <div class="field">
+                  <label>Delay automático (segundos)</label>
+                  <input class="input" type="number" min="0" max="120" id="bot-delay" />
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Mensagem inicial</label>
+                <textarea class="textarea" id="bot-greeting" rows="4"></textarea>
+              </div>
+
+              <div class="field">
+                <label>Mensagem de transferência</label>
+                <textarea class="textarea" id="bot-handoff" rows="4"></textarea>
+              </div>
+
+              <div class="flex-row" style="justify-content: space-between; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 0.85rem">
+                <div>
+                  <p style="font-size: 0.875rem; font-weight: 500">Resposta automática</p>
+                  <p class="text-muted" style="margin-top: 0.15rem; font-size: 0.75rem">Controla se o bot responde sozinho antes da transferência.</p>
+                </div>
+                <label class="switch"><input type="checkbox" id="bot-auto-reply" /><span class="switch-track"></span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 1.5rem">
+            <div class="card-header row">
+              <div class="card-title">Perguntas de qualificação</div>
+              <button type="button" class="btn btn-outline btn-sm" id="add-question">
+                <i data-lucide="plus" style="width: 0.85rem; height: 0.85rem"></i> Adicionar
+              </button>
+            </div>
+            <div class="card-body">
+              <p class="text-muted" style="margin-bottom: 0.6rem; font-size: 0.7rem">
+                A IA faz essas perguntas em ordem, uma por vez, esperando a resposta antes da próxima.
+              </p>
+              <div id="questions-list" style="display: flex; flex-direction: column; gap: 0.5rem"></div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 1.5rem">
+            <div class="card-header">
+              <div class="card-title flex-row gap-2"><i data-lucide="clock" style="width: 1rem; height: 1rem; color: var(--primary)"></i> Regras de transferência</div>
+            </div>
+            <div class="card-body" style="display: flex; flex-direction: column; gap: 1rem">
+              <div class="flex-row" style="justify-content: space-between; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 0.85rem">
+                <div>
+                  <p style="font-size: 0.875rem; font-weight: 500">Transferir automaticamente para um corretor</p>
+                  <p class="text-muted" style="margin-top: 0.15rem; font-size: 0.75rem">Quando o lead atingir o score mínimo, a IA conecta um humano.</p>
+                </div>
+                <label class="switch"><input type="checkbox" id="auto-transfer" /><span class="switch-track"></span></label>
+              </div>
+
+              <div>
+                <div class="flex-row" style="justify-content: space-between; margin-bottom: 0.6rem">
+                  <label style="font-size: 0.8rem; font-weight: 500">Score mínimo para transferência</label>
+                  <span id="min-score-value" style="font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; color: var(--primary)"></span>
+                </div>
+                <input type="range" id="min-score-slider" min="0" max="100" step="5" style="width: 100%; accent-color: var(--primary)" />
+                <p class="text-muted" id="min-score-hint" style="margin-top: 0.5rem; font-size: 0.7rem"></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex-row gap-2" style="justify-content: flex-end; margin-top: 1.5rem">
+            <button type="button" class="btn btn-outline">Cancelar</button>
+            <button type="button" class="btn btn-primary" id="save-settings">Salvar alterações</button>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script src="/assets/js/shell.js"></script>
+    <script src="/assets/js/pages/settings.js"></script>
+  </body>
+</html>

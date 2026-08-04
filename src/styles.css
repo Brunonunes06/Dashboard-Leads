@@ -123,8 +123,8 @@
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.18 0.02 250);
 
-  --popover: oklch(0.22 0.02 250);
-  --popover-foreground: oklch(0.98 0.005 240);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.02 250);
 
   --primary: oklch(0.62 0.16 155);
   --primary-foreground: oklch(0.98 0.01 155);
@@ -201,4 +201,31 @@
     background: var(--color-border);
     border-radius: 9999px;
   }
+}
+
+/* Google Translate widget */
+body {
+  top: 0 !important;
+}
+.goog-te-banner-frame {
+  display: none !important;
+}
+#google_translate_element {
+  display: none !important;
+}
+.goog-te-gadget {
+  font-size: 0 !important;
+  color: transparent !important;
+}
+.goog-te-gadget .goog-te-combo {
+  font-size: 13px !important;
+  color: var(--foreground) !important;
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+  padding: 6px 8px !important;
+  cursor: pointer;
+}
+.skiptranslate iframe {
+  display: none !important;
 }

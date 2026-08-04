@@ -38,14 +38,11 @@ CREATE POLICY "admins_read_all_messages"
     auth.email() = ANY(string_to_array(current_setting('app.admin_emails', true), ','))
   );
 
--- Clients can only read messages belonging to THEIR lead
-CREATE POLICY "clients_read_own_messages"
-  ON public.messages FOR SELECT
-  USING (
-    lead_id IN (
-      SELECT id FROM public.leads WHERE user_id = auth.uid()
-    )
-  );
+-- Nao existe "cliente com login vendo so os proprios leads" neste app:
+-- public.leads nao tem coluna de dono/tenant (SaaS single-tenant, um admin
+-- so). Mensagens com sender_role='client' sao as mensagens do WhatsApp do
+-- lead, inseridas via automacao/service role — nao por um usuario logado.
+-- Ver supabase/005_fix_messages_rls.sql para o historico dessa correcao.
 
 -- Admins can insert (respond to any lead)
 CREATE POLICY "admins_insert_messages"
@@ -56,32 +53,11 @@ CREATE POLICY "admins_insert_messages"
     AND sender_id = auth.uid()
   );
 
--- Clients can only insert into their own lead conversation
-CREATE POLICY "clients_insert_own_messages"
-  ON public.messages FOR INSERT
-  WITH CHECK (
-    lead_id IN (
-      SELECT id FROM public.leads WHERE user_id = auth.uid()
-    )
-    AND sender_role = 'client'
-    AND sender_id = auth.uid()
-  );
-
 -- Admins can mark messages as read (UPDATE read_at)
 CREATE POLICY "admins_update_read_at"
   ON public.messages FOR UPDATE
   USING (
     auth.email() = ANY(string_to_array(current_setting('app.admin_emails', true), ','))
-  )
-  WITH CHECK (true);
-
--- Clients can mark their received messages as read
-CREATE POLICY "clients_update_read_at"
-  ON public.messages FOR UPDATE
-  USING (
-    lead_id IN (
-      SELECT id FROM public.leads WHERE user_id = auth.uid()
-    )
   )
   WITH CHECK (true);
 
