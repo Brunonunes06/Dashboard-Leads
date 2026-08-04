@@ -103,11 +103,14 @@ function getPeriodGreeting(t: (key: string) => string) {
 // em assets/data.js, nao vinculado a nenhum dado real). Mantido aqui como
 // demonstracao visual identica ao design original, ate existir uma coluna
 // real de origem para substituir por dado de verdade.
+
+// GRAFICO LEADS
+// grafico leads
 const DEMO_SOURCES = [
-  { name: "Instagram Ads", value: 10, color: "var(--primary)" },
-  { name: "Google Ads", value: 20, color: "var(--chart-2)" },
+  { name: "Instagram Ads", value: 50, color: "var(--primary)" },
+  { name: "Google Ads", value: 50, color: "var(--chart-2)" },
   { name: "Facebook Ads", value: 50, color: "var(--chart-3)" },
-  { name: "Site/Orgânico", value: 80, color: "var(--chart-5)" },
+  { name: "Site/Orgânico", value: 50, color: "var(--chart-5)" },
 ];
 
 // Usado so quando ainda nao existe nenhum lead real (conta nova) — assim o
@@ -351,11 +354,13 @@ function DashboardPage() {
               />
             </GoogleOAuthProvider>
           ) : null}
-          <Button asChild>
-            <Link to="/leads/chat" className="inline-flex items-center gap-1">
-              {t("common.viewDetails")} <ArrowUpRight className="h-3.5 w-3.5" />
-            </Link>
-          </Button>
+          {user?.role === "admin" && (
+            <Button asChild>
+              <Link to="/leads/chat" className="inline-flex items-center gap-1">
+                {t("common.viewDetails")} <ArrowUpRight className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -419,16 +424,20 @@ function DashboardPage() {
                   name={t("chart.leads")}
                   radius={[4, 4, 0, 0]}
                   fill="var(--chart-2)"
-                  isAnimationActive={false}
-                  hide={hiddenSeries.has("leads")}
+                  isAnimationActive
+                  animationDuration={350}
+                  animationEasing="ease-out"
+                  opacity={hiddenSeries.has("leads") ? 0 : 1}
                 />
                 <Bar
                   dataKey="qualificados"
                   name={t("chart.qualified")}
                   radius={[4, 4, 0, 0]}
                   fill="var(--primary)"
-                  isAnimationActive={false}
-                  hide={hiddenSeries.has("qualificados")}
+                  isAnimationActive
+                  animationDuration={350}
+                  animationEasing="ease-out"
+                  opacity={hiddenSeries.has("qualificados") ? 0 : 1}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -474,33 +483,35 @@ function DashboardPage() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-sm">{t("dashboard.activeLeads")}</CardTitle>
-          <Link to="/leads/chat" className="text-xs text-primary hover:underline">
-            {t("common.viewAll")}
-          </Link>
-        </CardHeader>
-        <CardContent className="divide-y p-0">
-          {isLoading ? (
-            <p className="p-4 text-sm text-muted-foreground">{t("common.loading")}</p>
-          ) : leads.length === 0 ? (
-            <p className="p-4 text-sm text-muted-foreground">{t("common.noLeadsYet")}</p>
-          ) : (
-            leads.slice(0, 5).map((lead) => (
-              <div key={lead.id} className="flex items-center justify-between gap-4 p-4">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{lead.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {lead.last_message ?? lead.phone}
-                  </p>
+      {user?.role === "admin" && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm">{t("dashboard.activeLeads")}</CardTitle>
+            <Link to="/leads/chat" className="text-xs text-primary hover:underline">
+              {t("common.viewAll")}
+            </Link>
+          </CardHeader>
+          <CardContent className="divide-y p-0">
+            {isLoading ? (
+              <p className="p-4 text-sm text-muted-foreground">{t("common.loading")}</p>
+            ) : leads.length === 0 ? (
+              <p className="p-4 text-sm text-muted-foreground">{t("common.noLeadsYet")}</p>
+            ) : (
+              leads.slice(0, 5).map((lead) => (
+                <div key={lead.id} className="flex items-center justify-between gap-4 p-4">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{lead.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {lead.last_message ?? lead.phone}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-xs text-muted-foreground">score {lead.score}</span>
                 </div>
-                <span className="shrink-0 text-xs text-muted-foreground">score {lead.score}</span>
-              </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

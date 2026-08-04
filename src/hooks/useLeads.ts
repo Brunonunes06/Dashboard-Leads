@@ -12,6 +12,7 @@ export interface LeadWithMeta {
   last_message: string | null;
   last_message_at: string | null;
   unread_count: number;
+  ai_auto_reply: boolean;
 }
 
 export function useLeads() {
@@ -32,7 +33,7 @@ export function useLeads() {
     try {
       const { data, error } = await supabase
         .from("leads")
-        .select("id, name, phone, status, score, created_at")
+        .select("id, name, phone, status, score, created_at, ai_auto_reply")
         .order("created_at", { ascending: false });
 
       if (error || !data) return;

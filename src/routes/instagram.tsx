@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Camera, Clock, Inbox, Search, Send, TrendingUp, Users } from "lucide-react";
 import {
   CartesianGrid,
+  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -153,6 +154,16 @@ function InstagramCrmPage() {
   // (ex: virar pra largura mobile) ou quando a aba volta a ficar visivel — o
   // grafico renderiza em branco ate algo forcar um remount.
   const [chartEpoch, setChartEpoch] = useState(0);
+  const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
+
+  function toggleSeries(dataKey: string) {
+    setHiddenSeries((prev) => {
+      const next = new Set(prev);
+      if (next.has(dataKey)) next.delete(dataKey);
+      else next.add(dataKey);
+      return next;
+    });
+  }
   useEffect(() => {
     const onVisibilityChange = () => {
       if (document.visibilityState === "visible") setChartEpoch((n) => n + 1);
@@ -269,6 +280,23 @@ function InstagramCrmPage() {
               <XAxis dataKey="day" tickLine={false} axisLine={false} fontSize={12} />
               <YAxis tickLine={false} axisLine={false} fontSize={12} width={24} />
               <Tooltip cursor={{ stroke: "var(--muted)" }} content={<WeeklyFlowTooltip />} />
+              <Legend
+                iconType="square"
+                iconSize={9}
+                wrapperStyle={{ fontSize: 12, cursor: "pointer" }}
+                onClick={(entry: any) => entry?.dataKey && toggleSeries(String(entry.dataKey))}
+                formatter={(value, entry: any) => {
+                  const isHidden = entry?.dataKey && hiddenSeries.has(String(entry.dataKey));
+                  return (
+                    <span
+                      className="text-muted-foreground"
+                      style={{ opacity: isHidden ? 0.4 : 1, textDecoration: isHidden ? "line-through" : "none" }}
+                    >
+                      {value}
+                    </span>
+                  );
+                }}
+              />
               <Line
                 type="monotone"
                 dataKey="recebidas"
@@ -276,6 +304,8 @@ function InstagramCrmPage() {
                 stroke="var(--chart-2)"
                 strokeWidth={2}
                 dot={{ r: 3 }}
+                opacity={hiddenSeries.has("recebidas") ? 0 : 1}
+                animationDuration={350}
               />
               <Line
                 type="monotone"
@@ -284,6 +314,8 @@ function InstagramCrmPage() {
                 stroke="var(--primary)"
                 strokeWidth={2}
                 dot={{ r: 3 }}
+                opacity={hiddenSeries.has("qualificados") ? 0 : 1}
+                animationDuration={350}
               />
             </LineChart>
           </ResponsiveContainer>

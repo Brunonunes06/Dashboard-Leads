@@ -24,7 +24,7 @@ const CSP = [
   "object-src 'none'",
   "frame-ancestors 'self'",
   "script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com https://www.google.com https://www.gstatic.com https://translate.google.com https://translate.googleapis.com https://translate-pa.googleapis.com https://www.recaptcha.net https://sdk.mercadopago.com https://*.mlstatic.com",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.gstatic.com https://*.mercadopago.com https://*.mlstatic.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.gstatic.com https://accounts.google.com https://*.mercadopago.com https://*.mlstatic.com",
   "font-src 'self' https://fonts.gstatic.com data: https://*.mercadopago.com https://*.mlstatic.com",
   "img-src 'self' data: blob: https:",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://accounts.google.com https://www.google.com https://translate.google.com https://translate.googleapis.com https://api.mercadopago.com https://*.mercadopago.com https://*.mlstatic.com https://*.mercadolibre.com",

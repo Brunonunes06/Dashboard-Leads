@@ -1,4 +1,4 @@
--- ============================================================
+  -- ============================================================
 -- FREE TRIAL — permite registrar o Plano Semanal (grátis) na tabela
 -- subscriptions, hoje tratado 100% no frontend sem nenhum registro (ver
 -- comentários em backend/payments-routes.js e src/routes/plans.tsx). Isso

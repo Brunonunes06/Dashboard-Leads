@@ -108,7 +108,10 @@ BEGIN
   END IF;
 END $$;
 
--- 3: revoga EXECUTE público em rls_auto_enable() (qualquer assinatura)
+-- 3: revoga EXECUTE público em rls_auto_enable() (qualquer assinatura).
+-- Precisa incluir PUBLIC explicitamente: por padrão o Postgres libera
+-- EXECUTE em funções novas pra PUBLIC (todo mundo) — revogar só de
+-- anon/authenticated não basta, porque esses papéis herdam de PUBLIC.
 DO $$
 DECLARE
   fn RECORD;
@@ -119,8 +122,8 @@ BEGIN
     JOIN pg_namespace n ON n.oid = p.pronamespace
     WHERE n.nspname = 'public' AND p.proname = 'rls_auto_enable'
   LOOP
-    EXECUTE format('REVOKE EXECUTE ON FUNCTION public.%I(%s) FROM anon, authenticated', fn.proname, fn.args);
-    RAISE NOTICE 'EXECUTE revogado de anon/authenticated em public.%(%)', fn.proname, fn.args;
+    EXECUTE format('REVOKE ALL ON FUNCTION public.%I(%s) FROM PUBLIC, anon, authenticated', fn.proname, fn.args);
+    RAISE NOTICE 'EXECUTE revogado (incl. PUBLIC) em public.%(%)', fn.proname, fn.args;
   END LOOP;
 END $$;
 

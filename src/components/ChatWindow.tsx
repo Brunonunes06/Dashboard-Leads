@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { CheckCheck, Send, Sparkles } from "lucide-react";
+import { Bot, CheckCheck, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useRealtimeChat } from "@/hooks/useRealtimeChat";
 import { supabase } from "@/lib/supabase";
@@ -16,6 +16,7 @@ interface ChatWindowProps {
   currentUserName?: string;
   currentRole: "admin" | "client";
   onTransferred?: () => void;
+  onAiAutoReplyChange?: (enabled: boolean) => void;
 }
 
 type MessageGroup = {
@@ -31,6 +32,7 @@ export function ChatWindow({
   currentUserName,
   currentRole,
   onTransferred,
+  onAiAutoReplyChange,
 }: ChatWindowProps) {
   const { t } = useTranslation();
   const { messages, isLoading, sendMessage, markAsRead, isTyping, isOnline } =
@@ -39,9 +41,12 @@ export function ChatWindow({
   const [isSending, setIsSending] = useState(false);
   const [isTransferring, setIsTransferring] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const [isTogglingAi, setIsTogglingAi] = useState(false);
   const [showLeadDetails, setShowLeadDetails] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastAutoRepliedIdRef = useRef<string | null>(null);
+  const hasLoadedInitialMessagesRef = useRef(false);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -50,6 +55,32 @@ export function ChatWindow({
   useEffect(() => {
     if (messages.length > 0) markAsRead(currentUserId);
   }, [messages.length, currentUserId, markAsRead]);
+
+  // Reseta os marcadores de "já respondeu automaticamente" ao trocar de
+  // conversa, pra não confundir o histórico de um lead com o de outro.
+  useEffect(() => {
+    hasLoadedInitialMessagesRef.current = false;
+    lastAutoRepliedIdRef.current = null;
+  }, [lead.id]);
+
+  // IA automática: dispara só quando chega uma mensagem NOVA do lead (não no
+  // carregamento inicial da conversa) e o interruptor está ligado — funciona
+  // enquanto esse componente estiver montado (aba do navegador aberta), via
+  // Supabase Realtime; não é um bot rodando no servidor.
+  useEffect(() => {
+    if (!hasLoadedInitialMessagesRef.current) {
+      hasLoadedInitialMessagesRef.current = true;
+      lastAutoRepliedIdRef.current = messages[messages.length - 1]?.id ?? null;
+      return;
+    }
+    if (!lead.ai_auto_reply) return;
+    const last = messages[messages.length - 1];
+    if (!last || last.sender_role !== "client") return;
+    if (lastAutoRepliedIdRef.current === last.id) return;
+    lastAutoRepliedIdRef.current = last.id;
+    handleAiAutoReply();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, lead.ai_auto_reply]);
 
   const senderLabel = currentRole === "admin" ? currentUserName || "CEO" : lead.name;
 
@@ -138,6 +169,50 @@ export function ChatWindow({
     }
     toast.success("Lead transferido", { description: `${lead.name} foi marcado como transferido.` });
     onTransferred?.();
+  };
+
+  const handleAiAutoReply = async () => {
+    if (getAISettings().botEnabled === false) return;
+    try {
+      const input = buildAIReplyInput(
+        { name: lead.name, phone: lead.phone },
+        messages.map((m) => ({ sender_role: m.sender_role, content: m.content })),
+      );
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) return;
+      const result = await generateAiReply({ data: { input, accessToken: session.access_token } });
+      if (result.error || !result.text) return;
+      const { text, handoff } = splitHandoff(result.text);
+      if (!text) return;
+      await sendMessage(text, currentUserId, "admin");
+      if (handoff) {
+        toast.warning("IA sinalizou necessidade de humano", {
+          description: `${lead.name} pode precisar de atendimento manual — considere desligar a IA automática nessa conversa.`,
+        });
+      }
+    } catch (error) {
+      console.error("[IA automática] Erro ao responder:", error);
+    }
+  };
+
+  const handleToggleAiAutoReply = async () => {
+    if (isTogglingAi) return;
+    setIsTogglingAi(true);
+    const next = !lead.ai_auto_reply;
+    const { error } = await supabase.from("leads").update({ ai_auto_reply: next }).eq("id", lead.id);
+    setIsTogglingAi(false);
+    if (error) {
+      toast.error("Erro ao mudar modo da IA", { description: error.message });
+      return;
+    }
+    onAiAutoReplyChange?.(next);
+    toast.success(next ? "IA automática ligada" : "IA automática desligada", {
+      description: next
+        ? `A IA vai responder ${lead.name} sozinha enquanto essa conversa estiver aberta.`
+        : "Voltou pro modo manual — você aprova cada resposta antes de enviar.",
+    });
   };
 
   const handleAiSuggest = async () => {
@@ -260,10 +335,39 @@ export function ChatWindow({
 
         <button
           type="button"
+          onClick={handleToggleAiAutoReply}
+          disabled={isTogglingAi}
+          title={
+            lead.ai_auto_reply
+              ? "IA automática ligada — clique pra voltar ao modo manual"
+              : "IA automática desligada — clique pra ligar"
+          }
+          style={{
+            marginLeft: "auto",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "8px 14px",
+            borderRadius: 9999,
+            border: lead.ai_auto_reply ? "1px solid rgba(88,101,242,.4)" : "1px solid rgba(148,163,184,.3)",
+            background: lead.ai_auto_reply ? "rgba(88,101,242,.15)" : "transparent",
+            color: lead.ai_auto_reply ? "#5865f2" : "var(--muted-foreground)",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+            opacity: isTogglingAi ? 0.6 : 1,
+            flexShrink: 0,
+          }}
+        >
+          <Bot size={14} />
+          {lead.ai_auto_reply ? "IA automática" : "IA manual"}
+        </button>
+
+        <button
+          type="button"
           onClick={handleTransfer}
           disabled={isTransferring || lead.status === "transferido"}
           style={{
-            marginLeft: "auto",
             display: "flex",
             alignItems: "center",
             gap: 6,

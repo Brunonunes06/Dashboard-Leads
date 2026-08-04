@@ -288,6 +288,9 @@ function AdminChatPage() {
                 await refetch();
                 setSelected((prev) => (prev ? { ...prev, status: "transferido" } : prev));
               }}
+              onAiAutoReplyChange={(enabled) => {
+                setSelected((prev) => (prev ? { ...prev, ai_auto_reply: enabled } : prev));
+              }}
             />
           </>
         ) : (

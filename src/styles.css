@@ -229,3 +229,16 @@ body {
 .skiptranslate iframe {
   display: none !important;
 }
+
+/* Anima sumir/aparecer ao clicar na legenda dos gráficos (Dashboard e
+   Instagram) — precisa que a série continue montada no DOM (por isso os
+   gráficos usam opacity em vez de "hide" do Recharts, que remove o
+   elemento na hora e não deixa transição nenhuma acontecer). */
+.recharts-rectangle,
+.recharts-line,
+.recharts-line-dots .recharts-dot {
+  transition:
+    opacity 350ms ease,
+    fill-opacity 350ms ease,
+    stroke-opacity 350ms ease;
+}
