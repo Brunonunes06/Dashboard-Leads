@@ -31,6 +31,18 @@ export function getClientIpFromRequest(request: Request): string {
   return rawIp.trim().replace(/^::ffff:/, "") || "unknown";
 }
 
+// IP_ACCOUNT_GUARD_EXEMPT_IPS no .env: lista de IPs separados por vírgula
+// que ficam de fora do limite de "1 conta por IP" (ex: seu próprio IP, pra
+// testar login com várias contas diferentes). Env var — só quem tem acesso
+// ao servidor consegue mudar essa lista, nunca o cliente.
+function isExemptIp(ip: string): boolean {
+  const exempt = (process.env.IP_ACCOUNT_GUARD_EXEMPT_IPS || "")
+    .split(",")
+    .map((e) => e.trim())
+    .filter(Boolean);
+  return exempt.includes(ip);
+}
+
 function isPrivateOrLocalIp(ip: string): boolean {
   if (!ip || ip === "unknown") return true;
   if (ip === "127.0.0.1" || ip === "::1") return true;
@@ -117,6 +129,8 @@ export async function checkAndRegisterAccountForIp(request: Request, idToken: st
     };
   }
   const { email, name } = verified;
+
+  if (isExemptIp(ip)) return { allowed: true };
 
   if (await isVpnOrProxyIp(ip)) {
     return {

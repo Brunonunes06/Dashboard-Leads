@@ -33,17 +33,6 @@ const DEFAULT_QUESTIONS = [
   "Qual seu prazo de mudança?",
 ];
 
-function readLS(key: string, fallback: string) {
-  if (typeof window === "undefined") return fallback;
-  return localStorage.getItem(key) ?? fallback;
-}
-
-function readLSBool(key: string, fallback: boolean) {
-  if (typeof window === "undefined") return fallback;
-  const v = localStorage.getItem(key);
-  return v === null ? fallback : v === "true";
-}
-
 function SettingsPage() {
   const [aiName, setAiName] = useState("Sofia");
   const [aiBrand, setAiBrand] = useState("Premier Imóveis");
@@ -63,27 +52,33 @@ function SettingsPage() {
   const [autoTransfer, setAutoTransfer] = useState(true);
   const [minScore, setMinScore] = useState(70);
   const [questions, setQuestions] = useState<string[]>(DEFAULT_QUESTIONS);
+  const [loaded, setLoaded] = useState(false);
 
+  // Lê do banco (não mais localStorage) — o bot que roda no servidor
+  // (backend/meta-webhook-routes.js) não tem navegador, então precisa ler as
+  // mesmas configurações de algum lugar persistente e compartilhado.
   useEffect(() => {
-    setAiName(readLS("aiName", "Sofia"));
-    setAiBrand(readLS("aiBrand", "Premier Imóveis"));
-    setAiTone(readLS("aiTone", aiTone));
-    setBotEnabled(readLSBool("botEnabled", true));
-    setBotName(readLS("botName", "Express Bot"));
-    setBotDelaySeconds(readLS("botDelaySeconds", "0"));
-    setBotGreeting(readLS("botGreeting", botGreeting));
-    setBotHandoff(readLS("botHandoff", botHandoff));
-    setBotAutoReply(readLSBool("botAutoReply", true));
-    setAutoTransfer(readLSBool("autoTransfer", true));
-    const ms = localStorage.getItem("minScore");
-    if (ms) setMinScore(Number(ms));
-    try {
-      const stored = JSON.parse(localStorage.getItem("aiQuestions") || "null");
-      if (Array.isArray(stored) && stored.length) setQuestions(stored);
-    } catch {
-      // keep defaults
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    (supabase as any)
+      .from("bot_settings")
+      .select("settings")
+      .eq("id", true)
+      .maybeSingle()
+      .then(({ data }: { data: { settings: Record<string, unknown> } | null }) => {
+        const s = data?.settings || {};
+        if (typeof s.aiName === "string") setAiName(s.aiName);
+        if (typeof s.aiBrand === "string") setAiBrand(s.aiBrand);
+        if (typeof s.aiTone === "string") setAiTone(s.aiTone);
+        if (typeof s.botEnabled === "boolean") setBotEnabled(s.botEnabled);
+        if (typeof s.botName === "string") setBotName(s.botName);
+        if (typeof s.botDelaySeconds === "string") setBotDelaySeconds(s.botDelaySeconds);
+        if (typeof s.botGreeting === "string") setBotGreeting(s.botGreeting);
+        if (typeof s.botHandoff === "string") setBotHandoff(s.botHandoff);
+        if (typeof s.botAutoReply === "boolean") setBotAutoReply(s.botAutoReply);
+        if (typeof s.autoTransfer === "boolean") setAutoTransfer(s.autoTransfer);
+        if (typeof s.minScore === "number") setMinScore(s.minScore);
+        if (Array.isArray(s.questions) && s.questions.length) setQuestions(s.questions as string[]);
+        setLoaded(true);
+      });
   }, []);
 
   function addQuestion() {
@@ -98,19 +93,34 @@ function SettingsPage() {
     setQuestions((prev) => prev.filter((_, idx) => idx !== i));
   }
 
-  function saveSettings() {
-    localStorage.setItem("aiQuestions", JSON.stringify(questions));
-    localStorage.setItem("aiName", aiName);
-    localStorage.setItem("aiBrand", aiBrand);
-    localStorage.setItem("aiTone", aiTone);
-    localStorage.setItem("botEnabled", String(botEnabled));
-    localStorage.setItem("botName", botName);
-    localStorage.setItem("botDelaySeconds", botDelaySeconds);
-    localStorage.setItem("botGreeting", botGreeting);
-    localStorage.setItem("botHandoff", botHandoff);
-    localStorage.setItem("botAutoReply", String(botAutoReply));
-    localStorage.setItem("autoTransfer", String(autoTransfer));
-    localStorage.setItem("minScore", String(minScore));
+  const [saving, setSaving] = useState(false);
+
+  async function saveSettings() {
+    setSaving(true);
+    const { error } = await (supabase as any).from("bot_settings").upsert({
+      id: true,
+      settings: {
+        aiName,
+        aiBrand,
+        aiTone,
+        botEnabled,
+        botName,
+        botDelaySeconds,
+        botGreeting,
+        botHandoff,
+        botAutoReply,
+        autoTransfer,
+        minScore,
+        questions,
+      },
+      updated_at: new Date().toISOString(),
+    });
+    setSaving(false);
+
+    if (error) {
+      toast.error("Não foi possível salvar", { description: error.message });
+      return;
+    }
     toast.success("Configurações salvas", { description: "A IA já está usando as novas regras." });
   }
 
@@ -280,7 +290,9 @@ function SettingsPage() {
 
       <div className="flex justify-end gap-2">
         <Button variant="outline">Cancelar</Button>
-        <Button onClick={saveSettings}>Salvar alterações</Button>
+        <Button onClick={saveSettings} disabled={!loaded || saving}>
+          {saving ? "Salvando..." : "Salvar alterações"}
+        </Button>
       </div>
     </div>
   );

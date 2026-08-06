@@ -11,6 +11,8 @@ const { securityHeaders } = require("./security-headers");
 const { checkRateLimit, getClientIp } = require("./rate-limit");
 const { getServiceClient } = require("./supabase-admin");
 const { verifyGoogleIdToken } = require("./verify-google-token");
+const { schedulePaymentReminders, scheduleTestPlanCheck } = require("./payment-reminders-cron");
+const metaWebhookRoutes = require("./meta-webhook-routes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,7 +46,17 @@ app.use(
       : undefined,
   ),
 );
-app.use(express.json());
+// "verify" guarda o corpo bruto da requisição em req.rawBody antes do parse
+// — necessário pro webhook da Meta (backend/meta-webhook-routes.js) conferir
+// a assinatura HMAC, que é calculada sobre os bytes exatos recebidos, não
+// sobre o objeto já reserializado.
+app.use(
+  express.json({
+    verify: (req, res, buf) => {
+      req.rawBody = buf;
+    },
+  }),
+);
 app.set("trust proxy", true);
 app.use(securityHeaders);
 
@@ -58,6 +70,7 @@ app.use(recaptchaRoutes);
 app.use(lgpdRoutes);
 app.use(emailRoutes);
 app.use(paymentsRoutes);
+app.use(metaWebhookRoutes);
 
 // Config pública injetada em toda página estática via <script src="/config.js">.
 // Só valores seguros pro navegador — nunca chaves de serviço/segredos aqui.
@@ -81,6 +94,17 @@ function normalizeEmail(email) {
   return String(email || "")
     .trim()
     .toLowerCase();
+}
+
+// IP_ACCOUNT_GUARD_EXEMPT_IPS no .env: lista de IPs separados por vírgula
+// que ficam de fora do limite de "1 conta por IP" — mesma lógica de
+// src/lib/ip-guard.server.ts, mantida em sincronia aqui.
+function isExemptIp(ip) {
+  const exempt = (process.env.IP_ACCOUNT_GUARD_EXEMPT_IPS || "")
+    .split(",")
+    .map((e) => e.trim())
+    .filter(Boolean);
+  return exempt.includes(ip);
 }
 
 function isPrivateOrLocalIp(ip) {
@@ -136,6 +160,8 @@ app.post("/api/auth/ip-account", async (req, res) => {
     }
     const email = normalizeEmail(verified.email);
     const name = verified.name;
+
+    if (isExemptIp(ip)) return res.status(200).json({ success: true });
 
     if (await isVpnOrProxyIp(ip)) {
       return res.status(403).json({
@@ -198,4 +224,6 @@ app.get("/favicon.ico", (req, res) => res.status(204).end());
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta: ${PORT}`);
+  schedulePaymentReminders();
+  scheduleTestPlanCheck();
 });

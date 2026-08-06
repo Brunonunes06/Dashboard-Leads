@@ -1,10 +1,11 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Banknote, Check, Copy, CreditCard, Loader2, QrCode, Repeat } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
+import { RequireAuth } from "@/components/RequireAuth";
 import {
   createBoletoPayment,
   createCardPayment,
@@ -27,16 +28,14 @@ import {
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/plans")({
-  beforeLoad: async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session) throw redirect({ to: "/" });
-  },
-  component: PlansPage,
+  component: () => (
+    <RequireAuth>
+      <PlansPage />
+    </RequireAuth>
+  ),
 });
 
-type PlanKey = "semanal" | "mensal" | "anual";
+type PlanKey = "semanal" | "mensal" | "anual" | "teste";
 type PaymentMethodKey = "pix" | "card" | "boleto" | "subscription";
 
 // Valores numéricos pro Brick/backend — precisam bater com backend/payments-routes.js
@@ -112,6 +111,18 @@ const PLANS_BY_LOCALE: Record<Locale, Record<PlanKey, PlanInfo>> = {
         "Suporte prioritário",
       ],
     },
+    teste: {
+      title: "Plano TESTE",
+      badge: "Teste grátis",
+      price: "Gratuito",
+      priceNote: "1 por conta",
+      description: "Dispara uma mensagem de teste de cobrança por WhatsApp em segundos, sem esperar pagamento real.",
+      features: [
+        "Envia o lembrete de cobrança na hora",
+        "Some sozinho depois do teste",
+        "Disponível uma única vez por conta",
+      ],
+    },
   },
   en: {
     semanal: {
@@ -156,6 +167,14 @@ const PLANS_BY_LOCALE: Record<Locale, Record<PlanKey, PlanInfo>> = {
         "Priority access to new features",
         "Priority support",
       ],
+    },
+    teste: {
+      title: "Test Plan",
+      badge: "Free test",
+      price: "Free",
+      priceNote: "1 per account",
+      description: "Fires a test billing reminder over WhatsApp in seconds, without waiting for a real payment.",
+      features: ["Sends the billing reminder right away", "Cleans itself up after the test", "Available once per account"],
     },
   },
   es: {
@@ -202,6 +221,18 @@ const PLANS_BY_LOCALE: Record<Locale, Record<PlanKey, PlanInfo>> = {
         "Soporte prioritario",
       ],
     },
+    teste: {
+      title: "Plan de PRUEBA",
+      badge: "Prueba gratis",
+      price: "Gratis",
+      priceNote: "1 por cuenta",
+      description: "Dispara un recordatorio de cobro de prueba por WhatsApp en segundos, sin esperar un pago real.",
+      features: [
+        "Envía el recordatorio de cobro al instante",
+        "Desaparece solo después de la prueba",
+        "Disponible una única vez por cuenta",
+      ],
+    },
   },
 };
 
@@ -214,6 +245,8 @@ function PlansPage() {
   const [loading, setLoading] = useState(false);
   const [freeTrialUsed, setFreeTrialUsed] = useState(false);
   const [activatingTrial, setActivatingTrial] = useState(false);
+  const [activatingTest, setActivatingTest] = useState(false);
+  const [testUsed, setTestUsed] = useState(false);
   const [activePlans, setActivePlans] = useState<Partial<Record<"mensal" | "anual", ActivePlanInfo>>>({});
 
   const [pix, setPix] = useState<{ qrCode?: string; qrCodeBase64?: string } | null>(null);
@@ -273,6 +306,21 @@ function PlansPage() {
       .maybeSingle()
       .then(({ data }: { data: { id: string } | null }) => {
         if (data) setFreeTrialUsed(true);
+      });
+  }, [user?.id]);
+
+  // Carrega se a conta já usou o Plano TESTE — 1 uso por conta, controlado
+  // via profiles.test_message_sent_at (supabase/013_test_plan.sql trava isso
+  // também no banco via RLS, isso aqui só evita mostrar o botão de novo).
+  useEffect(() => {
+    if (!user?.id) return;
+    (supabase as any)
+      .from("profiles")
+      .select("test_message_sent_at")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }: { data: { test_message_sent_at: string | null } | null }) => {
+        if (data?.test_message_sent_at) setTestUsed(true);
       });
   }, [user?.id]);
 
@@ -363,6 +411,58 @@ function PlansPage() {
       });
       return;
     }
+
+    if (key === "teste") {
+      if (activatingTest || testUsed || !user?.id) return;
+      setActivatingTest(true);
+      // Cria 'pending' (não 'active') pra backend/payment-reminders-cron.js
+      // pegar — um checador dedicado lá roda a cada 5s, manda a mensagem de
+      // WhatsApp e apaga essa linha sozinho logo em seguida. Limite de 1 uso
+      // por conta é imposto pela RLS via profiles.test_message_sent_at
+      // (supabase/013_test_plan.sql) — se já foi usado, o insert falha.
+      const { error } = await (supabase as any).from("subscriptions").insert({
+        user_id: user.id,
+        plan: "teste",
+        method: "free",
+        status: "pending",
+      });
+      setActivatingTest(false);
+
+      if (error) {
+        if (error.code === "42501" || error.code === "PGRST301") {
+          // RLS bloqueou — quase sempre porque o teste já foi usado (o
+          // fetch do useEffect pode não ter sincronizado ainda).
+          setTestUsed(true);
+        }
+        toast.error(
+          locale === "pt"
+            ? "Não foi possível disparar o teste"
+            : locale === "es"
+              ? "No se pudo disparar la prueba"
+              : "Couldn't trigger the test",
+          { description: error.message },
+        );
+        return;
+      }
+
+      toast.success(
+        locale === "pt"
+          ? "Teste disparado!"
+          : locale === "es"
+            ? "¡Prueba disparada!"
+            : "Test triggered!",
+        {
+          description:
+            locale === "pt"
+              ? "A mensagem chega em até ~5s, se o telefone estiver cadastrado no perfil."
+              : locale === "es"
+                ? "El mensaje llega en hasta ~5s, si el teléfono está registrado en el perfil."
+                : "Message arrives within ~5s, if the phone is set in your profile.",
+        },
+      );
+      return;
+    }
+
     setOpenPlan(key);
     resetDialogState();
   }
@@ -380,7 +480,7 @@ function PlansPage() {
         : "Session expired. Please log in again.";
 
   async function handleChoosePix() {
-    if (!openPlan || openPlan === "semanal") return;
+    if (!openPlan || openPlan === "semanal" || openPlan === "teste") return;
     setMethod("pix");
     setLoading(true);
     const accessToken = await getAccessToken();
@@ -414,7 +514,7 @@ function PlansPage() {
   }
 
   async function handleSubmitBoleto() {
-    if (!openPlan || openPlan === "semanal") return;
+    if (!openPlan || openPlan === "semanal" || openPlan === "teste") return;
     if (!cpf.trim() || !firstName.trim() || !zipCode.trim() || !streetName.trim() || !streetNumber.trim() || !city.trim() || !federalUnit.trim()) {
       toast.error(t("plans.cpf") + " / " + t("plans.firstName") + " / " + t("plans.zipCode"));
       return;
@@ -451,7 +551,7 @@ function PlansPage() {
   // recorrente (o token gerado é o mesmo, só muda o que fazemos com ele
   // depois). O número do cartão nunca passa pelo nosso servidor.
   useEffect(() => {
-    if ((method !== "card" && method !== "subscription") || !openPlan || openPlan === "semanal") return;
+    if ((method !== "card" && method !== "subscription") || !openPlan || openPlan === "semanal" || openPlan === "teste") return;
     if (!getMercadoPagoPublicKey()) return;
 
     let cancelled = false;
@@ -496,7 +596,7 @@ function PlansPage() {
   }, [method, openPlan]);
 
   async function handleBrickSubmit(cardFormData: any) {
-    if (!openPlan || openPlan === "semanal") return;
+    if (!openPlan || openPlan === "semanal" || openPlan === "teste") return;
     setLoading(true);
     const accessToken = await getAccessToken();
     if (!accessToken) {
@@ -557,7 +657,7 @@ function PlansPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {(Object.keys(PLANS) as PlanKey[]).map((key) => {
           const p = PLANS[key];
-          const activeInfo = key !== "semanal" ? activePlans[key] : undefined;
+          const activeInfo = key === "mensal" || key === "anual" ? activePlans[key] : undefined;
           return (
             <Card key={key} className="flex flex-col">
               <CardContent className="flex flex-1 flex-col pt-6">
@@ -587,11 +687,21 @@ function PlansPage() {
                 <Button
                   className="mt-6 w-full"
                   onClick={() => handleSelectPlan(key)}
-                  disabled={(key === "semanal" && (freeTrialUsed || activatingTrial)) || Boolean(activeInfo)}
+                  disabled={
+                    (key === "semanal" && (freeTrialUsed || activatingTrial)) ||
+                    (key === "teste" && (testUsed || activatingTest)) ||
+                    Boolean(activeInfo)
+                  }
                 >
-                  {(key === "semanal" && freeTrialUsed) || activeInfo
-                    ? t("plans.trialUsed")
-                    : `${t("plans.subscribe")} ${p.title}`}
+                  {key === "teste"
+                    ? testUsed
+                      ? t("plans.trialUsed")
+                      : activatingTest
+                        ? "..."
+                        : p.title
+                    : (key === "semanal" && freeTrialUsed) || activeInfo
+                      ? t("plans.trialUsed")
+                      : `${t("plans.subscribe")} ${p.title}`}
                 </Button>
                 {activeInfo && (
                   <p className="mt-2 text-center text-xs text-muted-foreground">

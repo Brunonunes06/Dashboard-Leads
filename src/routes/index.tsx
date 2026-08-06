@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { GoogleOAuthProvider, GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import {
   Bar,
   BarChart,
@@ -22,43 +21,13 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { useLeads } from "@/hooks/useLeads";
 import { useTranslation } from "@/lib/i18n";
-import { registerAccountForIp } from "@/lib/api/ip-guard.functions";
-import { verifyRecaptcha } from "@/lib/api/recaptcha.functions";
-import { getRecaptchaToken } from "@/lib/recaptcha-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { GoogleLoginButton } from "@/components/GoogleLoginButton";
 
 export const Route = createFileRoute("/")({
   component: DashboardPage,
 });
-
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
-
-interface GoogleProfile {
-  sub: string;
-  email: string;
-  name: string;
-  picture?: string;
-}
-
-function decodeGoogleCredential(token: string): GoogleProfile {
-  const payload = token.split(".")[1];
-  const json = decodeURIComponent(
-    atob(payload.replace(/-/g, "+").replace(/_/g, "/"))
-      .split("")
-      .map((c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0"))
-      .join(""),
-  );
-  return JSON.parse(json) as GoogleProfile;
-}
 
 function SourcesTooltip({ active, payload, total }: any) {
   if (!active || !payload?.length) return null;
@@ -139,10 +108,9 @@ const DATE_LOCALE: Record<string, string> = { pt: "pt-BR", en: "en-US", es: "es-
 
 function DashboardPage() {
   const { t, locale } = useTranslation();
-  const { user, login, logout } = useAuth();
+  const { user, logout } = useAuth();
   const { leads, isLoading } = useLeads();
   const [session, setSession] = useState<Session | null>(null);
-  const [blockReason, setBlockReason] = useState<{ code: string; message: string } | null>(null);
   const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
 
   function toggleSeries(dataKey: string) {
@@ -188,58 +156,6 @@ function DashboardPage() {
       if (resizeTimer) clearTimeout(resizeTimer);
     };
   }, []);
-
-  async function handleGoogleSuccess(response: CredentialResponse) {
-    if (!response.credential) return;
-    try {
-      const profile = decodeGoogleCredential(response.credential);
-
-      const recaptchaToken = await getRecaptchaToken("login");
-      if (recaptchaToken) {
-        const recaptchaCheck = await verifyRecaptcha({ data: { token: recaptchaToken } }).catch((err) => {
-          console.warn("[reCAPTCHA] Verificacao indisponivel, login liberado:", err);
-          return { allowed: true as const, score: 1 };
-        });
-        if (!recaptchaCheck.allowed) {
-          setBlockReason({ code: recaptchaCheck.code, message: recaptchaCheck.message });
-          return;
-        }
-      }
-
-      const ipCheck = await registerAccountForIp({ data: { idToken: response.credential } }).catch((err) => {
-        console.warn("[Auth] Validacao de IP/VPN indisponivel, login liberado:", err);
-        return { allowed: true as const };
-      });
-
-      if (!ipCheck.allowed) {
-        setBlockReason({ code: ipCheck.code, message: ipCheck.message });
-        return;
-      }
-
-      login({
-        id: profile.sub,
-        email: profile.email,
-        name: profile.name,
-        avatarUrl: profile.picture,
-      });
-
-      const { error } = await supabase.auth.signInWithIdToken({
-        provider: "google",
-        token: response.credential,
-      });
-      if (error) {
-        console.error("Erro ao autenticar no Supabase:", error);
-        toast.warning("Login parcial", {
-          description: "Perfil salvo, mas a sessão de mensagens não pôde ser criada.",
-        });
-      } else {
-        toast.success("Login com Google realizado com sucesso!");
-      }
-    } catch (error) {
-      console.error("Erro no login Google:", error);
-      toast.error("Erro no login", { description: "Falha ao processar os dados do Google." });
-    }
-  }
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -315,16 +231,6 @@ function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <AlertDialog open={blockReason !== null}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Acesso bloqueado</AlertDialogTitle>
-            <AlertDialogDescription>{blockReason?.message}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogAction onClick={() => setBlockReason(null)}>Entendi</AlertDialogAction>
-        </AlertDialogContent>
-      </AlertDialog>
-
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">
@@ -343,17 +249,9 @@ function DashboardPage() {
             <Button variant="outline" size="sm" onClick={handleLogout}>
               {t("common.logout")}
             </Button>
-          ) : GOOGLE_CLIENT_ID ? (
-            <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={() => toast.error("Erro ao inicializar o login Google")}
-                shape="pill"
-                size="large"
-                theme="outline"
-              />
-            </GoogleOAuthProvider>
-          ) : null}
+          ) : (
+            <GoogleLoginButton />
+          )}
           {user?.role === "admin" && (
             <Button asChild>
               <Link to="/leads/chat" className="inline-flex items-center gap-1">
