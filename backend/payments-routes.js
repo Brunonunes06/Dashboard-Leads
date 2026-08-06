@@ -10,8 +10,8 @@ const MP_API = "https://api.mercadopago.com";
 // "semanal" é o plano grátis (7 dias) — tratado 100% no frontend, sem cobrança.
 // Só mensal/anual passam por aqui.
 const PLANS = {
-  mensal: { description: "Plano mensal TEAM WOLF", amount: 299.99, frequencyMonths: 1 },
-  anual: { description: "Plano anual TEAM WOLF", amount: 1600, frequencyMonths: 12 },
+  mensal: { description: "Plano mensal Digmans", amount: 299.99, frequencyMonths: 1 },
+  anual: { description: "Plano anual Digmans", amount: 1600, frequencyMonths: 12 },
 };
 
 function normalizeEmail(email) {
@@ -98,7 +98,7 @@ router.post("/api/payments/pix", async (req, res) => {
     const plan = PLANS[req.body.plan];
     if (!plan) return res.status(400).json({ success: false, error: "Plano inválido." });
 
-    const payerEmail = normalizeEmail(req.body.email) || user.email || "cliente@teamwolf.local";
+    const payerEmail = normalizeEmail(req.body.email) || user.email || "cliente@digmans.local";
     const { ok, data } = await mpPost(
       "/v1/payments",
       {
@@ -155,7 +155,7 @@ router.post("/api/payments/card", async (req, res) => {
       return res.status(400).json({ success: false, error: "Dados do cartão incompletos." });
     }
 
-    const payerEmail = normalizeEmail(req.body.email) || user.email || "cliente@teamwolf.local";
+    const payerEmail = normalizeEmail(req.body.email) || user.email || "cliente@digmans.local";
     // O Card Brick, pra pagadores no Brasil, sempre coleta o CPF junto do
     // cartão — sem repassar isso no payer.identification, o Mercado Pago
     // recusa a cobrança com um "internal_error" genérico (regra fiscal
@@ -221,7 +221,7 @@ router.post("/api/payments/boleto", async (req, res) => {
         .json({ success: false, error: "CPF, nome e endereço completo são obrigatórios para gerar o boleto." });
     }
 
-    const payerEmail = normalizeEmail(req.body.email) || user.email || "cliente@teamwolf.local";
+    const payerEmail = normalizeEmail(req.body.email) || user.email || "cliente@digmans.local";
     // Boleto no Brasil ("bolbradesco") exige o endereço completo do pagador
     // além do CPF — sem isso o Mercado Pago recusa com "insufficient_data",
     // mesmo respondendo HTTP 201 (por isso checamos data.status abaixo, não
@@ -301,7 +301,7 @@ router.post("/api/payments/subscription", async (req, res) => {
     if (!plan) return res.status(400).json({ success: false, error: "Plano inválido." });
     if (!token) return res.status(400).json({ success: false, error: "Token do cartão é obrigatório." });
 
-    const payerEmail = normalizeEmail(req.body.email) || user.email || "cliente@teamwolf.local";
+    const payerEmail = normalizeEmail(req.body.email) || user.email || "cliente@digmans.local";
     const { ok, data } = await mpPost(
       "/preapproval",
       {
@@ -315,7 +315,7 @@ router.post("/api/payments/subscription", async (req, res) => {
           transaction_amount: plan.amount,
           currency_id: "BRL",
         },
-        back_url: req.body.backUrl || "https://teamwolf.local/plans",
+        back_url: req.body.backUrl || "https://digmans.local/plans",
         status: "authorized",
       },
       req.body.plan,

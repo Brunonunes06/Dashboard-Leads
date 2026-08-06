@@ -490,7 +490,7 @@ function PlansPage() {
       return;
     }
     const result = await createPixPayment({
-      data: { plan: openPlan, email: user?.email || "cliente@teamwolf.local", accessToken },
+      data: { plan: openPlan, email: user?.email || "cliente@digmans.local", accessToken },
     }).catch((err) => ({ success: false as const, error: (err as Error).message }));
     setLoading(false);
     if (result.success) setPix({ qrCode: result.qrCode, qrCodeBase64: result.qrCodeBase64 });
@@ -529,7 +529,7 @@ function PlansPage() {
     const result = await createBoletoPayment({
       data: {
         plan: openPlan,
-        email: user?.email || "cliente@teamwolf.local",
+        email: user?.email || "cliente@digmans.local",
         accessToken,
         cpf,
         firstName,
@@ -610,7 +610,7 @@ function PlansPage() {
       const result = await createCardSubscription({
         data: {
           plan: openPlan,
-          email: user?.email || cardFormData?.payer?.email || "cliente@teamwolf.local",
+          email: user?.email || cardFormData?.payer?.email || "cliente@digmans.local",
           accessToken,
           token: cardFormData.token,
         },
@@ -624,7 +624,7 @@ function PlansPage() {
     const result = await createCardPayment({
       data: {
         plan: openPlan,
-        email: user?.email || cardFormData?.payer?.email || "cliente@teamwolf.local",
+        email: user?.email || cardFormData?.payer?.email || "cliente@digmans.local",
         accessToken,
         token: cardFormData.token,
         installments: cardFormData.installments,

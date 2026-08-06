@@ -28,7 +28,7 @@ function wrapHtml(title: string, bodyHtml: string) {
           <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background:#16161d;border-radius:12px;overflow:hidden;">
             <tr>
               <td style="background:#1f1f29;padding:20px 32px;">
-                <span style="color:#f5f5f5;font-size:18px;font-weight:bold;letter-spacing:0.5px;">TEAM WOLF</span>
+                <span style="color:#f5f5f5;font-size:18px;font-weight:bold;letter-spacing:0.5px;">Digmans</span>
               </td>
             </tr>
             <tr>
@@ -39,7 +39,7 @@ function wrapHtml(title: string, bodyHtml: string) {
             </tr>
             <tr>
               <td style="padding:16px 32px;color:#8a8a94;font-size:12px;border-top:1px solid #26262f;">
-                Você recebeu este e-mail porque possui uma conta na plataforma TEAM WOLF.
+                Você recebeu este e-mail porque possui uma conta na plataforma Digmans.
               </td>
             </tr>
           </table>
@@ -54,17 +54,17 @@ function buildEmail(type: (typeof EMAIL_TYPES)[number], data: EmailData): { subj
   switch (type) {
     case "account_confirmation":
       return {
-        subject: "Confirme sua conta — TEAM WOLF",
+        subject: "Confirme sua conta — Digmans",
         html: wrapHtml(
           "Confirme sua conta",
           `<p>Olá${data.name ? `, ${data.name}` : ""}!</p>
-           <p>Falta pouco para ativar sua conta na TEAM WOLF. Clique no botão abaixo para confirmar seu e-mail.</p>
+           <p>Falta pouco para ativar sua conta na Digmans. Clique no botão abaixo para confirmar seu e-mail.</p>
            <p style="text-align:center;margin:28px 0;"><a href="${data.confirmUrl}" style="background:#6d28d9;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold;display:inline-block;">Confirmar conta</a></p>`,
         ),
       };
     case "password_reset":
       return {
-        subject: "Redefinição de senha — TEAM WOLF",
+        subject: "Redefinição de senha — Digmans",
         html: wrapHtml(
           "Redefinição de senha",
           `<p>Olá${data.name ? `, ${data.name}` : ""}!</p>
@@ -75,7 +75,7 @@ function buildEmail(type: (typeof EMAIL_TYPES)[number], data: EmailData): { subj
       };
     case "billing_notice":
       return {
-        subject: "Aviso de cobrança — TEAM WOLF",
+        subject: "Aviso de cobrança — Digmans",
         html: wrapHtml(
           "Aviso de cobrança",
           `<p>Olá${data.name ? `, ${data.name}` : ""}!</p>
@@ -84,7 +84,7 @@ function buildEmail(type: (typeof EMAIL_TYPES)[number], data: EmailData): { subj
       };
     case "subscription":
       return {
-        subject: "Assinatura confirmada — TEAM WOLF",
+        subject: "Assinatura confirmada — Digmans",
         html: wrapHtml(
           "Assinatura confirmada",
           `<p>Olá${data.name ? `, ${data.name}` : ""}!</p>
@@ -93,12 +93,12 @@ function buildEmail(type: (typeof EMAIL_TYPES)[number], data: EmailData): { subj
       };
     case "notification":
       return {
-        subject: data.title || "Nova notificação — TEAM WOLF",
+        subject: data.title || "Nova notificação — Digmans",
         html: wrapHtml(data.title || "Nova notificação", `<p>${data.message}</p>`),
       };
     case "alert":
       return {
-        subject: `⚠️ ${data.title || "Alerta"} — TEAM WOLF`,
+        subject: `⚠️ ${data.title || "Alerta"} — Digmans`,
         html: wrapHtml(data.title || "Alerta", `<p style="color:#f5a3a3;">${data.message}</p>`),
       };
   }

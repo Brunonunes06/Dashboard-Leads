@@ -7,7 +7,6 @@ import {
   Settings2,
   Sparkles,
   UserCircle,
-  Zap,
 } from "lucide-react";
 
 import {
@@ -49,11 +48,11 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-2.5 px-2 py-2">
-          <div className="grid h-9 w-9 place-items-center rounded-xl gradient-primary shadow-glow">
-            <Zap className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
+          <div className="h-9 w-9 shrink-0 overflow-hidden rounded-xl shadow-glow">
+            <img src="/logo.webp" alt="Digmans" className="h-full w-full object-cover object-top" />
           </div>
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="font-display text-base font-semibold tracking-tight">TEAM WOLF</span>
+            <span className="font-display text-base font-semibold tracking-tight">Digmans</span>
             <span className="text-[11px] text-muted-foreground">SaaS de leads</span>
           </div>
         </div>

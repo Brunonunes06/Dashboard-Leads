@@ -13,7 +13,7 @@ function wrapHtml(title, bodyHtml) {
           <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background:#16161d;border-radius:12px;overflow:hidden;">
             <tr>
               <td style="background:#1f1f29;padding:20px 32px;">
-                <span style="color:#f5f5f5;font-size:18px;font-weight:bold;letter-spacing:0.5px;">TEAM WOLF</span>
+                <span style="color:#f5f5f5;font-size:18px;font-weight:bold;letter-spacing:0.5px;">Digmans</span>
               </td>
             </tr>
             <tr>
@@ -24,7 +24,7 @@ function wrapHtml(title, bodyHtml) {
             </tr>
             <tr>
               <td style="padding:16px 32px;color:#8a8a94;font-size:12px;border-top:1px solid #26262f;">
-                Você recebeu este e-mail porque possui uma conta na plataforma TEAM WOLF.
+                Você recebeu este e-mail porque possui uma conta na plataforma Digmans.
               </td>
             </tr>
           </table>
@@ -40,11 +40,11 @@ function wrapHtml(title, bodyHtml) {
 // conforme o produto definir a copy final de cada tipo.
 const TEMPLATES = {
   account_confirmation: ({ name, confirmUrl }) => ({
-    subject: "Confirme sua conta — TEAM WOLF",
+    subject: "Confirme sua conta — Digmans",
     html: wrapHtml(
       "Confirme sua conta",
       `<p>Olá${name ? `, ${name}` : ""}!</p>
-       <p>Falta pouco para ativar sua conta na TEAM WOLF. Clique no botão abaixo para confirmar seu e-mail.</p>
+       <p>Falta pouco para ativar sua conta na Digmans. Clique no botão abaixo para confirmar seu e-mail.</p>
        <p style="text-align:center;margin:28px 0;">
          <a href="${confirmUrl}" style="background:#6d28d9;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold;display:inline-block;">Confirmar conta</a>
        </p>
@@ -52,7 +52,7 @@ const TEMPLATES = {
     ),
   }),
   password_reset: ({ name, resetUrl }) => ({
-    subject: "Redefinição de senha — TEAM WOLF",
+    subject: "Redefinição de senha — Digmans",
     html: wrapHtml(
       "Redefinição de senha",
       `<p>Olá${name ? `, ${name}` : ""}!</p>
@@ -64,7 +64,7 @@ const TEMPLATES = {
     ),
   }),
   billing_notice: ({ name, amount, dueDate, invoiceUrl }) => ({
-    subject: "Aviso de cobrança — TEAM WOLF",
+    subject: "Aviso de cobrança — Digmans",
     html: wrapHtml(
       "Aviso de cobrança",
       `<p>Olá${name ? `, ${name}` : ""}!</p>
@@ -74,17 +74,17 @@ const TEMPLATES = {
     ),
   }),
   subscription: ({ name, plan, renewsAt }) => ({
-    subject: "Assinatura confirmada — TEAM WOLF",
+    subject: "Assinatura confirmada — Digmans",
     html: wrapHtml(
       "Assinatura confirmada",
       `<p>Olá${name ? `, ${name}` : ""}!</p>
        <p>Sua assinatura do plano <strong>${plan}</strong> foi confirmada com sucesso.</p>
        ${renewsAt ? `<p>Próxima renovação: <strong>${renewsAt}</strong>.</p>` : ""}
-       <p style="color:#9a9aa4;font-size:13px;">Obrigado por fazer parte da TEAM WOLF!</p>`,
+       <p style="color:#9a9aa4;font-size:13px;">Obrigado por fazer parte da Digmans!</p>`,
     ),
   }),
   notification: ({ name, title, message }) => ({
-    subject: title || "Nova notificação — TEAM WOLF",
+    subject: title || "Nova notificação — Digmans",
     html: wrapHtml(
       title || "Nova notificação",
       `<p>Olá${name ? `, ${name}` : ""}!</p>
@@ -92,7 +92,7 @@ const TEMPLATES = {
     ),
   }),
   alert: ({ name, title, message }) => ({
-    subject: `⚠️ ${title || "Alerta"} — TEAM WOLF`,
+    subject: `⚠️ ${title || "Alerta"} — Digmans`,
     html: wrapHtml(
       title || "Alerta",
       `<p>Olá${name ? `, ${name}` : ""}!</p>

@@ -1,4 +1,4 @@
-# Dashboard-Leads (TEAM WOLF)
+# Dashboard-Leads (Digmans)
 
 CRM de leads com chat em tempo real, planos pagos (Mercado Pago), cobrança e
 chatbot automáticos por WhatsApp/Instagram (Meta Cloud API + IA).
@@ -89,8 +89,43 @@ Supabase. Cada arquivo é idempotente (pode rodar de novo sem quebrar nada).
 
 ```bash
 npm run dev        # servidor de desenvolvimento (frontend)
-npm run build      # build de produção
+npm run build      # build de produção (gera .output/server/index.mjs)
+npm run start      # roda o build de produção do frontend
 npm run server     # atalho pro backend Express (equivalente a node backend/server.js)
 npm run lint        # ESLint
 npm run format      # Prettier
 ```
+
+## Deploy (Railway)
+
+O app tem **dois processos independentes** — não se chamam um ao outro, cada
+um fala direto com Supabase/OpenAI/Mercado Pago/Meta por conta própria.
+No Railway, isso vira **dois serviços separados**, apontando pro mesmo
+repositório do GitHub:
+
+### Serviço 1 — Frontend
+- **Build Command**: `npm run build`
+- **Start Command**: `npm run start`
+- Variáveis: todas as que começam com `VITE_`, mais `SUPABASE_URL`,
+  `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`, `RECAPTCHA_SECRET_KEY`,
+  `MERCADO_PAGO_ACCESS_TOKEN`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`,
+  `GOOGLE_CLIENT_SECRET` (as que as server functions em `src/lib/api/*.ts` usam).
+
+### Serviço 2 — Backend (webhooks + cron de cobrança)
+- **Build Command**: (nenhum — só `npm install`, que o Railway já faz sozinho)
+- **Start Command**: `npm run server`
+- Variáveis: as mesmas do backend em `.env` — `SUPABASE_*`, `META_*`,
+  `MERCADO_PAGO_*`, `CORS_ORIGIN`, `APP_BASE_URL`, `IP_ACCOUNT_GUARD_EXEMPT_IPS`.
+
+### Depois que os dois estiverem no ar
+1. Railway dá um domínio público pra cada serviço (tipo `algo.up.railway.app`)
+   — ou configure um domínio próprio nas configurações do serviço.
+2. Atualize `CORS_ORIGIN` e `APP_BASE_URL` (serviço 2) pro domínio novo do
+   **frontend**.
+3. Atualize os domínios cadastrados na chave reCAPTCHA e no OAuth do Google
+   pro domínio novo.
+4. Configure o webhook do chatbot (Meta) e do Mercado Pago apontando pro
+   domínio novo do **backend**.
+
+Nenhum dos dois serviços precisa do seu computador ligado depois disso — os
+crons de cobrança e o webhook do chatbot continuam rodando 24h no Railway.

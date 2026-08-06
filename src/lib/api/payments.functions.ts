@@ -7,8 +7,8 @@ import { verifySupabaseAccessToken } from "../verify-supabase-token.server";
 
 // "semanal" é o plano grátis (7 dias), tratado 100% no frontend, sem cobrança.
 const PLANS = {
-  mensal: { description: "Plano mensal TEAM WOLF", amount: 299.99, frequencyMonths: 1 },
-  anual: { description: "Plano anual TEAM WOLF", amount: 1600, frequencyMonths: 12 },
+  mensal: { description: "Plano mensal Digmans", amount: 299.99, frequencyMonths: 1 },
+  anual: { description: "Plano anual Digmans", amount: 1600, frequencyMonths: 12 },
 } as const;
 
 type PlanKey = keyof typeof PLANS;
@@ -320,7 +320,7 @@ export const createCardSubscription = createServerFn({ method: "POST" })
             transaction_amount: plan.amount,
             currency_id: "BRL",
           },
-          back_url: data.backUrl || "https://teamwolf.local/plans",
+          back_url: data.backUrl || "https://digmans.local/plans",
           status: "authorized",
         },
         data.plan,
