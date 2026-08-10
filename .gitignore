@@ -32,6 +32,10 @@ vite.config.ts
 .wrangler/
 .dev.vars
 
+# Script local de inicialização do Windows — específico da máquina de
+# desenvolvimento, não faz parte do app.
+start.bat
+
 # ngrok — backend/ngrok.yml contém um authtoken real, nunca deve ir pro git
 backend/ngrok.yml
 
