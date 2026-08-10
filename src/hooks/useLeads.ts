@@ -13,6 +13,7 @@ export interface LeadWithMeta {
   last_message_at: string | null;
   unread_count: number;
   ai_auto_reply: boolean;
+  user_id: string | null;
 }
 
 export function useLeads() {
@@ -33,7 +34,7 @@ export function useLeads() {
     try {
       const { data, error } = await supabase
         .from("leads")
-        .select("id, name, phone, status, score, created_at, ai_auto_reply")
+        .select("id, name, phone, status, score, created_at, ai_auto_reply, user_id")
         .order("created_at", { ascending: false });
 
       if (error || !data) return;
@@ -99,6 +100,9 @@ export function useLeads() {
       .channel("admin:leads-overview")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, scheduleFetch)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, scheduleFetch)
+      // Sem isso, apagar uma mensagem (ver ChatWindow.tsx::deleteMessage) não
+      // atualizava a última mensagem/contagem de não lidas na lista.
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "messages" }, scheduleFetch)
       .subscribe();
 
     channelRef.current = channel;

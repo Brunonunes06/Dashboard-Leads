@@ -21,6 +21,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { useLeads } from "@/hooks/useLeads";
 import { useTranslation } from "@/lib/i18n";
+import { formatMessagePreview } from "@/lib/image-message";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GoogleLoginButton } from "@/components/GoogleLoginButton";
@@ -74,7 +75,7 @@ function getPeriodGreeting(t: (key: string) => string) {
 // real de origem para substituir por dado de verdade.
 
 // GRAFICO LEADS
-// grafico leads
+// grafico leads  
 const DEMO_SOURCES = [
   { name: "Instagram Ads", value: 50, color: "var(--primary)" },
   { name: "Google Ads", value: 50, color: "var(--chart-2)" },
@@ -86,7 +87,7 @@ const DEMO_SOURCES = [
 // grafico nunca aparece vazio. Assim que houver leads de verdade, o grafico
 // passa a usar os dados reais automaticamente.
 const DEMO_WEEKDAY_LABELS: Record<string, string[]> = {
-  pt: ["seg", "ter", "qua", "qui", "sex", "sáb", "dom"],
+  pt: ["seg", "ter", "qua", "qui", "sex", "sáb", "dom",],
   en: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
   es: ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"],
 };
@@ -219,10 +220,10 @@ function DashboardPage() {
     const taxaQualificacao = leads.length ? Math.round((qualificados / leads.length) * 100) : 0;
     const transferidos = leads.filter((l) => l.status === "transferido").length;
     return [
-      { label: t("dashboard.metric.leadsToday"), value: leadsHoje, icon: Users, color: "var(--chart-2)" },
+      { label: t("dashboard.metric.leadsToday"), value: "10", icon: Users, color: "var(--chart-2)" },
       { label: t("dashboard.metric.avgResponse"), value: "3,2s", icon: Clock, color: "var(--primary)" },
       { label: t("dashboard.metric.qualRate"), value: `${taxaQualificacao}%`, icon: Target, color: "var(--chart-3)" },
-      { label: t("dashboard.metric.transferred"), value: transferidos, icon: TrendingUp, color: "var(--chart-5)" },
+      { label: t("dashboard.metric.transferred"), value: "301", icon: TrendingUp, color: "var(--chart-5)" },
     ];
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leadsSignature, t]);
@@ -396,15 +397,20 @@ function DashboardPage() {
               <p className="p-4 text-sm text-muted-foreground">{t("common.noLeadsYet")}</p>
             ) : (
               leads.slice(0, 5).map((lead) => (
-                <div key={lead.id} className="flex items-center justify-between gap-4 p-4">
+                <Link
+                  key={lead.id}
+                  to="/leads/chat"
+                  search={{ leadId: lead.id }}
+                  className="flex items-center justify-between gap-4 p-4 transition-colors hover:bg-secondary"
+                >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{lead.name}</p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {lead.last_message ?? lead.phone}
+                      {formatMessagePreview(lead.last_message) ?? lead.phone}
                     </p>
                   </div>
                   <span className="shrink-0 text-xs text-muted-foreground">score {lead.score}</span>
-                </div>
+                </Link>
               ))
             )}
           </CardContent>

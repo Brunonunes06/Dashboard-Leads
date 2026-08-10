@@ -15,6 +15,7 @@ const { getServiceClient } = require("./supabase-admin");
 const { sendWhatsAppMessage } = require("./meta-client");
 const { sendInstagramMessage } = require("./instagram-client");
 const { generateReply } = require("./ai-bot");
+const { sendEmail, buildEmail } = require("./resend-client");
 
 const router = Router();
 
@@ -110,6 +111,36 @@ async function insertMessage(supabase, { leadId, senderId, senderRole, content }
   if (error) console.error("[Webhook Meta] Erro ao salvar mensagem:", error.message);
 }
 
+// Avisa os admins por e-mail sempre que chega mensagem nova de um lead —
+// não dá pra saber se algum admin está de olho no app no momento (não há
+// rastreamento de presença/online), então dispara sempre; é o padrão mais
+// útil pra quem não fica o dia todo dentro do CRM. Nunca deixa uma falha de
+// e-mail interromper o fluxo de salvar a mensagem/rodar o bot.
+async function notifyAdminsNewMessage({ leadName, channel, content }) {
+  try {
+    const adminEmails = (process.env.ADMIN_EMAILS || process.env.VITE_ADMIN_EMAILS || "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    if (!adminEmails.length) return;
+
+    const built = buildEmail("notification", {
+      title: `Nova mensagem de ${leadName || "um lead"} (${channel === "whatsapp" ? "WhatsApp" : "Instagram"})`,
+      message: content,
+    });
+
+    await Promise.all(
+      adminEmails.map((to) =>
+        sendEmail({ to, subject: built.subject, html: built.html }).catch((error) => {
+          console.error("[Webhook Meta] Erro ao enviar e-mail de notificação:", error.message);
+        }),
+      ),
+    );
+  } catch (error) {
+    console.error("[Webhook Meta] Erro ao notificar admins por e-mail:", error.message);
+  }
+}
+
 async function maybeAutoReply(supabase, { lead, channel, recipient }) {
   if (!lead.ai_auto_reply) return;
 
@@ -166,6 +197,7 @@ async function handleWhatsappEvent(supabase, body) {
         if (!lead) continue;
 
         await insertMessage(supabase, { leadId: lead.id, senderId: phone, senderRole: "client", content: msg.text.body });
+        await notifyAdminsNewMessage({ leadName: lead.name, channel: "whatsapp", content: msg.text.body });
         await maybeAutoReply(supabase, { lead, channel: "whatsapp", recipient: phone });
       }
     }
@@ -184,6 +216,7 @@ async function handleInstagramEvent(supabase, body) {
       if (!lead) continue;
 
       await insertMessage(supabase, { leadId: lead.id, senderId: igsid, senderRole: "client", content: event.message.text });
+      await notifyAdminsNewMessage({ leadName: lead.name, channel: "instagram", content: event.message.text });
       await maybeAutoReply(supabase, { lead, channel: "instagram", recipient: igsid });
     }
   }

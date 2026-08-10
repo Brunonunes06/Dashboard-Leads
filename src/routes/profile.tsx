@@ -112,6 +112,18 @@ function ProfilePage() {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
   }, []);
 
+  // Preenche nome/e-mail/foto automaticamente com os dados do Google assim
+  // que a sessão carrega (é assíncrono, então na primeira renderização
+  // `user` ainda é null e os campos ficariam vazios sem isso). Só entra em
+  // campo ainda vazio — dados salvos em public.profiles (carregados abaixo)
+  // sempre têm prioridade.
+  useEffect(() => {
+    if (!user) return;
+    setName((prev) => prev || user.name || "");
+    setEmail((prev) => prev || user.email || "");
+    setAvatarUrl((prev) => prev || user.avatarUrl || "");
+  }, [user?.name, user?.email, user?.avatarUrl]);
+
   // Provider do login (sempre Google hoje — é o único método de login do
   // app) — usado pra decidir se a integração "Conta Google" mostra
   // "Conectado" ou "Conectar".

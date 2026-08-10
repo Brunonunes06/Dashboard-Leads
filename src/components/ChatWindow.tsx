@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { Bot, CheckCheck, Send, Sparkles } from "lucide-react";
+import { Bot, Camera, CheckCheck, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useRealtimeChat } from "@/hooks/useRealtimeChat";
+import { MessageDeleteMenu } from "@/components/MessageDeleteMenu";
 import { supabase } from "@/lib/supabase";
 import { generateAiReply } from "@/lib/api/ai-reply.functions";
+import { sendOutboundMessage } from "@/lib/api/send-message.functions";
 import { buildAIReplyInput, getAISettings, splitHandoff } from "@/lib/ai-reply-client";
 import { useTranslation } from "@/lib/i18n";
+import { isImageMessage, MAX_IMAGE_BYTES } from "@/lib/image-message";
 import { StatusBadge } from "@/components/StatusBadge";
 import type { LeadWithMeta } from "@/hooks/useLeads";
 import type { LeadStatus } from "@/data/mockLeads";
@@ -15,6 +18,13 @@ interface ChatWindowProps {
   currentUserId: string;
   currentUserName?: string;
   currentRole: "admin" | "client";
+  // Controla as ações de gestão do lead (transferir, IA automática,
+  // atribuir a um cliente) — true pro admin, false pro cliente dono do
+  // lead (que só pode ler/responder, não existe policy de UPDATE em
+  // leads pra não-admin).
+  canManageLead?: boolean;
+  assignableClients?: { id: string; name: string; email: string }[];
+  onAssign?: (userId: string | null) => void;
   onTransferred?: () => void;
   onAiAutoReplyChange?: (enabled: boolean) => void;
 }
@@ -31,20 +41,25 @@ export function ChatWindow({
   currentUserId,
   currentUserName,
   currentRole,
+  canManageLead = false,
+  assignableClients,
+  onAssign,
   onTransferred,
   onAiAutoReplyChange,
 }: ChatWindowProps) {
   const { t } = useTranslation();
-  const { messages, isLoading, sendMessage, markAsRead, isTyping, isOnline } =
+  const { messages, isLoading, sendMessage, deleteMessage, markAsRead, isTyping, isOnline } =
     useRealtimeChat(lead.id);
   const [draft, setDraft] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isTransferring, setIsTransferring] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isTogglingAi, setIsTogglingAi] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
   const [showLeadDetails, setShowLeadDetails] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const lastAutoRepliedIdRef = useRef<string | null>(null);
   const hasLoadedInitialMessagesRef = useRef(false);
 
@@ -146,15 +161,64 @@ export function ChatWindow({
     return `${Math.floor(hours / 24)} d`;
   };
 
+  // Despacha uma mensagem do admin de verdade pro WhatsApp/Instagram do lead
+  // — sem isso ela só ficava salva no Supabase e nunca chegava no lead.
+  // Best-effort: a mensagem já está salva, então uma falha aqui só avisa,
+  // não desfaz nada.
+  const relayOutbound = async (messageId: string) => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) return;
+    const result = await sendOutboundMessage({
+      data: { accessToken: session.access_token, leadId: lead.id, messageId },
+    });
+    if (!result.success) {
+      toast.warning("Mensagem salva, mas não chegou ao lead", { description: result.error });
+    }
+  };
+
   const handleSend = async () => {
     const text = draft.trim();
     if (!text || isSending) return;
 
     setDraft("");
     setIsSending(true);
-    await sendMessage(text, currentUserId, currentRole);
+    const messageId = await sendMessage(text, currentUserId, currentRole);
     setIsSending(false);
     inputRef.current?.focus();
+    if (messageId && currentRole === "admin") relayOutbound(messageId);
+  };
+
+  // Mesmo esquema do avatar em profile.tsx: converte pra data URL e manda
+  // como o próprio conteúdo da mensagem. Não despacha pro WhatsApp/Instagram
+  // (sendOutboundMessage manda o content como texto puro — uma imagem em
+  // base64 ali só chegaria quebrada); fica só dentro do app por enquanto.
+  const handleImageFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.error("Imagem muito grande", { description: "Escolha uma foto de até 3MB." });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const dataUrl = String(reader.result || "");
+      if (!dataUrl) return;
+      setIsSending(true);
+      const messageId = await sendMessage(dataUrl, currentUserId, currentRole);
+      setIsSending(false);
+      if (!messageId) {
+        toast.error("Erro ao enviar imagem");
+        return;
+      }
+      if (currentRole === "admin") {
+        toast.info("Imagem enviada só no app", { description: "Envio de fotos pro WhatsApp/Instagram ainda não é suportado." });
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleTransfer = async () => {
@@ -176,7 +240,12 @@ export function ChatWindow({
     try {
       const input = buildAIReplyInput(
         { name: lead.name, phone: lead.phone },
-        messages.map((m) => ({ sender_role: m.sender_role, content: m.content })),
+        // Nunca manda a foto (base64) pra IA como texto — estouraria o
+        // limite de contexto/custo à toa.
+        messages.map((m) => ({
+          sender_role: m.sender_role,
+          content: isImageMessage(m.content) ? "[imagem]" : m.content,
+        })),
       );
       const {
         data: { session },
@@ -186,7 +255,8 @@ export function ChatWindow({
       if (result.error || !result.text) return;
       const { text, handoff } = splitHandoff(result.text);
       if (!text) return;
-      await sendMessage(text, currentUserId, "admin");
+      const messageId = await sendMessage(text, currentUserId, "admin");
+      if (messageId) relayOutbound(messageId);
       if (handoff) {
         toast.warning("IA sinalizou necessidade de humano", {
           description: `${lead.name} pode precisar de atendimento manual — considere desligar a IA automática nessa conversa.`,
@@ -215,6 +285,22 @@ export function ChatWindow({
     });
   };
 
+  const handleAssign = async (userId: string) => {
+    if (isAssigning) return;
+    setIsAssigning(true);
+    const { error } = await supabase
+      .from("leads")
+      .update({ user_id: userId || null })
+      .eq("id", lead.id);
+    setIsAssigning(false);
+    if (error) {
+      toast.error("Erro ao atribuir lead", { description: error.message });
+      return;
+    }
+    toast.success(userId ? "Lead atribuído" : "Atribuição removida");
+    onAssign?.(userId || null);
+  };
+
   const handleAiSuggest = async () => {
     if (isSuggesting) return;
     if (getAISettings().botEnabled === false) {
@@ -225,7 +311,12 @@ export function ChatWindow({
     try {
       const input = buildAIReplyInput(
         { name: lead.name, phone: lead.phone },
-        messages.map((m) => ({ sender_role: m.sender_role, content: m.content })),
+        // Nunca manda a foto (base64) pra IA como texto — estouraria o
+        // limite de contexto/custo à toa.
+        messages.map((m) => ({
+          sender_role: m.sender_role,
+          content: isImageMessage(m.content) ? "[imagem]" : m.content,
+        })),
       );
       const {
         data: { session },
@@ -333,59 +424,63 @@ export function ChatWindow({
           </span>
         </div>
 
-        <button
-          type="button"
-          onClick={handleToggleAiAutoReply}
-          disabled={isTogglingAi}
-          title={
-            lead.ai_auto_reply
-              ? "IA automática ligada — clique pra voltar ao modo manual"
-              : "IA automática desligada — clique pra ligar"
-          }
-          style={{
-            marginLeft: "auto",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "8px 14px",
-            borderRadius: 9999,
-            border: lead.ai_auto_reply ? "1px solid rgba(88,101,242,.4)" : "1px solid rgba(148,163,184,.3)",
-            background: lead.ai_auto_reply ? "rgba(88,101,242,.15)" : "transparent",
-            color: lead.ai_auto_reply ? "#5865f2" : "var(--muted-foreground)",
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: "pointer",
-            opacity: isTogglingAi ? 0.6 : 1,
-            flexShrink: 0,
-          }}
-        >
-          <Bot size={14} />
-          {lead.ai_auto_reply ? "IA automática" : "IA manual"}
-        </button>
+        {canManageLead && (
+          <>
+            <button
+              type="button"
+              onClick={handleToggleAiAutoReply}
+              disabled={isTogglingAi}
+              title={
+                lead.ai_auto_reply
+                  ? "IA automática ligada — clique pra voltar ao modo manual"
+                  : "IA automática desligada — clique pra ligar"
+              }
+              style={{
+                marginLeft: "auto",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "8px 14px",
+                borderRadius: 9999,
+                border: lead.ai_auto_reply ? "1px solid rgba(88,101,242,.4)" : "1px solid rgba(148,163,184,.3)",
+                background: lead.ai_auto_reply ? "rgba(88,101,242,.15)" : "transparent",
+                color: lead.ai_auto_reply ? "#5865f2" : "var(--muted-foreground)",
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+                opacity: isTogglingAi ? 0.6 : 1,
+                flexShrink: 0,
+              }}
+            >
+              <Bot size={14} />
+              {lead.ai_auto_reply ? "IA automática" : "IA manual"}
+            </button>
 
-        <button
-          type="button"
-          onClick={handleTransfer}
-          disabled={isTransferring || lead.status === "transferido"}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "8px 14px",
-            borderRadius: 9999,
-            border: "1px solid rgba(16,185,129,.3)",
-            background: lead.status === "transferido" ? "transparent" : "var(--gradient-primary)",
-            color: lead.status === "transferido" ? "var(--primary)" : "var(--primary-foreground)",
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: lead.status === "transferido" ? "default" : "pointer",
-            opacity: isTransferring ? 0.6 : 1,
-            flexShrink: 0,
-          }}
-        >
-          <CheckCheck size={14} />
-          {lead.status === "transferido" ? t("lead.transferred") : t("lead.transfer")}
-        </button>
+            <button
+              type="button"
+              onClick={handleTransfer}
+              disabled={isTransferring || lead.status === "transferido"}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "8px 14px",
+                borderRadius: 9999,
+                border: "1px solid rgba(16,185,129,.3)",
+                background: lead.status === "transferido" ? "transparent" : "var(--gradient-primary)",
+                color: lead.status === "transferido" ? "var(--primary)" : "var(--primary-foreground)",
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: lead.status === "transferido" ? "default" : "pointer",
+                opacity: isTransferring ? 0.6 : 1,
+                flexShrink: 0,
+              }}
+            >
+              <CheckCheck size={14} />
+              {lead.status === "transferido" ? t("lead.transferred") : t("lead.transfer")}
+            </button>
+          </>
+        )}
       </div>
 
       {showLeadDetails && (
@@ -500,6 +595,36 @@ export function ChatWindow({
                 </div>
               </div>
             </div>
+
+            {canManageLead && assignableClients && (
+              <div style={{ marginTop: 14, border: "1px solid var(--border)", borderRadius: 14, padding: 14 }}>
+                <div style={{ fontSize: 11, color: "var(--muted-foreground)", textTransform: "uppercase" }}>
+                  Atribuído a
+                </div>
+                <select
+                  value={lead.user_id ?? ""}
+                  onChange={(e) => handleAssign(e.target.value)}
+                  disabled={isAssigning}
+                  style={{
+                    marginTop: 10,
+                    width: "100%",
+                    padding: "8px 10px",
+                    borderRadius: 10,
+                    border: "1px solid var(--border)",
+                    background: "var(--secondary)",
+                    color: "var(--foreground)",
+                    fontSize: 14,
+                  }}
+                >
+                  <option value="">Ninguém (só admin vê)</option>
+                  {assignableClients.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({c.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
               <button
@@ -619,22 +744,58 @@ export function ChatWindow({
                           </div>
                         )}
 
-                        <div
-                          className={`chat-bubble ${isOwn ? "is-own" : "is-incoming"}`}
-                          style={{
-                            maxWidth: "72%",
-                            padding: "10px 14px",
-                            borderRadius: isOwn
-                              ? `18px 18px ${isLast ? "6px" : "18px"} 18px`
-                              : `18px 18px 18px ${isLast ? "6px" : "18px"}`,
-                            fontSize: 14.5,
-                            lineHeight: 1.45,
-                            wordBreak: "break-word",
-                          }}
-                        >
-                          {msg.content}
-                          <div className="chat-timestamp">{formatMessageTime(msg.created_at)}</div>
-                        </div>
+                        {(() => {
+                          // Admin de verdade (canManageLead) pode apagar
+                          // qualquer mensagem da conversa, inclusive as do
+                          // lead — não só as que ele mesmo escreveu.
+                          const isDeletable = msg.sender_id === currentUserId || canManageLead;
+
+                          const isImage = isImageMessage(msg.content);
+
+                          const bubble = (
+                            <div
+                              className={`chat-bubble ${isOwn ? "is-own" : "is-incoming"}`}
+                              style={{
+                                maxWidth: isDeletable ? "100%" : "72%",
+                                padding: isImage ? 4 : "10px 14px",
+                                borderRadius: isOwn
+                                  ? `18px 18px ${isLast ? "6px" : "18px"} 18px`
+                                  : `18px 18px 18px ${isLast ? "6px" : "18px"}`,
+                                fontSize: 14.5,
+                                lineHeight: 1.45,
+                                overflowWrap: "break-word",
+                              }}
+                            >
+                              {isImage ? (
+                                <img
+                                  src={msg.content}
+                                  alt="Foto"
+                                  style={{ display: "block", maxWidth: 240, maxHeight: 240, borderRadius: 14, objectFit: "cover" }}
+                                />
+                              ) : (
+                                msg.content
+                              )}
+                              <div className="chat-timestamp" style={isImage ? { padding: "0 4px" } : undefined}>
+                                {formatMessageTime(msg.created_at)}
+                              </div>
+                            </div>
+                          );
+
+                          if (!isDeletable) return bubble;
+
+                          return (
+                            <MessageDeleteMenu
+                              align={isOwn ? "right" : "left"}
+                              maxWidth="72%"
+                              onDelete={async () => {
+                                const ok = await deleteMessage(msg.id);
+                                if (!ok) toast.error("Erro ao excluir mensagem");
+                              }}
+                            >
+                              {bubble}
+                            </MessageDeleteMenu>
+                          );
+                        })()}
                       </div>
                     );
                   })}
@@ -672,6 +833,27 @@ export function ChatWindow({
             padding: "8px 8px 8px 16px",
           }}
         >
+          <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageFile} />
+          <button
+            type="button"
+            onClick={() => imageInputRef.current?.click()}
+            disabled={isSending}
+            title="Enviar foto"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              background: "transparent",
+              border: "1px solid rgba(148,163,184,.3)",
+              cursor: isSending ? "default" : "pointer",
+              color: "var(--muted-foreground)",
+              display: "grid",
+              placeItems: "center",
+              flexShrink: 0,
+            }}
+          >
+            <Camera size={16} />
+          </button>
           <input
             ref={inputRef}
             className="chat-input"

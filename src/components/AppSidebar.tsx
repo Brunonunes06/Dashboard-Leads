@@ -3,6 +3,7 @@ import {
   CreditCard,
   Instagram,
   LayoutDashboard,
+  LifeBuoy,
   MessagesSquare,
   Settings2,
   Sparkles,
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useTranslation } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
+import { useSupportNotifications } from "@/hooks/useSupportNotifications";
 
 export function AppSidebar() {
   const { t } = useTranslation();
@@ -31,9 +33,15 @@ export function AppSidebar() {
   const { user } = useAuth();
   const { isMobile, setOpenMobile } = useSidebar();
 
+  // Montado aqui pq o AppSidebar está sempre presente (layout raiz) —
+  // avisa de mensagem nova no chat de suporte em qualquer página, não só
+  // dentro de /support.
+  useSupportNotifications();
+
   const ALL_ITEMS = [
     { title: t("nav.dashboard"), url: "/", icon: LayoutDashboard, adminOnly: false },
     { title: t("nav.chat"), url: "/leads/chat", icon: MessagesSquare, adminOnly: false },
+    { title: t("nav.support"), url: "/support", icon: LifeBuoy, adminOnly: false },
     { title: t("nav.plans"), url: "/plans", icon: CreditCard, adminOnly: false },
     { title: t("nav.instagram"), url: "/instagram", icon: Instagram, adminOnly: true },
     { title: t("nav.settings"), url: "/settings", icon: Settings2, adminOnly: true },
@@ -47,8 +55,8 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
-        <div className="flex items-center gap-2.5 px-2 py-2">
-          <div className="h-9 w-9 shrink-0 overflow-hidden rounded-xl shadow-glow">
+        <div className="flex items-center gap-2.5 px-2 py-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+          <div className="h-9 w-9 shrink-0 overflow-hidden rounded-xl shadow-glow group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
             <img src="/logo.webp" alt="Digmans" className="h-full w-full object-cover object-top" />
           </div>
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">

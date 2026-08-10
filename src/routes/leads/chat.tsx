@@ -1,37 +1,64 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Search } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { isAdminEmail } from "@/lib/permissions";
+import { useAuth } from "@/hooks/useAuth";
 import { useLeads } from "@/hooks/useLeads";
 import { ChatWindow } from "@/components/ChatWindow";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useTranslation } from "@/lib/i18n";
+import { listClients, type ClientOption } from "@/lib/api/clients.functions";
+import { formatMessagePreview } from "@/lib/image-message";
 
 import type { LeadWithMeta } from "@/hooks/useLeads";
 import type { LeadStatus } from "@/data/mockLeads";
 
 export const Route = createFileRoute("/leads/chat")({
+  validateSearch: (search: Record<string, unknown>): { leadId?: string } => {
+    const leadId = typeof search.leadId === "string" ? search.leadId : undefined;
+    return leadId ? { leadId } : {};
+  },
   beforeLoad: async () => {
     const {
       data: { session },
     } = await supabase.auth.getSession();
     if (!session) throw redirect({ to: "/" });
-    if (!isAdminEmail(session.user.email)) {
-      throw redirect({ to: "/" });
-    }
-    return { adminId: session.user.id, adminName: "CEO" };
   },
   component: AdminChatPage,
 });
 
 function AdminChatPage() {
   const { t } = useTranslation();
-  const { adminId, adminName } = Route.useRouteContext();
+  const { user } = useAuth();
+  const { leadId } = Route.useSearch();
   const { leads, isLoading, refetch } = useLeads();
   const [selected, setSelected] = useState<LeadWithMeta | null>(null);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
+  const [assignableClients, setAssignableClients] = useState<ClientOption[]>([]);
+  const isAdmin = user?.role === "admin";
+
+  // Abre direto a conversa quando se chega aqui via /leads/chat?leadId=... —
+  // ex.: clicando num lead no card "Leads ativos" da home.
+  useEffect(() => {
+    if (!leadId) return;
+    const match = leads.find((l) => l.id === leadId);
+    if (match) setSelected(match);
+  }, [leadId, leads]);
+
+  // Lista de clientes pra atribuir um lead — só o admin usa isso (pra
+  // decidir de quem é cada conversa; ver ChatWindow.tsx::showLeadDetails).
+  useEffect(() => {
+    if (!isAdmin) return;
+    (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) return;
+      const result = await listClients({ data: { accessToken: session.access_token } });
+      if (result.success) setAssignableClients(result.clients);
+    })();
+  }, [isAdmin]);
 
   const STATUS_FILTERS: { key: string; label: string }[] = [
     { key: "todos", label: t("chat.filters.all") },
@@ -61,11 +88,21 @@ function AdminChatPage() {
     return `${Math.floor(hrs / 24)}d`;
   };
 
+  if (!user) {
+    return (
+      <div
+        style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "calc(100dvh - 3.5rem)" }}
+      >
+        <p style={{ fontSize: 13, color: "var(--muted-foreground)" }}>{t("common.loading")}</p>
+      </div>
+    );
+  }
+
   return (
     <div
       className="grid grid-cols-1 md:grid-cols-[300px_1fr]"
       style={{
-        height: "calc(100vh - 3.5rem)",
+        height: "calc(100dvh - 3.5rem)",
         background: "var(--background)",
         fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       }}
@@ -253,7 +290,7 @@ function AdminChatPage() {
                       marginTop: 2,
                     }}
                   >
-                    {lead.last_message ?? lead.phone}
+                    {formatMessagePreview(lead.last_message) ?? lead.phone}
                   </p>
                   <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 6 }}>
                     <StatusBadge status={lead.status as LeadStatus} />
@@ -281,9 +318,15 @@ function AdminChatPage() {
             </button>
             <ChatWindow
               lead={selected}
-              currentUserId={adminId}
-              currentUserName={adminName}
+              currentUserId={user?.id ?? ""}
+              currentUserName={user?.name}
               currentRole="admin"
+              canManageLead={isAdmin}
+              assignableClients={isAdmin ? assignableClients : undefined}
+              onAssign={(userId) => {
+                refetch();
+                setSelected((prev) => (prev ? { ...prev, user_id: userId } : prev));
+              }}
               onTransferred={async () => {
                 await refetch();
                 setSelected((prev) => (prev ? { ...prev, status: "transferido" } : prev));

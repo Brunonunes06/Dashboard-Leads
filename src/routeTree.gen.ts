@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SupportRouteImport } from './routes/support'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -18,6 +19,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LeadsIndexRouteImport } from './routes/leads/index'
 import { Route as LeadsChatRouteImport } from './routes/leads/chat'
 
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
+  '/support': typeof SupportRoute
   '/leads/chat': typeof LeadsChatRoute
   '/leads/': typeof LeadsIndexRoute
 }
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
+  '/support': typeof SupportRoute
   '/leads/chat': typeof LeadsChatRoute
   '/leads': typeof LeadsIndexRoute
 }
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
+  '/support': typeof SupportRoute
   '/leads/chat': typeof LeadsChatRoute
   '/leads/': typeof LeadsIndexRoute
 }
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/profile'
     | '/settings'
+    | '/support'
     | '/leads/chat'
     | '/leads/'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/profile'
     | '/settings'
+    | '/support'
     | '/leads/chat'
     | '/leads'
   id:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/profile'
     | '/settings'
+    | '/support'
     | '/leads/chat'
     | '/leads/'
   fileRoutesById: FileRoutesById
@@ -130,12 +142,20 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
+  SupportRoute: typeof SupportRoute
   LeadsChatRoute: typeof LeadsChatRoute
   LeadsIndexRoute: typeof LeadsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -202,6 +222,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
+  SupportRoute: SupportRoute,
   LeadsChatRoute: LeadsChatRoute,
   LeadsIndexRoute: LeadsIndexRoute,
 }

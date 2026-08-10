@@ -95,6 +95,20 @@ export function useRealtimeChat(leadId: string | null) {
         },
       )
 
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "messages",
+          filter: `lead_id=eq.${leadId}`,
+        },
+        (payload) => {
+          const deleted = payload.old as { id: string };
+          setMessages((prev) => prev.filter((msg) => msg.id !== deleted.id));
+        },
+      )
+
       .subscribe();
 
     channelRef.current = channel;
@@ -104,14 +118,16 @@ export function useRealtimeChat(leadId: string | null) {
     };
   }, [leadId]);
 
-  // Enviar mensagem
+  // Enviar mensagem. Devolve o id da mensagem gravada (ou null se falhar) —
+  // quem chama usa esse id pra disparar o despacho de verdade pro
+  // WhatsApp/Instagram (ver ChatWindow.tsx::relayOutbound).
   const sendMessage = useCallback(
     async (content: string, senderId: string, senderRole: SenderRole) => {
-      if (!leadId) return false;
+      if (!leadId) return null;
 
       const text = content.trim();
 
-      if (!text) return false;
+      if (!text) return null;
 
       const optimisticId = crypto.randomUUID();
 
@@ -142,7 +158,7 @@ export function useRealtimeChat(leadId: string | null) {
         setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
 
         console.error(error);
-        return false;
+        return null;
       }
 
       if (data) {
@@ -151,10 +167,27 @@ export function useRealtimeChat(leadId: string | null) {
         );
       }
 
-      return true;
+      return (data as RealtimeMessage | null)?.id ?? null;
     },
     [leadId],
   );
+
+  // Apagar mensagem própria — RLS (020_delete_own_messages.sql) só deixa
+  // apagar quem realmente mandou (sender_id = auth.uid()), então a policy
+  // já barra tentativa de apagar mensagem de outra pessoa; aqui só otimiza a
+  // UI removendo na hora, sem esperar o evento DELETE do Realtime.
+  const deleteMessage = useCallback(async (messageId: string) => {
+    const previous = messages;
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+
+    const { error } = await supabase.from("messages").delete().eq("id", messageId);
+    if (error) {
+      setMessages(previous);
+      console.error(error);
+      return false;
+    }
+    return true;
+  }, [messages]);
 
   // Marcar mensagens como lidas
   const markAsRead = useCallback(
@@ -185,6 +218,7 @@ export function useRealtimeChat(leadId: string | null) {
     setIsTyping,
 
     sendMessage,
+    deleteMessage,
     markAsRead,
   };
 }
